@@ -69,10 +69,10 @@ services:
     restart: always
     environment:
       - POSTGRES_USER=layer8
-      - POSTGRES_PASSWORD=cRACtIeRChYsiNFinuMp
-      - POSTGRES_DB=layer8authdb
+      - POSTGRES_PASSWORD=layer81234
+      - POSTGRES_DB=layer8db
     volumes:
-      - ./pg-data:/var/lib/postgresql/data
+      - ./tmp/pg-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
