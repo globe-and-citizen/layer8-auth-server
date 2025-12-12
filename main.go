@@ -3,19 +3,22 @@ package main
 import (
 	_ "encoding/hex"
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/entity"
+	"globe-and-citizen/layer8/auth-server/config"
+	uH "globe-and-citizen/layer8/auth-server/internal/handlers/user"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
+	"globe-and-citizen/layer8/auth-server/internal/usecases"
 	apiLog "globe-and-citizen/layer8/auth-server/utils/log"
 
 	"github.com/gin-gonic/gin"
 )
 
-var postgresConfig entity.PostgresConfig
-var serverConfig entity.ServerConfig
+var postgresConfig config.PostgresConfig
+var serverConfig config.ServerConfig
 
 func readConfig() {
 
-	postgresConfig = entity.PostgresConfig{
+	postgresConfig = config.PostgresConfig{
 		Host:     "localhost",
 		Port:     5432,
 		User:     "layer8",
@@ -23,7 +26,7 @@ func readConfig() {
 		DBName:   "layer8db",
 	}
 
-	serverConfig = entity.ServerConfig{
+	serverConfig = config.ServerConfig{
 		Host:      "localhost",
 		Port:      5002,
 		JWTSecret: "5b0b18dc37004b97946367ca5d82673918a6c6e7a817bf84236abe1c0907b9bf",
@@ -34,11 +37,17 @@ func main() {
 
 	readConfig()
 
-	repo := postgresRepo.NewPostgresRepository(postgresConfig)
-	repo.Migrate()
-
 	app := gin.New()
 	app.Use(apiLog.AccessLog)
+
+	postgresdb := postgresRepo.NewPostgresRepository(postgresConfig)
+	postgresdb.Migrate()
+
+	token := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret))
+
+	userUseCase := usecases.NewUserUseCase(postgresdb, token)
+	userHandler := uH.NewUserHandler(app, userUseCase, config.UserConfig{})
+	userHandler.RegisterHandler()
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)

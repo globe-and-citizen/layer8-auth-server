@@ -1,4 +1,4 @@
-package entity
+package config
 
 type PostgresConfig struct {
 	Host     string `env:"DB_HOST" env-default:"localhost"`
@@ -12,4 +12,8 @@ type ServerConfig struct {
 	Host      string `env:"HOST"`
 	Port      int    `env:"PORT"`
 	JWTSecret string `env:"JWT_SECRET"`
+}
+
+type UserConfig struct {
+	ScramIterationCount int `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
 }

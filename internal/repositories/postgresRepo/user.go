@@ -2,11 +2,11 @@ package postgresRepo
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/internal/dto/tmp"
+	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 )
 
-func (r *PostgresRepository) AddUser(req tmp.UserRegisterDTO) error {
+func (r *PostgresRepository) AddUser(req requestdto.UserRegister) error {
 	newUser := models.User{}
 
 	tx := r.db.Begin()
@@ -81,7 +81,7 @@ func (r *PostgresRepository) GetUserProfile(userID uint) (models.User, models.Us
 	return user, userMetadata, nil
 }
 
-func (r *PostgresRepository) PrecheckUserRegister(req tmp.RegisterUserPrecheckDTO, salt string, iterCount int) error {
+func (r *PostgresRepository) PrecheckUserRegister(req requestdto.UserRegisterPrecheck, salt string, iterCount int) error {
 	user := models.User{
 		Username:       req.Username,
 		Salt:           salt,

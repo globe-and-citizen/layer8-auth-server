@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/entity"
+	"globe-and-citizen/layer8/auth-server/config"
 	"log"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func ConnectDB(postgresConfig entity.PostgresConfig) *gorm.DB {
+func ConnectDB(postgresConfig config.PostgresConfig) *gorm.DB {
 	// PostgreSQL DSN format:
 	// postgres://user:password@host:port/dbname?sslmode=disable
 	dsn := fmt.Sprintf(

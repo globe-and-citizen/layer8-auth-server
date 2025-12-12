@@ -1,6 +1,7 @@
 package postgresRepo
 
 import (
+	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/tmp"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"time"
@@ -8,21 +9,29 @@ import (
 
 type IPostgresRepository interface {
 	Migrate()
+	IUserRepositories
+	IClientRepositories
+}
+
+type IUserRepositories interface {
 	IUserRepository
-	IClientRepository
-	IClientTrafficStatisticsRepository
 	IUserMetadataRepository
 	IPhoneNumberVerificationRepository
 	IEmailVerificationRepository
 	IZKSnarksKeyRepository
 }
 
+type IClientRepositories interface {
+	IClientRepository
+	IClientTrafficStatisticsRepository
+}
+
 type IUserRepository interface {
-	AddUser(req tmp.UserRegisterDTO) error
+	AddUser(req requestdto.UserRegister) error
 	FindUserByID(userId uint) (models.User, error)
 	GetUserByUsername(username string) (models.User, error)
 	GetUserProfile(userID uint) (models.User, models.UserMetadata, error)
-	PrecheckUserRegister(req tmp.RegisterUserPrecheckDTO, salt string, iterCount int) error
+	PrecheckUserRegister(req requestdto.UserRegisterPrecheck, salt string, iterCount int) error
 	UpdateUserPassword(username string, storedKey string, serverKey string) error
 }
 

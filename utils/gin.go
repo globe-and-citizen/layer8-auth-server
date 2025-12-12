@@ -1,0 +1,48 @@
+package utils
+
+import (
+	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
+	"globe-and-citizen/layer8/auth-server/utils/log"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
+
+func HandleError(c *gin.Context, status int, message string, err error) {
+	l := log.Get()
+	l.Err(err)
+
+	c.AbortWithStatusJSON(status, responsedto.Response{
+		IsSuccess: false,
+		Message:   message,
+		Error:     strings.Split(err.Error(), "\n"),
+	})
+}
+
+func ReturnOK(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusOK, responsedto.Response{
+		IsSuccess: true,
+		Message:   message,
+		Data:      data,
+	})
+}
+
+func ReturnCreated(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusCreated, responsedto.Response{
+		IsSuccess: true,
+		Message:   message,
+		Data:      data,
+	})
+}
+
+func DecodeJSONFromRequest[T any](c *gin.Context) (T, error) {
+	var request T
+	err := c.BindJSON(&request)
+	if err != nil {
+		HandleError(c, http.StatusBadRequest, "Invalid request payload", err)
+		return request, err
+	}
+
+	return request, nil
+}

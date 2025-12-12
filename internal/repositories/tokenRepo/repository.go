@@ -1,0 +1,61 @@
+package tokenRepo
+
+import (
+	"fmt"
+	"globe-and-citizen/layer8/auth-server/internal/models"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type ITokenRepository interface {
+	GenerateUserJWTToken(user models.User) (string, error)
+	VerifyUserJWTToken(tokenString string) (models.UserClaims, error)
+}
+
+type TokenRepository struct {
+	jwtSecret []byte
+}
+
+func (t TokenRepository) GenerateUserJWTToken(user models.User) (string, error) {
+	expirationTime := time.Now().Add(60 * time.Minute)
+
+	claims := &models.UserClaims{
+		Username: user.Username,
+		UserID:   user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			Issuer:    "GlobeAndCitizen",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(t.jwtSecret)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func (t TokenRepository) VerifyUserJWTToken(tokenString string) (models.UserClaims, error) {
+	claims := &models.UserClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return models.UserClaims{}, nil
+	})
+	if err != nil {
+		return models.UserClaims{}, err
+	}
+
+	if !token.Valid {
+		return models.UserClaims{}, fmt.Errorf("invalid token")
+	}
+
+	return *claims, nil
+}
+
+func NewTokenRepository(jwtSecret []byte) ITokenRepository {
+	return &TokenRepository{
+		jwtSecret: jwtSecret,
+	}
+}

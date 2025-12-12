@@ -1,7 +1,7 @@
 package postgresRepo
 
 import (
-	"globe-and-citizen/layer8/auth-server/entity"
+	"globe-and-citizen/layer8/auth-server/config"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/utils"
 	"log"
@@ -13,7 +13,7 @@ type PostgresRepository struct {
 	db *gorm.DB
 }
 
-func NewPostgresRepository(config entity.PostgresConfig) IPostgresRepository {
+func NewPostgresRepository(config config.PostgresConfig) IPostgresRepository {
 	return &PostgresRepository{db: utils.ConnectDB(config)}
 }
 
