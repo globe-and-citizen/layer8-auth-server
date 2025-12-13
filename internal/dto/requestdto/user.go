@@ -22,3 +22,13 @@ type UserLogin struct {
 	CNonce      string `json:"c_nonce" validate:"required"`
 	ClientProof string `json:"client_proof" validate:"required"`
 }
+
+type UserMetadataUpdate struct {
+	DisplayName string `json:"display_name" validate:"required"`
+	Color       string `json:"color" validate:"required"`
+	Bio         string `json:"bio" validate:"required"`
+}
+
+type UserEmailVerify struct {
+	Email string `json:"email" validate:"required,email"`
+}

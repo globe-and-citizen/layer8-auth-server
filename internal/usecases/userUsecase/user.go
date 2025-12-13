@@ -1,4 +1,4 @@
-package usecases
+package userUsecase
 
 import (
 	"crypto/hmac"
@@ -18,6 +18,7 @@ type IUserUseCase interface {
 	Register(req requestdto.UserRegister) error
 	PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error)
 	Login(req requestdto.UserLogin) (responsedto.UserLogin, error)
+	UpdateUserMetadata(userID uint, req requestdto.UserMetadataUpdate) error
 }
 
 type UserUseCase struct {

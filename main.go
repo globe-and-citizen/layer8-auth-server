@@ -4,10 +4,12 @@ import (
 	_ "encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/config"
-	uH "globe-and-citizen/layer8/auth-server/internal/handlers/user"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/tokenHandler"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/userHandler"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
-	"globe-and-citizen/layer8/auth-server/internal/usecases"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/tokenUsecase"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/userUseCase"
 	apiLog "globe-and-citizen/layer8/auth-server/utils/log"
 
 	"github.com/gin-gonic/gin"
@@ -44,10 +46,12 @@ func main() {
 	postgresdb.Migrate()
 
 	token := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret))
+	tokenUC := tokenUsecase.NewTokenUseCase(token)
+	tokenH := tokenHandler.NewTokenHandler(tokenUC)
 
-	userUseCase := usecases.NewUserUseCase(postgresdb, token)
-	userHandler := uH.NewUserHandler(app, userUseCase, config.UserConfig{})
-	userHandler.RegisterHandler()
+	userUC := userUsecase.NewUserUseCase(postgresdb, token)
+	userH := userHandler.NewUserHandler(app, userUC, config.UserConfig{})
+	userH.RegisterHandler(tokenH.UserAuthentication)
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)

@@ -1,19 +1,19 @@
-package user
+package userHandler
 
 import (
 	"globe-and-citizen/layer8/auth-server/config"
-	"globe-and-citizen/layer8/auth-server/internal/usecases"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/userUsecase"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
-	uc     usecases.IUserUseCase
+	uc     userUsecase.IUserUseCase
 	config config.UserConfig
 	router *gin.RouterGroup
 }
 
-func NewUserHandler(app *gin.Engine, uc usecases.IUserUseCase, config config.UserConfig) UserHandler {
+func NewUserHandler(app *gin.Engine, uc userUsecase.IUserUseCase, config config.UserConfig) UserHandler {
 	return UserHandler{
 		uc:     uc,
 		config: config,

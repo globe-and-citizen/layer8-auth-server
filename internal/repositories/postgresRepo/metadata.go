@@ -1,7 +1,7 @@
 package postgresRepo
 
 import (
-	"globe-and-citizen/layer8/auth-server/internal/dto/tmp"
+	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 )
 
@@ -14,7 +14,7 @@ func (r *PostgresRepository) GetMetadataByUserID(userID uint) (models.UserMetada
 	return userMetadata, nil
 }
 
-func (r *PostgresRepository) UpdateUserMetadata(userID uint, req tmp.UserMetadataUpdateDTO) error {
+func (r *PostgresRepository) UpdateUserMetadata(userID uint, req requestdto.UserMetadataUpdate) error {
 	return r.db.Model(&models.UserMetadata{}).
 		Where("id = ?", userID).
 		Updates(models.UserMetadata{

@@ -54,7 +54,7 @@ type IClientTrafficStatisticsRepository interface {
 
 type IUserMetadataRepository interface {
 	GetMetadataByUserID(userID uint) (models.UserMetadata, error)
-	UpdateUserMetadata(userID uint, req tmp.UserMetadataUpdateDTO) error
+	UpdateUserMetadata(userID uint, req requestdto.UserMetadataUpdate) error
 }
 
 type IPhoneNumberVerificationRepository interface {

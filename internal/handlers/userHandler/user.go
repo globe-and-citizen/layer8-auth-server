@@ -1,4 +1,4 @@
-package user
+package userHandler
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
@@ -69,9 +69,4 @@ func (h UserHandler) Login(c *gin.Context) {
 	}
 
 	utils.ReturnOK(c, "Login successful", response)
-}
-
-func (h UserHandler) CheckBackendURI(c *gin.Context) {
-	// TODO Implementation of logic
-
 }
