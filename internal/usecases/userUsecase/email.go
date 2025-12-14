@@ -2,7 +2,7 @@ package userUsecase
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
 
@@ -23,7 +23,7 @@ func (uc *UserUseCase) VerifyEmail(userID uint, userEmail string) error {
 	}
 
 	e = uc.postgres.SaveEmailVerificationData(
-		models.EmailVerificationData{
+		gormModels.EmailVerificationData{
 			UserId:           user.ID,
 			VerificationCode: verificationCode,
 			ExpiresAt:        time.Now().Add(uc.email.VerificationCodeValidityDuration()).UTC(),

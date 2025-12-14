@@ -2,7 +2,7 @@ package utils
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
-	"globe-and-citizen/layer8/auth-server/utils/log"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"net/http"
 	"strings"
 

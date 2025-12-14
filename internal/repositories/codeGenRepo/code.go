@@ -1,7 +1,7 @@
 package codeGenRepo
 
 import (
-	"globe-and-citizen/layer8/auth-server/utils/code"
+	"globe-and-citizen/layer8/auth-server/pkg/code"
 )
 
 type ICodeGeneratorRepository interface {

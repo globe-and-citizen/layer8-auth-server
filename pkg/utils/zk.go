@@ -1,8 +1,11 @@
 package utils
 
 import (
+	stdBytes "bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
+	"log"
 	"unicode/utf8"
 
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
@@ -12,9 +15,9 @@ import (
 const VerificationCodeSize = 6
 const InputFrRepresentationSize = 38
 
-const runesPerElement = 7
-const bytes = 4
-const elementByteSize = 32
+const RunesPerElement = 7
+const BufferSize = 4
+const ElementByteSize = 32
 
 func StringToFrElements(input string) ([InputFrRepresentationSize]fr.Element, error) {
 	runeCount := utf8.RuneCountInString(input)
@@ -31,18 +34,18 @@ func StringToFrElements(input string) ([InputFrRepresentationSize]fr.Element, er
 
 	ind = 0
 
-	for i := 0; i < runeCount; i += runesPerElement {
-		var elementBytes [elementByteSize]byte
+	for i := 0; i < runeCount; i += RunesPerElement {
+		var elementBytes [ElementByteSize]byte
 
 		offset := 0
-		for j := i; j < i+runesPerElement; j++ {
+		for j := i; j < i+RunesPerElement; j++ {
 			if j == runeCount {
 				break
 			}
 
-			binary.LittleEndian.PutUint32(elementBytes[offset:offset+bytes], uint32(runes[j]))
+			binary.LittleEndian.PutUint32(elementBytes[offset:offset+BufferSize], uint32(runes[j]))
 
-			offset += bytes
+			offset += BufferSize
 		}
 
 		element, err := fr.LittleEndian.Element(&elementBytes)
@@ -96,4 +99,43 @@ func ConvertCodeToCircuitVariables(code string) ([6]frontend.Variable, error) {
 	}
 
 	return codeAsCircuitVariables, nil
+}
+
+func Equal(fst []byte, snd []byte) bool {
+	if len(fst) != len(snd) {
+		return false
+	}
+
+	for i := 0; i < len(fst); i++ {
+		if fst[i] != snd[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func WriteBytes[T io.WriterTo](key T) []byte {
+	var byteWriter stdBytes.Buffer
+
+	_, err := key.WriteTo(&byteWriter)
+	if err != nil {
+		log.Fatalf("Error while writing key to byte buffer: %e", err)
+	}
+
+	return byteWriter.Bytes()
+}
+
+func ReadBytes[T io.ReaderFrom](key T, keyBytes []byte) {
+	byteBuffer := stdBytes.NewBuffer([]byte{})
+
+	_, err := byteBuffer.Write(keyBytes)
+	if err != nil {
+		log.Fatalf("Error while writing bytes to byte buffer: %e", err)
+	}
+
+	_, err = key.ReadFrom(byteBuffer)
+	if err != nil {
+		log.Fatalf("Error while decoding key from bytes: %e", err)
+	}
 }

@@ -3,8 +3,8 @@ package zk
 import (
 	"bytes"
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/utils"
-	"globe-and-citizen/layer8/auth-server/utils/zk/circuit"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/zk/circuit"
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"

@@ -2,7 +2,7 @@ package userHandler
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

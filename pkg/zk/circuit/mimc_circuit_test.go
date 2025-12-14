@@ -1,7 +1,7 @@
 package circuit
 
 import (
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"

@@ -13,7 +13,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
 type UserUseCase struct {

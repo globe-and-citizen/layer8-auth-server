@@ -1,7 +1,7 @@
 package circuit
 
 import (
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/std/hash/mimc"

@@ -1,6 +1,6 @@
 package zkRepo
 
-import "globe-and-citizen/layer8/auth-server/utils/zk"
+import "globe-and-citizen/layer8/auth-server/pkg/zk"
 
 type IZkRepository interface {
 	GenerateProof(salt string, target string, verificationCode string) ([]byte, uint, error)

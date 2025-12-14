@@ -3,11 +3,11 @@ package postgresRepo
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 )
 
 func (r *PostgresRepository) AddUser(req requestdto.UserRegister) error {
-	newUser := models.User{}
+	newUser := gormModels.User{}
 
 	tx := r.db.Begin()
 	if err := tx.Where("username = ?", req.Username).First(&newUser).Error; err != nil {
@@ -25,7 +25,7 @@ func (r *PostgresRepository) AddUser(req requestdto.UserRegister) error {
 		return fmt.Errorf("could not update user: %e", err)
 	}
 
-	userMetadata := models.UserMetadata{
+	userMetadata := gormModels.UserMetadata{
 		ID:              newUser.ID,
 		IsEmailVerified: false,
 		DisplayName:     "",
@@ -43,46 +43,46 @@ func (r *PostgresRepository) AddUser(req requestdto.UserRegister) error {
 	return nil
 }
 
-func (r *PostgresRepository) FindUserByID(userId uint) (models.User, error) {
-	var user models.User
+func (r *PostgresRepository) FindUserByID(userId uint) (gormModels.User, error) {
+	var user gormModels.User
 	e := r.db.Where("id = ?", userId).First(&user).Error
 
 	if e != nil {
-		return models.User{}, e
+		return gormModels.User{}, e
 	}
 
 	return user, e
 }
 
-func (r *PostgresRepository) GetUserByUsername(username string) (models.User, error) {
-	var user models.User
+func (r *PostgresRepository) GetUserByUsername(username string) (gormModels.User, error) {
+	var user gormModels.User
 
-	err := r.db.Model(&models.User{}).
+	err := r.db.Model(&gormModels.User{}).
 		Where("username = ?", username).
 		First(&user).
 		Error
 
 	if err != nil {
-		return models.User{}, err
+		return gormModels.User{}, err
 	}
 
 	return user, nil
 }
 
-func (r *PostgresRepository) GetUserProfile(userID uint) (models.User, models.UserMetadata, error) {
-	var user models.User
+func (r *PostgresRepository) GetUserProfile(userID uint) (gormModels.User, gormModels.UserMetadata, error) {
+	var user gormModels.User
 	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
-		return models.User{}, models.UserMetadata{}, err
+		return gormModels.User{}, gormModels.UserMetadata{}, err
 	}
-	var userMetadata models.UserMetadata
+	var userMetadata gormModels.UserMetadata
 	if err := r.db.Where("id = ?", userID).Find(&userMetadata).Error; err != nil {
-		return models.User{}, models.UserMetadata{}, err
+		return gormModels.User{}, gormModels.UserMetadata{}, err
 	}
 	return user, userMetadata, nil
 }
 
 func (r *PostgresRepository) PrecheckUserRegister(req requestdto.UserRegisterPrecheck, salt string, iterCount int) error {
-	user := models.User{
+	user := gormModels.User{
 		Username:       req.Username,
 		Salt:           salt,
 		IterationCount: iterCount,
@@ -97,7 +97,7 @@ func (r *PostgresRepository) PrecheckUserRegister(req requestdto.UserRegisterPre
 }
 
 func (r *PostgresRepository) UpdateUserPassword(username string, storedKey string, serverKey string) error {
-	return r.db.Model(&models.User{}).
+	return r.db.Model(&gormModels.User{}).
 		Where("username=?", username).
 		Updates(map[string]interface{}{"stored_key": storedKey, "server_key": serverKey}).Error
 }

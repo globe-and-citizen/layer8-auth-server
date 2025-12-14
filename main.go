@@ -6,7 +6,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/config"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/tokenHandler"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/userHandler"
-	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
@@ -14,10 +14,10 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/tokenUsecase"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/userUsecase"
-	"globe-and-citizen/layer8/auth-server/utils"
-	"globe-and-citizen/layer8/auth-server/utils/code"
-	apiLog "globe-and-citizen/layer8/auth-server/utils/log"
-	"globe-and-citizen/layer8/auth-server/utils/zk"
+	"globe-and-citizen/layer8/auth-server/pkg/code"
+	apiLog "globe-and-citizen/layer8/auth-server/pkg/log"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/zk"
 	"log"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -69,7 +69,7 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 		cs, provingKey, verifyingKey = zk.RunZkSnarksSetup()
 
 		zkKeyPairId, err = postgresRepository.SaveZkSnarksKeyPair(
-			models.ZkSnarksKeyPair{
+			gormModels.ZkSnarksKeyPair{
 				ProvingKey:   utils.WriteBytes(provingKey),
 				VerifyingKey: utils.WriteBytes(verifyingKey),
 			},

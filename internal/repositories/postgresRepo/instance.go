@@ -2,8 +2,8 @@ package postgresRepo
 
 import (
 	"globe-and-citizen/layer8/auth-server/config"
-	"globe-and-citizen/layer8/auth-server/internal/models"
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"log"
 
 	"gorm.io/gorm"
@@ -20,13 +20,13 @@ func NewPostgresRepository(config config.PostgresConfig) IPostgresRepository {
 func (r *PostgresRepository) Migrate() {
 	// Auto migrate tables
 	err := r.db.AutoMigrate(
-		&models.User{},
-		&models.Client{},
-		&models.UserMetadata{},
-		&models.ClientTrafficStatistics{},
-		&models.EmailVerificationData{},
-		&models.PhoneNumberVerificationData{},
-		&models.ZkSnarksKeyPair{},
+		&gormModels.User{},
+		&gormModels.Client{},
+		&gormModels.UserMetadata{},
+		&gormModels.ClientTrafficStatistics{},
+		&gormModels.EmailVerificationData{},
+		&gormModels.PhoneNumberVerificationData{},
+		&gormModels.ZkSnarksKeyPair{},
 	)
 	if err != nil {
 		log.Fatalf("Cannot migrate tables: %v", err)

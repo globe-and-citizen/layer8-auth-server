@@ -3,15 +3,15 @@ package postgresRepo
 import (
 	"database/sql"
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
 
-func (r *PostgresRepository) GetClientTrafficStatistics(clientId string) (*models.ClientTrafficStatistics, error) {
+func (r *PostgresRepository) GetClientTrafficStatistics(clientId string) (*gormModels.ClientTrafficStatistics, error) {
 	// TODO: is isolation level higher then the default needed?
-	var clientStatistics models.ClientTrafficStatistics
+	var clientStatistics gormModels.ClientTrafficStatistics
 
-	err := r.db.Model(&models.ClientTrafficStatistics{}).
+	err := r.db.Model(&gormModels.ClientTrafficStatistics{}).
 		Where("client_id = ?", clientId).
 		First(&clientStatistics).
 		Error
@@ -26,7 +26,7 @@ func (r *PostgresRepository) GetClientTrafficStatistics(clientId string) (*model
 func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedBytes int, now time.Time) error {
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 
-	var clientStatistics models.ClientTrafficStatistics
+	var clientStatistics gormModels.ClientTrafficStatistics
 	err := tx.Where("client_id = ?", clientId).
 		First(&clientStatistics).
 		Error
@@ -39,7 +39,7 @@ func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedByte
 	newTrafficBytes := clientStatistics.TotalUsageBytes + consumedBytes
 	newUnpaidAmount := clientStatistics.UnpaidAmount + consumedBytes*clientStatistics.RatePerByte
 
-	err = r.db.Model(&models.ClientTrafficStatistics{}).
+	err = r.db.Model(&gormModels.ClientTrafficStatistics{}).
 		Where("client_id = ?", clientId).
 		Updates(map[string]interface{}{
 			"total_usage_bytes":             newTrafficBytes,
@@ -59,7 +59,7 @@ func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedByte
 func (r *PostgresRepository) PayClientTrafficUsage(clientId string, amountPaid int) error {
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 
-	var clientStatistics models.ClientTrafficStatistics
+	var clientStatistics gormModels.ClientTrafficStatistics
 	err := tx.Where("client_id = ?", clientId).
 		First(&clientStatistics).
 		Error
@@ -74,7 +74,7 @@ func (r *PostgresRepository) PayClientTrafficUsage(clientId string, amountPaid i
 		return fmt.Errorf("full amount must be paid")
 	}
 
-	err = r.db.Model(&models.ClientTrafficStatistics{}).
+	err = r.db.Model(&gormModels.ClientTrafficStatistics{}).
 		Where("client_id = ?", clientId).
 		Updates(map[string]interface{}{
 			"unpaid_amount": clientStatistics.UnpaidAmount - amountPaid,
@@ -89,9 +89,9 @@ func (r *PostgresRepository) PayClientTrafficUsage(clientId string, amountPaid i
 	return nil
 }
 
-func (r *PostgresRepository) GetAllClientStatistics() ([]models.ClientTrafficStatistics, error) {
+func (r *PostgresRepository) GetAllClientStatistics() ([]gormModels.ClientTrafficStatistics, error) {
 	// TODO: is isolation level higher then the default needed?
-	var allClientStatistics []models.ClientTrafficStatistics
+	var allClientStatistics []gormModels.ClientTrafficStatistics
 
 	err := r.db.Find(&allClientStatistics).Error
 	if err != nil {

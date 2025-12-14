@@ -3,7 +3,7 @@ package code
 import (
 	"encoding/hex"
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"

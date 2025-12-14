@@ -16,7 +16,7 @@ func TestGenerateCode_EmailWithASCIICharacters(t *testing.T) {
 	code, err := generator.GenerateCode(salt, email)
 
 	assert.Nil(t, err)
-	assert.True(t, len(code) == utils.VerificationCodeSize)
+	assert.True(t, len(code) == pkg.VerificationCodeSize)
 }
 
 func TestGenerateCode_EmailWithChineseCharacters(t *testing.T) {
@@ -26,7 +26,7 @@ func TestGenerateCode_EmailWithChineseCharacters(t *testing.T) {
 	code, err := generator.GenerateCode(salt, email)
 
 	assert.Nil(t, err)
-	assert.True(t, len(code) == utils.VerificationCodeSize)
+	assert.True(t, len(code) == pkg.VerificationCodeSize)
 }
 
 func TestGenerateCode_EmailWithGermanCharacters(t *testing.T) {
@@ -36,5 +36,5 @@ func TestGenerateCode_EmailWithGermanCharacters(t *testing.T) {
 	code, err := generator.GenerateCode(salt, email)
 
 	assert.Nil(t, err)
-	assert.True(t, len(code) == utils.VerificationCodeSize)
+	assert.True(t, len(code) == pkg.VerificationCodeSize)
 }

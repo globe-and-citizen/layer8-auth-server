@@ -3,7 +3,7 @@ package tokenHandler
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/tokenUsecase"
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -2,7 +2,7 @@ package postgresRepo
 
 import (
 	"database/sql"
-	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 )
 
 func (r *PostgresRepository) SaveProofOfEmailVerification(
@@ -11,7 +11,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Model(
-		&models.User{},
+		&gormModels.User{},
 	).Where(
 		"id = ?", userId,
 	).Updates(map[string]interface{}{
@@ -28,7 +28,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	err = tx.Where(
 		"user_id = ?", userId,
 	).Delete(
-		&models.EmailVerificationData{},
+		&gormModels.EmailVerificationData{},
 	).Error
 
 	if err != nil {
@@ -37,7 +37,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	}
 
 	err = tx.Model(
-		&models.UserMetadata{},
+		&gormModels.UserMetadata{},
 	).Where(
 		"id = ?", userId,
 	).Update("is_email_verified", true).Error
@@ -51,12 +51,12 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	return nil
 }
 
-func (r *PostgresRepository) SaveEmailVerificationData(data models.EmailVerificationData) error {
+func (r *PostgresRepository) SaveEmailVerificationData(data gormModels.EmailVerificationData) error {
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Where(
-		models.EmailVerificationData{UserId: data.UserId},
-	).Assign(data).FirstOrCreate(&models.EmailVerificationData{}).Error
+		gormModels.EmailVerificationData{UserId: data.UserId},
+	).Assign(data).FirstOrCreate(&gormModels.EmailVerificationData{}).Error
 
 	if err != nil {
 		tx.Rollback()
@@ -67,24 +67,24 @@ func (r *PostgresRepository) SaveEmailVerificationData(data models.EmailVerifica
 	return nil
 }
 
-func (r *PostgresRepository) GetEmailVerificationData(userId uint) (models.EmailVerificationData, error) {
-	var data models.EmailVerificationData
+func (r *PostgresRepository) GetEmailVerificationData(userId uint) (gormModels.EmailVerificationData, error) {
+	var data gormModels.EmailVerificationData
 	e := r.db.Where("user_id = ?", userId).First(&data).Error
 	if e != nil {
-		return models.EmailVerificationData{}, e
+		return gormModels.EmailVerificationData{}, e
 	}
 
 	return data, nil
 }
 
 func (r *PostgresRepository) SavePhoneNumberVerificationData(
-	data models.PhoneNumberVerificationData,
+	data gormModels.PhoneNumberVerificationData,
 ) error {
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Where(
-		models.PhoneNumberVerificationData{UserId: data.UserId},
-	).Assign(data).FirstOrCreate(&models.PhoneNumberVerificationData{}).Error
+		gormModels.PhoneNumberVerificationData{UserId: data.UserId},
+	).Assign(data).FirstOrCreate(&gormModels.PhoneNumberVerificationData{}).Error
 
 	if err != nil {
 		tx.Rollback()
@@ -95,11 +95,11 @@ func (r *PostgresRepository) SavePhoneNumberVerificationData(
 	return nil
 }
 
-func (r *PostgresRepository) GetPhoneNumberVerificationData(userID uint) (models.PhoneNumberVerificationData, error) {
-	var data models.PhoneNumberVerificationData
+func (r *PostgresRepository) GetPhoneNumberVerificationData(userID uint) (gormModels.PhoneNumberVerificationData, error) {
+	var data gormModels.PhoneNumberVerificationData
 	err := r.db.Where("user_id = ?", userID).First(&data).Error
 	if err != nil {
-		return models.PhoneNumberVerificationData{}, err
+		return gormModels.PhoneNumberVerificationData{}, err
 	}
 
 	return data, nil
@@ -114,7 +114,7 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Model(
-		&models.User{},
+		&gormModels.User{},
 	).Where(
 		"id = ?", userID,
 	).Updates(map[string]interface{}{
@@ -131,7 +131,7 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 	err = tx.Where(
 		"user_id = ?", userID,
 	).Delete(
-		&models.PhoneNumberVerificationData{},
+		&gormModels.PhoneNumberVerificationData{},
 	).Error
 
 	if err != nil {
@@ -140,7 +140,7 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 	}
 
 	err = tx.Model(
-		&models.UserMetadata{},
+		&gormModels.UserMetadata{},
 	).Where(
 		"id = ?", userID,
 	).Update("is_phone_number_verified", true).Error
@@ -156,7 +156,7 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 
 func (r *PostgresRepository) SaveTelegramSessionIDHash(userID uint, sessionID []byte) error {
 	return r.db.Model(
-		&models.User{},
+		&gormModels.User{},
 	).Where(
 		"id = ?", userID,
 	).Update("telegram_session_id_hash", sessionID).Error

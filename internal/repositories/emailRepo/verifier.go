@@ -3,7 +3,7 @@ package emailRepo
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/config"
-	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"log"
 	"time"
 )
@@ -28,7 +28,7 @@ func NewEmailVerifier(config config.EmailConfig) *EmailVerifier {
 	}
 }
 
-func (v *EmailVerifier) VerifyCode(verificationData *models.EmailVerificationData, code string) error {
+func (v *EmailVerifier) VerifyCode(verificationData *gormModels.EmailVerificationData, code string) error {
 	if verificationData.ExpiresAt.Before(v.now()) {
 		return fmt.Errorf(
 			"the verification code is expired. Please try to run the verification process again",

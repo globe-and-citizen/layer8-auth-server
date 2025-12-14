@@ -1,8 +1,10 @@
 package postgresRepo
 
-import "globe-and-citizen/layer8/auth-server/internal/models"
+import (
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+)
 
-func (r *PostgresRepository) SaveZkSnarksKeyPair(keyPair models.ZkSnarksKeyPair) (uint, error) {
+func (r *PostgresRepository) SaveZkSnarksKeyPair(keyPair gormModels.ZkSnarksKeyPair) (uint, error) {
 	tx := r.db.Create(&keyPair)
 
 	if tx.Error != nil {
@@ -12,12 +14,12 @@ func (r *PostgresRepository) SaveZkSnarksKeyPair(keyPair models.ZkSnarksKeyPair)
 	return keyPair.ID, nil
 }
 
-func (r *PostgresRepository) GetLatestZkSnarksKeys() (models.ZkSnarksKeyPair, error) {
-	var keyPair models.ZkSnarksKeyPair
-	err := r.db.Model(&models.ZkSnarksKeyPair{}).Last(&keyPair).Error
+func (r *PostgresRepository) GetLatestZkSnarksKeys() (gormModels.ZkSnarksKeyPair, error) {
+	var keyPair gormModels.ZkSnarksKeyPair
+	err := r.db.Model(&gormModels.ZkSnarksKeyPair{}).Last(&keyPair).Error
 
 	if err != nil {
-		return models.ZkSnarksKeyPair{}, err
+		return gormModels.ZkSnarksKeyPair{}, err
 	}
 
 	return keyPair, nil

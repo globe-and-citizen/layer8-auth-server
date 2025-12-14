@@ -1,4 +1,4 @@
-package models
+package gormModels
 
 type Client struct {
 	ID              string `gorm:"column:id; not null" json:"id"`

@@ -1,4 +1,4 @@
-package models
+package gormModels
 
 type ZkSnarksKeyPair struct {
 	ID           uint   `gorm:"primaryKey; unique; autoIncrement; not null" json:"id"`

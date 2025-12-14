@@ -1,7 +1,7 @@
 package zk
 
 import (
-	"globe-and-citizen/layer8/auth-server/utils/zk/circuit"
+	"globe-and-citizen/layer8/auth-server/pkg/zk/circuit"
 	"log"
 
 	"github.com/consensys/gnark-crypto/ecc"
