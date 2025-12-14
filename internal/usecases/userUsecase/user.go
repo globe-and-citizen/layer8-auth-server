@@ -8,26 +8,36 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/utils"
 )
-
-type IUserUseCase interface {
-	PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error)
-	Register(req requestdto.UserRegister) error
-	PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error)
-	Login(req requestdto.UserLogin) (responsedto.UserLogin, error)
-	UpdateUserMetadata(userID uint, req requestdto.UserMetadataUpdate) error
-}
 
 type UserUseCase struct {
 	postgres postgresRepo.IUserRepositories
 	token    tokenRepo.ITokenRepository
+	email    emailRepo.IEmailRepository
+	code     codeGenRepo.ICodeGeneratorRepository
+	zk       zkRepo.IZkRepository
 }
 
-func NewUserUseCase(postgres postgresRepo.IUserRepositories, token tokenRepo.ITokenRepository) IUserUseCase {
-	return &UserUseCase{postgres: postgres, token: token}
+func NewUserUseCase(
+	postgres postgresRepo.IUserRepositories,
+	token tokenRepo.ITokenRepository,
+	email emailRepo.IEmailRepository,
+	code codeGenRepo.ICodeGeneratorRepository,
+	zk zkRepo.IZkRepository,
+) IUserUseCase {
+	return &UserUseCase{
+		postgres: postgres,
+		token:    token,
+		email:    email,
+		code:     code,
+		zk:       zk,
+	}
 }
 
 func (uc *UserUseCase) PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {

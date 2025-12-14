@@ -13,21 +13,26 @@ type UserHandler struct {
 	router *gin.RouterGroup
 }
 
-func NewUserHandler(app *gin.Engine, uc userUsecase.IUserUseCase, config config.UserConfig) UserHandler {
+func NewUserHandler(router *gin.RouterGroup, uc userUsecase.IUserUseCase, config config.UserConfig) UserHandler {
 	return UserHandler{
 		uc:     uc,
 		config: config,
-		router: app.Group(""),
+		router: router.Group(""),
 	}
 }
 
-func (h UserHandler) RegisterHandler(middlewares ...gin.HandlerFunc) {
-	h.router.POST("users/register-precheck", h.PrecheckRegister)
-	h.router.POST("users/register", h.Register)
-	h.router.POST("users/login-precheck", h.PrecheckLogin)
-	h.router.POST("users/login", h.Login)
+func (h UserHandler) RegisterHandler(authorizationMiddleware gin.HandlerFunc, middlewares ...gin.HandlerFunc) {
 
-	user := h.router.Group("user")
-	user.Use(middlewares...)
+	unauthorisedGroup := h.router.Group("users")
+	unauthorisedGroup.POST("/register-precheck", h.PrecheckRegister)
+	unauthorisedGroup.POST("/register", h.Register)
+	unauthorisedGroup.POST("/login-precheck", h.PrecheckLogin)
+	unauthorisedGroup.POST("/login", h.Login)
 
+	authorisedGroup := h.router.Group("user")
+	authorisedGroup.Use(authorizationMiddleware)
+	authorisedGroup.Use(middlewares...)
+
+	authorisedGroup.POST("/verify-email", h.VerifyEmail)
+	authorisedGroup.POST("/check-email-verification-code", h.CheckEmailVerificationCode)
 }

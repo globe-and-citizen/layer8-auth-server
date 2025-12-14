@@ -17,3 +17,15 @@ type ServerConfig struct {
 type UserConfig struct {
 	ScramIterationCount int `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
 }
+
+type EmailConfig struct {
+	ApiKey                        string `env:"MAILER_SEND_API_KEY"`
+	TemplateId                    string `env:"MAILER_SEND_TEMPLATE_ID"`
+	Layer8EmailUsername           string `env:"LAYER8_EMAIL_USERNAME"`
+	Layer8EmailDomain             string `env:"LAYER8_EMAIL_DOMAIN"`
+	VerificationCodeValidDuration string `env:"VERIFICATION_CODE_VALIDITY_DURATION" default:"15m"`
+}
+
+type ZkConfig struct {
+	GenerateNewZkSnarksKeys bool `env:"GENERATE_NEW_ZK_SNARKS_KEYS" default:"false"`
+}
