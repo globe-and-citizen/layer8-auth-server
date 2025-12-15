@@ -4,27 +4,22 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/config"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
-	"log"
 	"time"
 )
 
 type EmailVerifier struct {
-	adminEmailAddress                string
-	now                              func() time.Time
-	VerificationCodeValidityDuration time.Duration
+	adminEmailAddress      string
+	now                    func() time.Time
+	VerificationCodeExpiry time.Duration
 }
 
 func NewEmailVerifier(config config.EmailConfig) *EmailVerifier {
 	adminEmailAddress := fmt.Sprintf("%s@%s", config.Layer8EmailUsername, config.Layer8EmailDomain)
-	verificationCodeValidityDuration, e := time.ParseDuration(config.VerificationCodeValidDuration)
-	if e != nil {
-		log.Fatalf("error parsing verification code validity duration: %e", e)
-	}
 
 	return &EmailVerifier{
-		adminEmailAddress:                adminEmailAddress,
-		now:                              time.Now,
-		VerificationCodeValidityDuration: verificationCodeValidityDuration,
+		adminEmailAddress:      adminEmailAddress,
+		now:                    time.Now,
+		VerificationCodeExpiry: config.VerificationCodeExpiry,
 	}
 }
 

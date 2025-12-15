@@ -5,7 +5,8 @@ import (
 )
 
 type ICodeGeneratorRepository interface {
-	GenerateVerificationCode(salt string, userEmail string) (string, error)
+	GenerateEmailVerificationCode(salt string, userEmail string) (string, error)
+	GeneratePhoneVerificationCode(salt string, phoneNumber string) (string, error)
 }
 
 type CodeGeneratorRepository struct {
@@ -16,6 +17,10 @@ func NewCodeGenerateRepository(generator code.ICodeGenerator) ICodeGeneratorRepo
 	return &CodeGeneratorRepository{}
 }
 
-func (cgr *CodeGeneratorRepository) GenerateVerificationCode(salt string, userEmail string) (string, error) {
+func (cgr *CodeGeneratorRepository) GenerateEmailVerificationCode(salt string, userEmail string) (string, error) {
 	return cgr.generator.GenerateCode(salt, userEmail)
+}
+
+func (cgr *CodeGeneratorRepository) GeneratePhoneVerificationCode(salt string, phoneNumber string) (string, error) {
+	return cgr.generator.GenerateCode(salt, phoneNumber)
 }

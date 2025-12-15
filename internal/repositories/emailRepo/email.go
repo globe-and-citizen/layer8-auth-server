@@ -8,10 +8,9 @@ import (
 )
 
 type IEmailRepository interface {
-	Send(email *models.Email) error
 	SendVerificationEmail(user *gormModels.User, userEmail string, verificationCode string) error
 	VerifyCode(verificationData *gormModels.EmailVerificationData, code string) error
-	VerificationCodeValidityDuration() time.Duration
+	GetVerificationCodeExpiry() time.Duration // todo this sounds silly?
 }
 
 type EmailRepository struct {
@@ -20,7 +19,6 @@ type EmailRepository struct {
 }
 
 func NewEmailRepository(config config.EmailConfig) *EmailRepository {
-
 	sender := NewEmailSender(config.ApiKey, config.TemplateId)
 	verifier := NewEmailVerifier(config)
 
@@ -28,10 +26,6 @@ func NewEmailRepository(config config.EmailConfig) *EmailRepository {
 		sender:   sender,
 		verifier: verifier,
 	}
-}
-
-func (r *EmailRepository) Send(email *models.Email) error {
-	return r.sender.Send(email)
 }
 
 func (r *EmailRepository) SendVerificationEmail(user *gormModels.User, userEmail string, verificationCode string) error {
@@ -52,6 +46,6 @@ func (r *EmailRepository) VerifyCode(verificationData *gormModels.EmailVerificat
 	return r.verifier.VerifyCode(verificationData, code)
 }
 
-func (r *EmailRepository) VerificationCodeValidityDuration() time.Duration {
-	return r.verifier.VerificationCodeValidityDuration
+func (r *EmailRepository) GetVerificationCodeExpiry() time.Duration {
+	return r.verifier.VerificationCodeExpiry
 }

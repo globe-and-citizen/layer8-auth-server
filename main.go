@@ -9,6 +9,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/phoneRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
@@ -19,6 +20,8 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/pkg/zk"
 	"log"
+	"os"
+	"time"
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
@@ -30,6 +33,7 @@ var postgresConfig config.PostgresConfig
 var serverConfig config.ServerConfig
 var emailConfig config.EmailConfig
 var zkConfig config.ZkConfig
+var phoneConfig config.PhoneConfig
 
 func readConfig() {
 
@@ -48,11 +52,16 @@ func readConfig() {
 	}
 
 	emailConfig = config.EmailConfig{
-		VerificationCodeValidDuration: "10m",
+		VerificationCodeExpiry: time.Minute * 10,
 	}
 
 	zkConfig = config.ZkConfig{
 		GenerateNewZkSnarksKeys: true,
+	}
+
+	phoneConfig = config.PhoneConfig{
+		TelegramApiKey:         os.Getenv("TELEGRAM_API_KEY"),
+		VerificationCodeExpiry: time.Minute * 10,
 	}
 
 	// TODO: read from env variables or config files
@@ -118,8 +127,16 @@ func main() {
 	emailRepository := emailRepo.NewEmailRepository(emailConfig)
 	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
+	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
 
-	userUC := userUsecase.NewUserUseCase(postgresRepository, tokenRepository, emailRepository, codeGenRepository, zkRepository)
+	userUC := userUsecase.NewUserUsecase(
+		postgresRepository,
+		tokenRepository,
+		emailRepository,
+		codeGenRepository,
+		zkRepository,
+		phoneRepository,
+	)
 	userH := userHandler.NewUserHandler(router, userUC, config.UserConfig{})
 	userH.RegisterHandler(tokenH.UserAuthentication)
 

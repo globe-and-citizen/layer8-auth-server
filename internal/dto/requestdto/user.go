@@ -33,7 +33,11 @@ type UserEmailVerify struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-type CheckEmailVerificationCode struct {
+type UserCheckEmailVerificationCode struct {
 	Email string `json:"email" validate:"required,email"`
 	Code  string `json:"code" validate:"required"`
+}
+
+type UserCheckPhoneNumberVerificationCode struct {
+	VerificationCode string `json:"verification_code"`
 }

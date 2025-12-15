@@ -35,4 +35,7 @@ func (h UserHandler) RegisterHandler(authorizationMiddleware gin.HandlerFunc, mi
 
 	authorisedGroup.POST("/verify-email", h.VerifyEmail)
 	authorisedGroup.POST("/check-email-verification-code", h.CheckEmailVerificationCode)
+	authorisedGroup.POST("/verify-phone-number-via-bot", h.VerifyPhoneNumber)
+	authorisedGroup.POST("/check-phone-number-verification-code", h.CheckPhoneNumberVerificationCode)
+	authorisedGroup.GET("/generate-telegram-session-id", h.GenerateTelegramSessionID) // this api was originally POST, but I think GET is more suitable
 }

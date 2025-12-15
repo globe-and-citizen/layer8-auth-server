@@ -16,4 +16,8 @@ type (
 		ServerSignature string `json:"server_signature"`
 		Token           string `json:"token"`
 	}
+
+	UserGetTelegramSessionID struct {
+		SessionID string `json:"session_id"`
+	}
 )

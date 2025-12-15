@@ -10,37 +10,41 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/phoneRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
-type UserUseCase struct {
+type UserUsecase struct {
 	postgres postgresRepo.IUserRepositories
 	token    tokenRepo.ITokenRepository
 	email    emailRepo.IEmailRepository
 	code     codeGenRepo.ICodeGeneratorRepository
 	zk       zkRepo.IZkRepository
+	phone    phoneRepo.IPhoneRepository
 }
 
-func NewUserUseCase(
+func NewUserUsecase(
 	postgres postgresRepo.IUserRepositories,
 	token tokenRepo.ITokenRepository,
 	email emailRepo.IEmailRepository,
 	code codeGenRepo.ICodeGeneratorRepository,
 	zk zkRepo.IZkRepository,
+	phone phoneRepo.IPhoneRepository,
 ) IUserUseCase {
-	return &UserUseCase{
+	return &UserUsecase{
 		postgres: postgres,
 		token:    token,
 		email:    email,
 		code:     code,
 		zk:       zk,
+		phone:    phone,
 	}
 }
 
-func (uc *UserUseCase) PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {
+func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {
 	rmSalt := utils.GenerateRandomSalt(consts.SaltSize)
 
 	err := uc.postgres.PrecheckUserRegister(req, rmSalt, iterCount)
@@ -54,11 +58,11 @@ func (uc *UserUseCase) PrecheckRegister(req requestdto.UserRegisterPrecheck, ite
 	}, nil
 }
 
-func (uc *UserUseCase) Register(req requestdto.UserRegister) error {
+func (uc *UserUsecase) Register(req requestdto.UserRegister) error {
 	return uc.postgres.AddUser(req)
 }
 
-func (uc *UserUseCase) PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
+func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
 	sNonce := utils.GenerateRandomSalt(consts.SaltSize)
 
 	user, err := uc.postgres.GetUserByUsername(req.Username)
@@ -75,7 +79,7 @@ func (uc *UserUseCase) PrecheckLogin(req requestdto.UserLoginPrecheck) (response
 	return loginPrecheckResp, nil
 }
 
-func (uc *UserUseCase) Login(req requestdto.UserLogin) (responsedto.UserLogin, error) {
+func (uc *UserUsecase) Login(req requestdto.UserLogin) (responsedto.UserLogin, error) {
 	user, err := uc.postgres.GetUserByUsername(req.Username)
 	if err != nil {
 		return responsedto.UserLogin{}, err

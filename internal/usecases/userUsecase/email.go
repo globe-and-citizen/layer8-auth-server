@@ -6,34 +6,34 @@ import (
 	"time"
 )
 
-func (uc *UserUseCase) VerifyEmail(userID uint, userEmail string) error {
-	user, e := uc.postgres.FindUserByID(userID)
-	if e != nil {
-		return e
-	}
-
-	verificationCode, err := uc.code.GenerateVerificationCode(user.Salt, userEmail)
+func (uc *UserUsecase) VerifyEmail(userID uint, userEmail string) error {
+	user, err := uc.postgres.FindUserByID(userID)
 	if err != nil {
 		return err
 	}
 
-	e = uc.email.SendVerificationEmail(&user, userEmail, verificationCode)
-	if e != nil {
-		return e
+	verificationCode, err := uc.code.GenerateEmailVerificationCode(user.Salt, userEmail)
+	if err != nil {
+		return err
 	}
 
-	e = uc.postgres.SaveEmailVerificationData(
+	err = uc.email.SendVerificationEmail(&user, userEmail, verificationCode)
+	if err != nil {
+		return err
+	}
+
+	err = uc.postgres.SaveEmailVerificationData(
 		gormModels.EmailVerificationData{
 			UserId:           user.ID,
 			VerificationCode: verificationCode,
-			ExpiresAt:        time.Now().Add(uc.email.VerificationCodeValidityDuration()).UTC(),
+			ExpiresAt:        time.Now().Add(uc.email.GetVerificationCodeExpiry()).UTC(),
 		},
 	)
 
-	return e
+	return err
 }
 
-func (uc *UserUseCase) CheckEmailVerificationCode(userId uint, code string) error {
+func (uc *UserUsecase) CheckEmailVerificationCode(userId uint, code string) error {
 	verificationData, e := uc.postgres.GetEmailVerificationData(userId)
 	if e != nil {
 		return e
@@ -44,7 +44,7 @@ func (uc *UserUseCase) CheckEmailVerificationCode(userId uint, code string) erro
 	return e
 }
 
-func (uc *UserUseCase) SaveProofOfEmailVerification(userID uint, req requestdto.CheckEmailVerificationCode) (string, error) {
+func (uc *UserUsecase) SaveProofOfEmailVerification(userID uint, req requestdto.UserCheckEmailVerificationCode) (string, error) {
 	user, err := uc.postgres.FindUserByID(userID)
 	if err != nil {
 		return "Failed to get user", err

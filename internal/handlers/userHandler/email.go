@@ -28,7 +28,7 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
 	userID := c.GetUint(consts.MiddlewareKeyUserID)
 
-	request, err := utils.DecodeJSONFromRequest[requestdto.CheckEmailVerificationCode](c)
+	request, err := utils.DecodeJSONFromRequest[requestdto.UserCheckEmailVerificationCode](c)
 	if err != nil {
 		return
 	}
