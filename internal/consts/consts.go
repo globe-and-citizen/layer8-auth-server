@@ -7,4 +7,6 @@ const SecretSize = 16
 
 const EmailSendTimeout = time.Second * 10
 
-const MiddlewareKeyUserID = "user_id"
+const MiddlewareKeyUserUserID = "user_id"
+const MiddlewareKeyClientUsername = "username"
+const MiddlewareKeyClientClientID = "client_id"

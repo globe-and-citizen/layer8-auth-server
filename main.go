@@ -4,6 +4,7 @@ import (
 	_ "encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/config"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/clientHandler"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/tokenHandler"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/userHandler"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
@@ -13,6 +14,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/clientUsecase"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/tokenUsecase"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/userUsecase"
 	"globe-and-citizen/layer8/auth-server/pkg/code"
@@ -34,6 +36,7 @@ var serverConfig config.ServerConfig
 var emailConfig config.EmailConfig
 var zkConfig config.ZkConfig
 var phoneConfig config.PhoneConfig
+var clientConfig config.ClientConfig
 
 func readConfig() {
 
@@ -120,7 +123,7 @@ func main() {
 	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
 	postgresRepository.Migrate()
 
-	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret))
+	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
 	tokenUC := tokenUsecase.NewTokenUseCase(tokenRepository)
 	tokenH := tokenHandler.NewTokenHandler(tokenUC)
 
@@ -139,6 +142,13 @@ func main() {
 	)
 	userH := userHandler.NewUserHandler(router, userUC, config.UserConfig{})
 	userH.RegisterHandler(tokenH.UserAuthentication)
+
+	clientUC := clientUsecase.NewClientUsecase(
+		postgresRepository,
+		tokenRepository,
+	)
+	clientH := clientHandler.NewClientHandler(router, config.ClientConfig{}, clientUC)
+	clientH.RegisterHandler()
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)

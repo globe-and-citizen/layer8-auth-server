@@ -27,5 +27,21 @@ func (h *TokenHandler) UserAuthentication(c *gin.Context) {
 		return
 	}
 
-	c.Set(consts.MiddlewareKeyUserID, userID)
+	c.Set(consts.MiddlewareKeyUserUserID, userID)
+	c.Next()
+}
+
+func (h *TokenHandler) ClientAuthentication(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
+	tokenString = tokenString[7:] // Remove the "Bearer " prefix
+
+	clientID, username, err := h.uc.VerifyClientJWTToken(tokenString)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		return
+	}
+
+	c.Set(consts.MiddlewareKeyClientUsername, username)
+	c.Set(consts.MiddlewareKeyClientClientID, clientID)
+	c.Next()
 }

@@ -4,6 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
 func GenerateRandomSalt(saltSize int) string {
@@ -28,4 +31,26 @@ func XorBytes(bytesA, bytesB []byte) ([]byte, error) {
 		result[i] = bytesA[i] ^ bytesB[i]
 	}
 	return result, nil
+}
+
+func GenerateUUID() string {
+	newUUID := uuid.New()
+	return newUUID.String()
+}
+
+func GenerateSecret(secretSize int) string {
+	var randomBytes = make([]byte, secretSize)
+
+	_, err := rand.Read(randomBytes[:])
+	if err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(randomBytes[:])
+}
+
+func RemoveProtocolFromURL(url string) string {
+	cleanedURL := strings.Replace(url, "http://", "", -1)
+	cleanedURL = strings.Replace(cleanedURL, "https://", "", -1)
+	return cleanedURL
 }

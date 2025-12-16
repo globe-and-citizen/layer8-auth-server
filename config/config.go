@@ -36,3 +36,7 @@ type PhoneConfig struct {
 	TelegramApiKey         string        `env:"TELEGRAM_API_KEY"`
 	VerificationCodeExpiry time.Duration `env:"PHONE_VERIFICATION_CODE_EXPIRY" default:"10m"`
 }
+
+type ClientConfig struct {
+	ScramIterationCount int `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
+}

@@ -10,7 +10,7 @@ import (
 )
 
 func (h UserHandler) VerifyEmail(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserID)
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserEmailVerify](c)
 	if err != nil {
 		return
@@ -26,7 +26,7 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 }
 
 func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserID)
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserCheckEmailVerificationCode](c)
 	if err != nil {

@@ -2,23 +2,22 @@ package postgresRepo
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/internal/dto/tmp"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 )
 
-func (r *PostgresRepository) AddClient(req tmp.ClientRegisterDTO, clientUUID string, clientSecret string) error {
+func (r *PostgresRepository) AddClient(newClient gormModels.Client) error {
 	tx := r.db.Begin()
 
 	result := tx.Model(&gormModels.Client{}).
-		Where("username = ?", req.Username).
-		Updates(map[string]interface{}{
-			"name":         req.Name,
-			"redirect_uri": req.RedirectURI,
-			"backend_uri":  req.BackendURI,
-			"id":           clientUUID,
-			"secret":       clientSecret,
-			"stored_key":   req.StoredKey,
-			"server_key":   req.ServerKey,
+		Where("username = ?", newClient.Username).
+		Updates(map[string]interface{}{ // why use map here? because gorm doesn't support updating struct with zero values
+			"name":         newClient.Name,
+			"redirect_uri": newClient.RedirectURI,
+			"backend_uri":  newClient.BackendURI,
+			"id":           newClient.ID,
+			"secret":       newClient.Secret,
+			"stored_key":   newClient.StoredKey,
+			"server_key":   newClient.ServerKey,
 		})
 
 	if result.Error != nil {
@@ -28,7 +27,7 @@ func (r *PostgresRepository) AddClient(req tmp.ClientRegisterDTO, clientUUID str
 
 	if result.RowsAffected == 0 {
 		tx.Rollback()
-		return fmt.Errorf("no client found with username: %s", req.Username)
+		return fmt.Errorf("no client found with username: %s", newClient.Username)
 	}
 
 	tx.Commit()
@@ -75,13 +74,7 @@ func (r *PostgresRepository) GetClientProfile(username string) (gormModels.Clien
 	return client, nil
 }
 
-func (r *PostgresRepository) PrecheckClientRegister(req tmp.ClientRegisterPrecheckDTO, salt string, iterCount int) error {
-	client := gormModels.Client{
-		Username:       req.Username,
-		Salt:           salt,
-		IterationCount: iterCount,
-	}
-
+func (r *PostgresRepository) PrecheckClientRegister(client gormModels.Client) error {
 	if err := r.db.Create(&client).Error; err != nil {
 		return fmt.Errorf("failed to create a new client: %v", err)
 	}

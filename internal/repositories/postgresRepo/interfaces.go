@@ -2,7 +2,6 @@ package postgresRepo
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/internal/dto/tmp"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
@@ -36,13 +35,13 @@ type IUserRepository interface {
 }
 
 type IClientRepository interface {
-	AddClient(req tmp.ClientRegisterDTO, clientUUID string, clientSecret string) error
+	AddClient(newClient gormModels.Client) error
 	GetClientByName(name string) (gormModels.Client, error)
 	GetClientByBackendURI(backendURI string) (gormModels.Client, error)
 	IsBackendURIExists(backendURL string) (bool, error)
 	GetClientByUsername(username string) (gormModels.Client, error)
 	GetClientProfile(username string) (gormModels.Client, error)
-	PrecheckClientRegister(req tmp.ClientRegisterPrecheckDTO, salt string, iterCount int) error
+	PrecheckClientRegister(req gormModels.Client) error
 }
 
 type IClientTrafficStatisticsRepository interface {

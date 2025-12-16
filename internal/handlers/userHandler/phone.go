@@ -12,7 +12,7 @@ import (
 )
 
 func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserID)
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	message, err := h.uc.VerifyPhoneNumber(userID)
 	if err != nil {
@@ -24,7 +24,7 @@ func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
 }
 
 func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserID)
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserCheckPhoneNumberVerificationCode](c)
 	if err != nil {
@@ -41,7 +41,7 @@ func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
 }
 
 func (h UserHandler) GenerateTelegramSessionID(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserID)
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	sessionID, errMsg, err := h.uc.GenerateAndSaveTelegramSessionIDHash(userID)
 	if err != nil {

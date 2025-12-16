@@ -5,7 +5,8 @@ import (
 )
 
 type ITokenUseCase interface {
-	VerifyUserJWTToken(tokenString string) (uint, error)
+	VerifyUserJWTToken(tokenString string) (userID uint, err error)
+	VerifyClientJWTToken(tokenString string) (clientID string, clientUsername string, err error)
 }
 
 type TokenUseCase struct {
@@ -23,4 +24,13 @@ func (uc *TokenUseCase) VerifyUserJWTToken(tokenString string) (uint, error) {
 	}
 
 	return claims.UserID, nil
+}
+
+func (uc *TokenUseCase) VerifyClientJWTToken(tokenString string) (string, string, error) {
+	claims, err := uc.r.VerifyClientJWTToken(tokenString)
+	if err != nil {
+		return "", "", err
+	}
+
+	return claims.ClientID, claims.Username, nil
 }

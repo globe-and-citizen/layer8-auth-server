@@ -10,7 +10,7 @@ import (
 )
 
 func (h UserHandler) UpdateUserMetadata(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserID)
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserMetadataUpdate](c)
 	if err != nil {
