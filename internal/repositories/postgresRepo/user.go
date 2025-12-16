@@ -2,23 +2,20 @@ package postgresRepo
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 )
 
-func (r *PostgresRepository) AddUser(req requestdto.UserRegister) error {
-	newUser := gormModels.User{}
-
+func (r *PostgresRepository) AddUser(newUser gormModels.User) error {
 	tx := r.db.Begin()
-	if err := tx.Where("username = ?", req.Username).First(&newUser).Error; err != nil {
+	if err := tx.Where("username = ?", newUser.Username).First(&newUser).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("could not find user: %e", err)
 	}
 
 	err := tx.Model(&r).Updates(map[string]interface{}{
-		"public_key": req.PublicKey,
-		"stored_key": req.StoredKey,
-		"server_key": req.ServerKey,
+		"public_key": newUser.PublicKey,
+		"stored_key": newUser.StoredKey,
+		"server_key": newUser.ServerKey,
 	}).Error
 	if err != nil {
 		tx.Rollback()
@@ -39,7 +36,6 @@ func (r *PostgresRepository) AddUser(req requestdto.UserRegister) error {
 	}
 
 	tx.Commit()
-
 	return nil
 }
 
@@ -81,14 +77,7 @@ func (r *PostgresRepository) GetUserProfile(userID uint) (gormModels.User, gormM
 	return user, userMetadata, nil
 }
 
-func (r *PostgresRepository) PrecheckUserRegister(req requestdto.UserRegisterPrecheck, salt string, iterCount int) error {
-	user := gormModels.User{
-		Username:       req.Username,
-		Salt:           salt,
-		IterationCount: iterCount,
-		PublicKey:      []byte{},
-	}
-
+func (r *PostgresRepository) PrecheckUserRegister(user gormModels.User) error {
 	if err := r.db.Create(&user).Error; err != nil {
 		return fmt.Errorf("failed to create a new user: %v", err)
 	}

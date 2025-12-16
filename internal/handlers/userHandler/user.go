@@ -70,3 +70,48 @@ func (h UserHandler) Login(c *gin.Context) {
 
 	utils.ReturnOK(c, "Login successful", response)
 }
+
+func (h UserHandler) GetProfile(c *gin.Context) {
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
+
+	profileResp, err := h.uc.GetProfile(userID)
+	if err != nil {
+		utils.HandleError(c, http.StatusBadRequest, "Failed to get user profile", err)
+		return
+	}
+
+	utils.ReturnOK(c, "Get user profile successful", profileResp)
+}
+
+func (h UserHandler) PrecheckResetPassword(c *gin.Context) {
+	request, err := utils.DecodeJSONFromRequest[requestdto.UserResetPasswordPrecheck](c)
+	if err != nil {
+		return
+	}
+
+	response, err := h.uc.PrecheckResetPassword(request)
+	if err != nil {
+		utils.HandleError(c, http.StatusBadRequest, "User does not exist!", err)
+		return
+	}
+
+	utils.ReturnOK(c, "User does exist!", response)
+}
+
+func (h UserHandler) ResetPassword(c *gin.Context) {
+	request, err := utils.DecodeJSONFromRequest[requestdto.UserResetPassword](c)
+	if err != nil {
+		return
+	}
+
+	status, msg, err := h.uc.ResetPassword(request)
+	if err != nil {
+		utils.HandleError(c, status, msg, err)
+		return
+	}
+
+	utils.ReturnCreated(c, "Your password was updated successfully!", nil)
+}

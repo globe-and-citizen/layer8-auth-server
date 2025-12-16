@@ -41,3 +41,14 @@ type UserCheckEmailVerificationCode struct {
 type UserCheckPhoneNumberVerificationCode struct {
 	VerificationCode string `json:"verification_code"`
 }
+
+type UserResetPasswordPrecheck struct {
+	Username string `json:"username" validate:"required"`
+}
+
+type UserResetPassword struct {
+	Username  string `json:"username" validate:"required,min=3,max=50"`
+	Signature []byte `json:"signature" validate:"required"`
+	StoredKey string `json:"stored_key" validation:"required,min=1"`
+	ServerKey string `json:"server_key" validation:"required,min=1"`
+}

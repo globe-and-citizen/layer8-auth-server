@@ -8,46 +8,22 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
-	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
-	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
-	"globe-and-citizen/layer8/auth-server/internal/repositories/phoneRepo"
-	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
-	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
-	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"net/http"
 )
-
-type UserUsecase struct {
-	postgres postgresRepo.IUserRepositories
-	token    tokenRepo.ITokenRepository
-	email    emailRepo.IEmailRepository
-	code     codeGenRepo.ICodeGeneratorRepository
-	zk       zkRepo.IZkRepository
-	phone    phoneRepo.IPhoneRepository
-}
-
-func NewUserUsecase(
-	postgres postgresRepo.IUserRepositories,
-	token tokenRepo.ITokenRepository,
-	email emailRepo.IEmailRepository,
-	code codeGenRepo.ICodeGeneratorRepository,
-	zk zkRepo.IZkRepository,
-	phone phoneRepo.IPhoneRepository,
-) IUserUseCase {
-	return &UserUsecase{
-		postgres: postgres,
-		token:    token,
-		email:    email,
-		code:     code,
-		zk:       zk,
-		phone:    phone,
-	}
-}
 
 func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {
 	rmSalt := utils.GenerateRandomSalt(consts.SaltSize)
 
-	err := uc.postgres.PrecheckUserRegister(req, rmSalt, iterCount)
+	user := gormModels.User{
+		Username:       req.Username,
+		Salt:           rmSalt,
+		IterationCount: iterCount,
+		PublicKey:      []byte{},
+	}
+
+	err := uc.postgres.PrecheckUserRegister(user)
 	if err != nil {
 		return responsedto.UserRegisterPrecheck{}, err
 	}
@@ -59,7 +35,14 @@ func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, ite
 }
 
 func (uc *UserUsecase) Register(req requestdto.UserRegister) error {
-	return uc.postgres.AddUser(req)
+	newUser := gormModels.User{
+		Username:  req.Username,
+		PublicKey: req.PublicKey,
+		StoredKey: req.StoredKey,
+		ServerKey: req.ServerKey,
+	}
+
+	return uc.postgres.AddUser(newUser)
 }
 
 func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
@@ -132,4 +115,51 @@ func (uc *UserUsecase) Login(req requestdto.UserLogin) (responsedto.UserLogin, e
 		ServerSignature: serverSignatureHex,
 		Token:           tokenString,
 	}, nil
+}
+
+func (uc *UserUsecase) GetProfile(userID uint) (responsedto.UserProfile, error) {
+	user, metadata, err := uc.postgres.GetUserProfile(userID)
+	if err != nil {
+		return responsedto.UserProfile{}, err
+	}
+
+	return responsedto.UserProfile{
+		Username:            user.Username,
+		DisplayName:         metadata.DisplayName,
+		Bio:                 metadata.Bio,
+		Color:               metadata.Color,
+		EmailVerified:       metadata.IsEmailVerified,
+		PhoneNumberVerified: metadata.IsPhoneNumberVerified,
+	}, nil
+}
+
+func (uc *UserUsecase) PrecheckResetPassword(req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error) {
+	user, err := uc.postgres.GetUserByUsername(req.Username)
+	if err != nil {
+		return responsedto.UserResetPasswordPrecheck{}, err
+	}
+
+	return responsedto.UserResetPasswordPrecheck{
+		Salt:           user.Salt,
+		IterationCount: user.IterationCount,
+	}, nil
+}
+
+func (uc *UserUsecase) ResetPassword(req requestdto.UserResetPassword) (int, string, error) {
+	user, err := uc.postgres.GetUserByUsername(req.Username)
+	if err != nil {
+		return http.StatusNotFound, "User does not exist!", err
+	}
+
+	err = utils.ValidateSignature("Sign-in with Layer8", req.Signature, user.PublicKey)
+	if err != nil {
+		return http.StatusBadRequest, "Signature is invalid!", err
+	}
+
+	err = uc.postgres.UpdateUserPassword(user.Username, req.StoredKey, req.ServerKey)
+	if err != nil {
+		return http.StatusInternalServerError, "Internal error: failed to update user", err
+	}
+
+	return http.StatusOK, "", nil
 }

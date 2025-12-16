@@ -1,7 +1,6 @@
 package userHandler
 
 import (
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
@@ -10,7 +9,10 @@ import (
 )
 
 func (h UserHandler) UpdateUserMetadata(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
 
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserMetadataUpdate](c)
 	if err != nil {

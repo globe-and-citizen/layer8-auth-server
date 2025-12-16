@@ -2,7 +2,6 @@ package userHandler
 
 import (
 	"encoding/base64"
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
@@ -12,7 +11,10 @@ import (
 )
 
 func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
 
 	message, err := h.uc.VerifyPhoneNumber(userID)
 	if err != nil {
@@ -24,7 +26,10 @@ func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
 }
 
 func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
 
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserCheckPhoneNumberVerificationCode](c)
 	if err != nil {
@@ -41,7 +46,10 @@ func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
 }
 
 func (h UserHandler) GenerateTelegramSessionID(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
 
 	sessionID, errMsg, err := h.uc.GenerateAndSaveTelegramSessionIDHash(userID)
 	if err != nil {

@@ -1,7 +1,6 @@
 package userHandler
 
 import (
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
@@ -10,7 +9,11 @@ import (
 )
 
 func (h UserHandler) VerifyEmail(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
+
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserEmailVerify](c)
 	if err != nil {
 		return
@@ -26,7 +29,10 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 }
 
 func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+	userID, err := h.getAuthenticatedUserID(c)
+	if err != nil {
+		return
+	}
 
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserCheckEmailVerificationCode](c)
 	if err != nil {

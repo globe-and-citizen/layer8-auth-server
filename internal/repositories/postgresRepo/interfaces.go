@@ -26,11 +26,11 @@ type IClientRepositories interface {
 }
 
 type IUserRepository interface {
-	AddUser(req requestdto.UserRegister) error
+	AddUser(newUser gormModels.User) error
 	FindUserByID(userId uint) (gormModels.User, error)
 	GetUserByUsername(username string) (gormModels.User, error)
 	GetUserProfile(userID uint) (gormModels.User, gormModels.UserMetadata, error)
-	PrecheckUserRegister(req requestdto.UserRegisterPrecheck, salt string, iterCount int) error
+	PrecheckUserRegister(user gormModels.User) error
 	UpdateUserPassword(username string, storedKey string, serverKey string) error
 }
 
