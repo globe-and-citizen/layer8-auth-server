@@ -4,10 +4,12 @@ import (
 	_ "encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/config"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/authH"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/clientH"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/middlewareH"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/userH"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/authRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/phoneRepo"
@@ -15,6 +17,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/authUC"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/clientUC"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/middlewareUC"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/userUC"
@@ -119,7 +122,6 @@ func main() {
 
 	app := gin.New()
 	app.Use(apiLog.AccessLog)
-	router := app.Group("/api/v1")
 
 	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
 	postgresRepository.Migrate()
@@ -130,6 +132,14 @@ func main() {
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
 	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
 	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
+	oauthRepository := authRepo.NewAuthenticationRepository()
+
+	router := app.Group("/")
+	authUsecase := authUC.NewAuthenticationUsecase(postgresRepository, oauthRepository, tokenRepository)
+	authHandler := authH.NewAuthenticationHandler(router, authUsecase)
+	authHandler.RegisterHandler()
+
+	router = app.Group("/api/v1")
 
 	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository)
 	middlewareHandler := middlewareH.NewMiddlewareHandler(middlewareUsecase)

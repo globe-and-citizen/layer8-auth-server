@@ -64,7 +64,7 @@ services:
       retries: 10
 
   auth-postgres:
-    container_name: auth-postgres
+    container_name: postgres
     image: postgres:13
     restart: always
     environment:

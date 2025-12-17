@@ -33,7 +33,7 @@ func (t TokenRepository) GenerateUserJWTToken(user gormModels.User) (string, err
 func (t TokenRepository) VerifyUserJWTToken(tokenString string) (models.UserClaims, error) {
 	claims := &models.UserClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return models.UserClaims{}, nil
+		return t.clientJWTSecret, nil
 	})
 	if err != nil {
 		return models.UserClaims{}, err

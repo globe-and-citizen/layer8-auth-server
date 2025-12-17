@@ -31,7 +31,7 @@ func (t TokenRepository) GenerateClientJWTToken(client gormModels.Client) (strin
 func (t TokenRepository) VerifyClientJWTToken(tokenString string) (models.ClientClaims, error) {
 	claims := &models.ClientClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return models.ClientClaims{}, nil
+		return t.clientJWTSecret, nil
 	})
 	if err != nil {
 		return models.ClientClaims{}, err
@@ -41,6 +41,5 @@ func (t TokenRepository) VerifyClientJWTToken(tokenString string) (models.Client
 		return models.ClientClaims{}, fmt.Errorf("invalid token")
 	}
 
-	// fixme validation without secret???
 	return *claims, nil
 }

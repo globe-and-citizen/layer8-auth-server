@@ -43,6 +43,7 @@ type IClientRepository interface {
 	GetClientProfile(username string) (gormModels.Client, error)
 	PrecheckClientRegister(req gormModels.Client) error
 	SaveX509Certificate(clientID string, certificate string) error
+	GetClientByID(id string) (gormModels.Client, error)
 }
 
 type IClientTrafficStatisticsRepository interface {
