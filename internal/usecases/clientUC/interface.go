@@ -1,4 +1,4 @@
-package clientUsecase
+package clientUC
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"

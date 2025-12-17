@@ -1,23 +1,23 @@
-package tokenHandler
+package middlewareH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
-	"globe-and-citizen/layer8/auth-server/internal/usecases/tokenUsecase"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/middlewareUC"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type TokenHandler struct {
-	uc tokenUsecase.ITokenUseCase
+type MiddlewareHandler struct {
+	uc middlewareUC.IMiddlewareUsecase
 }
 
-func NewTokenHandler(uc tokenUsecase.ITokenUseCase) *TokenHandler {
-	return &TokenHandler{uc: uc}
+func NewMiddlewareHandler(uc middlewareUC.IMiddlewareUsecase) *MiddlewareHandler {
+	return &MiddlewareHandler{uc: uc}
 }
 
-func (h *TokenHandler) UserAuthentication(c *gin.Context) {
+func (h *MiddlewareHandler) AuthenticateUser(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
 	tokenString = tokenString[7:] // Remove the "Bearer " prefix
 
@@ -31,7 +31,7 @@ func (h *TokenHandler) UserAuthentication(c *gin.Context) {
 	c.Next()
 }
 
-func (h *TokenHandler) ClientAuthentication(c *gin.Context) {
+func (h *MiddlewareHandler) AuthenticateClient(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
 	tokenString = tokenString[7:] // Remove the "Bearer " prefix
 

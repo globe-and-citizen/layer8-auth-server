@@ -4,9 +4,9 @@ import (
 	_ "encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/config"
-	"globe-and-citizen/layer8/auth-server/internal/handlers/clientHandler"
-	"globe-and-citizen/layer8/auth-server/internal/handlers/tokenHandler"
-	"globe-and-citizen/layer8/auth-server/internal/handlers/userHandler"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/clientH"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/middlewareH"
+	"globe-and-citizen/layer8/auth-server/internal/handlers/userH"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
@@ -15,9 +15,9 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
-	"globe-and-citizen/layer8/auth-server/internal/usecases/clientUsecase"
-	"globe-and-citizen/layer8/auth-server/internal/usecases/tokenUsecase"
-	"globe-and-citizen/layer8/auth-server/internal/usecases/userUsecase"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/clientUC"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/middlewareUC"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/userUC"
 	"globe-and-citizen/layer8/auth-server/pkg/code"
 	apiLog "globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
@@ -125,15 +125,16 @@ func main() {
 	postgresRepository.Migrate()
 
 	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
-	tokenUC := tokenUsecase.NewTokenUseCase(tokenRepository)
-	tokenH := tokenHandler.NewTokenHandler(tokenUC)
-
 	emailRepository := emailRepo.NewEmailRepository(emailConfig)
 	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
 	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
+	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
 
-	userUC := userUsecase.NewUserUsecase(
+	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository)
+	middlewareHandler := middlewareH.NewMiddlewareHandler(middlewareUsecase)
+
+	userUsecase := userUC.NewUserUsecase(
 		postgresRepository,
 		tokenRepository,
 		emailRepository,
@@ -141,18 +142,16 @@ func main() {
 		zkRepository,
 		phoneRepository,
 	)
-	userH := userHandler.NewUserHandler(router, userUC, config.UserConfig{})
-	userH.RegisterHandler(tokenH.UserAuthentication)
+	userHandler := userH.NewUserHandler(router, userUsecase, config.UserConfig{})
+	userHandler.RegisterHandler(middlewareHandler.AuthenticateUser)
 
-	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
-
-	clientUC := clientUsecase.NewClientUsecase(
+	clientUsecase := clientUC.NewClientUsecase(
 		postgresRepository,
 		tokenRepository,
 		statsRepository,
 	)
-	clientH := clientHandler.NewClientHandler(router, config.ClientConfig{}, clientUC)
-	clientH.RegisterHandler()
+	clientHandler := clientH.NewClientHandler(router, config.ClientConfig{}, clientUsecase)
+	clientHandler.RegisterHandler(middlewareHandler.AuthenticateClient)
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)

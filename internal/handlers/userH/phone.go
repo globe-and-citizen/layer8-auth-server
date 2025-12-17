@@ -1,4 +1,4 @@
-package userHandler
+package userH
 
 import (
 	"encoding/base64"

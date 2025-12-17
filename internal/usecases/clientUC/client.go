@@ -1,4 +1,4 @@
-package clientUsecase
+package clientUC
 
 import (
 	"crypto/hmac"

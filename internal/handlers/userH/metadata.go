@@ -1,4 +1,4 @@
-package userHandler
+package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"

@@ -1,4 +1,4 @@
-package userUsecase
+package userUC
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package userUsecase
+package userUC
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
@@ -11,7 +11,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
 )
 
-type IUserUseCase interface { // todo usecase methods should return custom error type that contains http status codes, message and error
+type IUserUsecase interface { // todo usecase methods should return custom error type that contains http status codes, message and error
 	PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error)
 	Register(req requestdto.UserRegister) error
 	PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error)
@@ -44,7 +44,7 @@ func NewUserUsecase(
 	code codeGenRepo.ICodeGeneratorRepository,
 	zk zkRepo.IZkRepository,
 	phone phoneRepo.IPhoneRepository,
-) IUserUseCase {
+) IUserUsecase {
 	return &UserUsecase{
 		postgres: postgres,
 		token:    token,
