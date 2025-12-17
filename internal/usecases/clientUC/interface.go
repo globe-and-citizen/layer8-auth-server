@@ -17,6 +17,7 @@ type IClientUsecase interface {
 	GetProfile(username string) (responsedto.ClientProfile, error)
 	GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error)
 	GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error)
+	SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error
 }
 
 type ClientUsecase struct {

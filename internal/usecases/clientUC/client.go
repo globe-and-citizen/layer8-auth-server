@@ -12,7 +12,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
-func (uc ClientUsecase) CheckBackendURI(req requestdto.ClientCheckBackendURI) (bool, error) {
+func (uc *ClientUsecase) CheckBackendURI(req requestdto.ClientCheckBackendURI) (bool, error) {
 	response, err := uc.postgres.IsBackendURIExists(req.BackendURI)
 	if err != nil {
 		return false, err
@@ -22,7 +22,7 @@ func (uc ClientUsecase) CheckBackendURI(req requestdto.ClientCheckBackendURI) (b
 	return response, nil
 }
 
-func (uc ClientUsecase) PrecheckRegister(
+func (uc *ClientUsecase) PrecheckRegister(
 	req requestdto.ClientRegisterPrecheck,
 	iterCount int,
 ) (responsedto.ClientRegisterPrecheck, error) {
@@ -45,7 +45,7 @@ func (uc ClientUsecase) PrecheckRegister(
 	}, nil
 }
 
-func (uc ClientUsecase) Register(req requestdto.ClientRegister) error {
+func (uc *ClientUsecase) Register(req requestdto.ClientRegister) error {
 	clientUUID := utils.GenerateUUID()
 	clientSecret := utils.GenerateSecret(consts.SecretSize)
 	backendURI := utils.RemoveProtocolFromURL(req.BackendURI)
@@ -64,7 +64,7 @@ func (uc ClientUsecase) Register(req requestdto.ClientRegister) error {
 	return uc.postgres.AddClient(newClient)
 }
 
-func (uc ClientUsecase) PrecheckLogin(req requestdto.ClientLoginPrecheck) (responsedto.ClientLoginPrecheck, error) {
+func (uc *ClientUsecase) PrecheckLogin(req requestdto.ClientLoginPrecheck) (responsedto.ClientLoginPrecheck, error) {
 	sNonce := utils.GenerateRandomSalt(consts.SaltSize)
 
 	client, err := uc.postgres.GetClientByUsername(req.Username)
@@ -81,7 +81,7 @@ func (uc ClientUsecase) PrecheckLogin(req requestdto.ClientLoginPrecheck) (respo
 	return loginPrecheckResp, nil
 }
 
-func (uc ClientUsecase) Login(req requestdto.ClientLogin) (responsedto.ClientLogin, error) {
+func (uc *ClientUsecase) Login(req requestdto.ClientLogin) (responsedto.ClientLogin, error) {
 	client, err := uc.postgres.GetClientByUsername(req.Username)
 	if err != nil {
 		return responsedto.ClientLogin{}, err
@@ -136,7 +136,7 @@ func (uc ClientUsecase) Login(req requestdto.ClientLogin) (responsedto.ClientLog
 	}, nil
 }
 
-func (uc ClientUsecase) GetProfile(username string) (responsedto.ClientProfile, error) {
+func (uc *ClientUsecase) GetProfile(username string) (responsedto.ClientProfile, error) {
 	clientData, err := uc.postgres.GetClientByUsername(username)
 	if err != nil {
 		return responsedto.ClientProfile{}, err
@@ -153,7 +153,7 @@ func (uc ClientUsecase) GetProfile(username string) (responsedto.ClientProfile, 
 	return clientModel, nil
 }
 
-func (uc ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error) {
+func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error) {
 	stats, err := uc.postgres.GetClientTrafficStatistics(clientID)
 	if err != nil {
 		return responsedto.ClientUnpaidAmount{}, err
@@ -162,4 +162,9 @@ func (uc ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientUnpa
 	return responsedto.ClientUnpaidAmount{
 		UnpaidAmount: stats.UnpaidAmount,
 	}, nil
+}
+
+func (uc *ClientUsecase) SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error {
+	// todo validate certificate
+	return uc.postgres.SaveX509Certificate(clientID, req.Certificate)
 }

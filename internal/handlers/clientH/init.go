@@ -39,4 +39,5 @@ func (h ClientHandler) RegisterHandler(authentication gin.HandlerFunc, middlewar
 	authenticatedGroup.POST("/profile", h.GetProfile)
 	authenticatedGroup.GET("/usage-stats", h.GetUsageStatistics)
 	authenticatedGroup.GET("/client-unpaid-amount", h.GetUnpaidAmount)
+	authenticatedGroup.POST("/upload-certificate", h.UploadNTorCertificate)
 }

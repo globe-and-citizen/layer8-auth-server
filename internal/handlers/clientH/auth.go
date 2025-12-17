@@ -1,6 +1,7 @@
 package clientH
 
 import (
+	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
@@ -50,4 +51,24 @@ func (h ClientHandler) GetUnpaidAmount(c *gin.Context) {
 	}
 
 	utils.ReturnOK(c, "successfully retrieved client's unpaid amount", response)
+}
+
+func (h ClientHandler) UploadNTorCertificate(c *gin.Context) {
+	clientID, err := h.getAuthenticatedClientID(c)
+	if err != nil {
+		return
+	}
+
+	req, err := utils.DecodeJSONFromRequest[requestdto.ClientUploadNTorCertificate](c)
+	if err != nil {
+		return
+	}
+
+	err = h.uc.SaveNTorCertificate(clientID, req)
+	if err != nil {
+		utils.HandleError(c, http.StatusInternalServerError, "failed to save the SP x.509 certificate", err)
+		return
+	}
+
+	utils.ReturnCreated(c, "x.509 certificate was saved successfully", nil)
 }

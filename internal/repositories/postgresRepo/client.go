@@ -81,3 +81,10 @@ func (r *PostgresRepository) PrecheckClientRegister(client gormModels.Client) er
 
 	return nil
 }
+
+func (r *PostgresRepository) SaveX509Certificate(clientID string, certificate string) error {
+	return r.db.Model(&gormModels.Client{}).
+		Where("id = ?", clientID).
+		Update("x509_certificate_bytes", certificate).
+		Error
+}

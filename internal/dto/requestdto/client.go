@@ -28,3 +28,7 @@ type ClientLogin struct {
 type ClientCheckBackendURI struct {
 	BackendURI string `json:"backend_uri" validate:"required"`
 }
+
+type ClientUploadNTorCertificate struct {
+	Certificate string `json:"certificate" validate:"required"`
+}
