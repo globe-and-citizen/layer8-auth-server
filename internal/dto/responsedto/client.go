@@ -1,5 +1,7 @@
 package responsedto
 
+import "globe-and-citizen/layer8/auth-server/internal/models"
+
 type ClientRegisterPrecheck struct {
 	Salt           string `json:"salt"`
 	IterationCount int    `json:"iterationCount"`
@@ -23,4 +25,15 @@ type ClientProfile struct {
 	RedirectURI     string `json:"redirect_uri"`
 	BackendURI      string `json:"backend_uri"`
 	X509Certificate string `json:"x509_certificate"`
+}
+
+type ClientUsageStatistic struct {
+	MetricType              string                      `json:"metric_type"`
+	UnitOfMeasurement       string                      `json:"unit_of_measurement"`
+	MonthToDate             models.MonthToDateStatistic `json:"month_to_date"`
+	LastThirtyDaysStatistic models.Statistics           `json:"last_thirty_days_statistic"`
+}
+
+type ClientUnpaidAmount struct {
+	UnpaidAmount int `json:"unpaid_amount"`
 }

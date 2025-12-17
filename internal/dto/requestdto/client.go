@@ -25,6 +25,6 @@ type ClientLogin struct {
 	ClientProof string `json:"client_proof" validate:"required"`
 }
 
-type CheckBackendURI struct {
+type ClientCheckBackendURI struct {
 	BackendURI string `json:"backend_uri" validate:"required"`
 }

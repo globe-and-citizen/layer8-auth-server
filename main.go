@@ -12,6 +12,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/emailRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/phoneRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
+	"globe-and-citizen/layer8/auth-server/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/clientUsecase"
@@ -143,9 +144,12 @@ func main() {
 	userH := userHandler.NewUserHandler(router, userUC, config.UserConfig{})
 	userH.RegisterHandler(tokenH.UserAuthentication)
 
+	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
+
 	clientUC := clientUsecase.NewClientUsecase(
 		postgresRepository,
 		tokenRepository,
+		statsRepository,
 	)
 	clientH := clientHandler.NewClientHandler(router, config.ClientConfig{}, clientUC)
 	clientH.RegisterHandler()

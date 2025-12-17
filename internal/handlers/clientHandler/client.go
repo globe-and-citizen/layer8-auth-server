@@ -1,7 +1,6 @@
 package clientHandler
 
 import (
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
@@ -70,7 +69,7 @@ func (h ClientHandler) Login(c *gin.Context) {
 }
 
 func (h ClientHandler) CheckBackendURI(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.CheckBackendURI](c)
+	request, err := utils.DecodeJSONFromRequest[requestdto.ClientCheckBackendURI](c)
 	if err != nil {
 		return
 	}
@@ -84,12 +83,11 @@ func (h ClientHandler) CheckBackendURI(c *gin.Context) {
 	utils.ReturnOK(c, "Check backend URI successfully", response)
 }
 
-func (h ClientHandler) getAuthorizedUsername(c *gin.Context) string {
-	return c.GetString(consts.MiddlewareKeyClientUsername)
-}
-
 func (h ClientHandler) GetProfile(c *gin.Context) {
-	username := h.getAuthorizedUsername(c)
+	username, err := h.getAuthenticatedUsername(c)
+	if err != nil {
+		return
+	}
 
 	profileResp, err := h.uc.GetProfile(username)
 	if err != nil {
@@ -98,4 +96,34 @@ func (h ClientHandler) GetProfile(c *gin.Context) {
 	}
 
 	utils.ReturnOK(c, "Get client profile successfully", profileResp)
+}
+
+func (h ClientHandler) GetUsageStatistics(c *gin.Context) {
+	clientID, err := h.getAuthenticatedClientID(c)
+	if err != nil {
+		return
+	}
+
+	response, status, msg, err := h.uc.GetUsageStatistics(clientID)
+	if err != nil {
+		utils.HandleError(c, status, msg, err)
+		return
+	}
+
+	utils.ReturnOK(c, "Get client usage statistics successful", response)
+}
+
+func (h ClientHandler) GetUnpaidAmount(c *gin.Context) {
+	clientID, err := h.getAuthenticatedClientID(c)
+	if err != nil {
+		return
+	}
+
+	response, err := h.uc.GetUnpaidAmount(clientID)
+	if err != nil {
+		utils.HandleError(c, http.StatusInternalServerError, "Failed to get unpaid amount", err)
+		return
+	}
+
+	utils.ReturnOK(c, "successfully retrieved client's unpaid amount", response)
 }

@@ -12,7 +12,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
-func (uc ClientUsecase) CheckBackendURI(req requestdto.CheckBackendURI) (bool, error) {
+func (uc ClientUsecase) CheckBackendURI(req requestdto.ClientCheckBackendURI) (bool, error) {
 	response, err := uc.postgres.IsBackendURIExists(req.BackendURI)
 	if err != nil {
 		return false, err
@@ -151,4 +151,15 @@ func (uc ClientUsecase) GetProfile(username string) (responsedto.ClientProfile, 
 		X509Certificate: clientData.X509Certificate,
 	}
 	return clientModel, nil
+}
+
+func (uc ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error) {
+	stats, err := uc.postgres.GetClientTrafficStatistics(clientID)
+	if err != nil {
+		return responsedto.ClientUnpaidAmount{}, err
+	}
+
+	return responsedto.ClientUnpaidAmount{
+		UnpaidAmount: stats.UnpaidAmount,
+	}, nil
 }
