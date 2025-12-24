@@ -11,29 +11,29 @@ import (
 	"net/http"
 )
 
-type IAuthenticationUsecase interface {
-	ValidateAndGenerateAccessToken(req requestdto.OauthToken) (responsedto.OauthToken, int, string, error)
+type IAuthorizationUsecase interface {
+	ValidateAndGenerateAccessToken(req requestdto.AuthorizationToken) (responsedto.OauthToken, int, string, error)
 }
 
-func NewAuthenticationUsecase(
+func NewAuthorizationUsecase(
 	postgres postgresRepo.IPostgresRepository,
-	oauth authRepo.IAuthenticationRepository,
+	oauth authRepo.IAuthorizationRepository,
 	token tokenRepo.ITokenRepository,
-) IAuthenticationUsecase {
-	return &AuthenticationUsecase{
+) IAuthorizationUsecase {
+	return &AuthorizationUsecase{
 		postgres: postgres,
 		oauth:    oauth,
 		token:    token,
 	}
 }
 
-type AuthenticationUsecase struct {
+type AuthorizationUsecase struct {
 	postgres postgresRepo.IPostgresRepository
-	oauth    authRepo.IAuthenticationRepository
+	oauth    authRepo.IAuthorizationRepository
 	token    tokenRepo.ITokenRepository
 }
 
-func (uc *AuthenticationUsecase) ValidateAndGenerateAccessToken(req requestdto.OauthToken) (responsedto.OauthToken, int, string, error) {
+func (uc *AuthorizationUsecase) ValidateAndGenerateAccessToken(req requestdto.AuthorizationToken) (responsedto.OauthToken, int, string, error) {
 	client, err := uc.postgres.GetClientByID(req.ClientUUID)
 	if err != nil {
 		return responsedto.OauthToken{}, http.StatusUnauthorized, "failed to authenticate client", err
@@ -48,7 +48,7 @@ func (uc *AuthenticationUsecase) ValidateAndGenerateAccessToken(req requestdto.O
 		return responsedto.OauthToken{}, http.StatusBadRequest, "the authorization code is invalid", err
 	}
 
-	accessToken, err := uc.token.GenerateClientOauthJWTToken(client, *claims)
+	accessToken, err := uc.token.GenerateClientAuthJWTToken(client, *claims)
 	if err != nil {
 		return responsedto.OauthToken{}, http.StatusInternalServerError, "internal error when generating the access token", err
 	}

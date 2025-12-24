@@ -1,6 +1,8 @@
 package responsedto
 
-import "globe-and-citizen/layer8/auth-server/internal/models"
+import (
+	"globe-and-citizen/layer8/auth-server/internal/models"
+)
 
 type ClientRegisterPrecheck struct {
 	Salt           string `json:"salt"`

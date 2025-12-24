@@ -25,7 +25,6 @@ import (
 	apiLog "globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/pkg/zk"
-	"log"
 	"os"
 	"time"
 
@@ -75,6 +74,7 @@ func readConfig() {
 }
 
 func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig config.ZkConfig) zk.IProofProcessor {
+	log := apiLog.Get()
 	var cs constraint.ConstraintSystem
 	var zkKeyPairId uint
 	var provingKey groth16.ProvingKey
@@ -91,12 +91,12 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 			},
 		)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal().Err(err)
 		}
 	} else {
 		zkSnarksKeyPair, err := postgresRepository.GetLatestZkSnarksKeys()
 		if err != nil {
-			log.Fatalf("Error while reading zk-snarks keys from the database: %e", err)
+			log.Fatal().Errs("Error while reading zk-snarks keys from the database", []error{err})
 		}
 
 		cs = zk.GenerateConstraintSystem()
@@ -135,13 +135,13 @@ func main() {
 	oauthRepository := authRepo.NewAuthenticationRepository()
 
 	router := app.Group("/")
-	authUsecase := authUC.NewAuthenticationUsecase(postgresRepository, oauthRepository, tokenRepository)
-	authHandler := authH.NewAuthenticationHandler(router, authUsecase)
+	authUsecase := authUC.NewAuthorizationUsecase(postgresRepository, oauthRepository, tokenRepository)
+	authHandler := authH.NewAuthorizationHandler(router, authUsecase)
 	authHandler.RegisterHandler()
 
 	router = app.Group("/api/v1")
 
-	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository)
+	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository, postgresRepository)
 	middlewareHandler := middlewareH.NewMiddlewareHandler(middlewareUsecase)
 
 	userUsecase := userUC.NewUserUsecase(

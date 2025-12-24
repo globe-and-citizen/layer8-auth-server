@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"net/http"
@@ -45,4 +47,15 @@ func DecodeJSONFromRequest[T any](c *gin.Context) (T, error) {
 	}
 
 	return request, nil
+}
+
+func GetBearerToken(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+
+	if !strings.HasPrefix(authHeader, consts.TokenTypeBearer) {
+		errorMsg := "invalid authorization header"
+		return "", fmt.Errorf(errorMsg)
+	}
+
+	return authHeader[len(consts.TokenTypeBearer)+1:], nil
 }

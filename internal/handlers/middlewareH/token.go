@@ -18,29 +18,38 @@ func NewMiddlewareHandler(uc middlewareUC.IMiddlewareUsecase) *MiddlewareHandler
 }
 
 func (h *MiddlewareHandler) AuthenticateUser(c *gin.Context) {
-	tokenString := c.GetHeader("Authorization")
-	tokenString = tokenString[7:] // Remove the "Bearer " prefix
+	token, err := utils.GetBearerToken(c)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		return
+	}
 
-	userID, err := h.uc.VerifyUserJWTToken(tokenString)
+	userID, username, err := h.uc.VerifyUserJWTToken(token)
 	if err != nil {
 		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
 	}
 
+	// save claims in context for further handlers
+	c.Set(consts.MiddlewareKeyUserUsername, username)
 	c.Set(consts.MiddlewareKeyUserUserID, userID)
 	c.Next()
 }
 
 func (h *MiddlewareHandler) AuthenticateClient(c *gin.Context) {
-	tokenString := c.GetHeader("Authorization")
-	tokenString = tokenString[7:] // Remove the "Bearer " prefix
+	token, err := utils.GetBearerToken(c)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		return
+	}
 
-	clientID, username, err := h.uc.VerifyClientJWTToken(tokenString)
+	clientID, username, err := h.uc.VerifyClientJWTToken(token)
 	if err != nil {
 		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
 	}
 
+	// save claims in context for further handlers
 	c.Set(consts.MiddlewareKeyClientUsername, username)
 	c.Set(consts.MiddlewareKeyClientClientID, clientID)
 	c.Next()

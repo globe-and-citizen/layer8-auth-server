@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (t TokenRepository) GenerateClientOauthJWTToken(client gormModels.Client, authClaims layer8Utils.AuthCodeClaims) (string, error) {
+func (t TokenRepository) GenerateClientAuthJWTToken(client gormModels.Client, authClaims layer8Utils.AuthCodeClaims) (string, error) {
 	claims := models.ClientAccessTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Globe and Citizen",

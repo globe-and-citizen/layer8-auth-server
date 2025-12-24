@@ -9,7 +9,6 @@ import (
 )
 
 func (h UserHandler) PrecheckRegister(c *gin.Context) {
-
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserRegisterPrecheck](c)
 	if err != nil {
 		return
@@ -40,7 +39,6 @@ func (h UserHandler) Register(c *gin.Context) {
 }
 
 func (h UserHandler) PrecheckLogin(c *gin.Context) {
-
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserLoginPrecheck](c)
 	if err != nil {
 		return
@@ -56,7 +54,6 @@ func (h UserHandler) PrecheckLogin(c *gin.Context) {
 }
 
 func (h UserHandler) Login(c *gin.Context) {
-
 	request, err := utils.DecodeJSONFromRequest[requestdto.UserLogin](c)
 	if err != nil {
 		return

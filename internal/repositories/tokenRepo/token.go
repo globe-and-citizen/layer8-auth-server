@@ -12,7 +12,7 @@ type ITokenRepository interface {
 	VerifyUserJWTToken(tokenString string) (models.UserClaims, error)
 	GenerateClientJWTToken(client gormModels.Client) (string, error)
 	VerifyClientJWTToken(tokenString string) (models.ClientClaims, error)
-	GenerateClientOauthJWTToken(client gormModels.Client, authClaims layer8Utils.AuthCodeClaims) (string, error)
+	GenerateClientAuthJWTToken(client gormModels.Client, authClaims layer8Utils.AuthCodeClaims) (string, error)
 }
 
 func NewTokenRepository(userJWTSecret []byte, clientJWTSecret []byte) ITokenRepository {

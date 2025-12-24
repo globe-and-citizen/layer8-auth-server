@@ -8,24 +8,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewAuthenticationHandler(router *gin.RouterGroup, uc authUC.IAuthenticationUsecase) *AuthenticationHandler {
-	return &AuthenticationHandler{
+func NewAuthorizationHandler(router *gin.RouterGroup, uc authUC.IAuthorizationUsecase) *AuthorizationHandler {
+	return &AuthorizationHandler{
 		uc:     uc,
 		router: router.Group("auth"),
 	}
 }
 
-type AuthenticationHandler struct {
-	uc     authUC.IAuthenticationUsecase
+type AuthorizationHandler struct {
+	uc     authUC.IAuthorizationUsecase
 	router *gin.RouterGroup
 }
 
-func (h AuthenticationHandler) RegisterHandler() {
+func (h AuthorizationHandler) RegisterHandler() {
 	h.router.POST("/api/token", h.GetAccessToken)
 }
 
-func (h AuthenticationHandler) GetAccessToken(c *gin.Context) {
-	req, err := utils.DecodeJSONFromRequest[requestdto.OauthToken](c)
+func (h AuthorizationHandler) GetAccessToken(c *gin.Context) {
+	req, err := utils.DecodeJSONFromRequest[requestdto.AuthorizationToken](c)
 	if err != nil {
 		return
 	}

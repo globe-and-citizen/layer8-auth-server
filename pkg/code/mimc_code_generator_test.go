@@ -1,7 +1,7 @@
 package code
 
 import (
-	"globe-and-citizen/layer8/auth-server/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ func TestGenerateCode_EmailWithASCIICharacters(t *testing.T) {
 	code, err := generator.GenerateCode(salt, email)
 
 	assert.Nil(t, err)
-	assert.True(t, len(code) == pkg.VerificationCodeSize)
+	assert.True(t, len(code) == utils.VerificationCodeSize)
 }
 
 func TestGenerateCode_EmailWithChineseCharacters(t *testing.T) {
@@ -26,7 +26,7 @@ func TestGenerateCode_EmailWithChineseCharacters(t *testing.T) {
 	code, err := generator.GenerateCode(salt, email)
 
 	assert.Nil(t, err)
-	assert.True(t, len(code) == pkg.VerificationCodeSize)
+	assert.True(t, len(code) == utils.VerificationCodeSize)
 }
 
 func TestGenerateCode_EmailWithGermanCharacters(t *testing.T) {
@@ -36,5 +36,5 @@ func TestGenerateCode_EmailWithGermanCharacters(t *testing.T) {
 	code, err := generator.GenerateCode(salt, email)
 
 	assert.Nil(t, err)
-	assert.True(t, len(code) == pkg.VerificationCodeSize)
+	assert.True(t, len(code) == utils.VerificationCodeSize)
 }
