@@ -1,8 +1,14 @@
-.min__width {
-    min-width: 0;
-}
+@layer components {
+  /*
+    Legacy modal styles
+    Do NOT mix with Tailwind utilities
+  */
 
-.modal__overlay {
+  .min__width {
+    min-width: 0;
+  }
+
+  .modal__overlay {
     position: fixed;
     width: 100%;
     height: 100%;
@@ -13,9 +19,9 @@
     opacity: 0;
     background: #000000;
     transition: all 0.25s;
-}
+  }
 
-.modal__dialog {
+  .modal__dialog {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -29,24 +35,24 @@
     backface-visibility: hidden;
     transform: translateX(-50%) translateY(-50%);
     perspective: 1300px;
-}
+  }
 
-.modal__dialog.active {
+  .modal__dialog.active {
     opacity: 1;
     visibility: visible;
-}
+  }
 
-.modal__dialog.active ~ .modal__overlay {
+  .modal__dialog.active ~ .modal__overlay {
     opacity: 0.9;
     visibility: visible;
-}
+  }
 
-.modal__dialog.active .modal__content {
+  .modal__dialog.active .modal__content {
     transform: rotateX(0deg);
     opacity: 1;
-}
+  }
 
-.modal__content {
+  .modal__content {
     background: #fafafa;
     border-radius: 2px;
     padding: 24px;
@@ -56,72 +62,72 @@
     transform-origin: 50% 0;
     opacity: 0;
     transition: all 0.25s;
-}
+  }
 
-.modal__header {
+  .modal__header {
     text-align: center;
     font-weight: 300;
     font-size: 22px;
     color: rgba(0, 0, 0, 0.45);
     margin-bottom: 1rem;
-}
+  }
 
-.modal__body {
+  .modal__body {
     text-align: center;
     display: flex;
     margin: 0 auto;
     width: 100%;
     flex-direction: column;
-}
+  }
 
-.modal__footer {
+  .modal__footer {
     margin: 24px 0;
-}
+  }
 
-.info-message {
+  .info-message {
     font-weight: 700;
     font-size: 18px;
-}
+  }
 
-.mnemonic-text {
+  .mnemonic-text {
     color: rgb(37 99 235);
     font-weight: 600;
     font-family: Georgia, serif;
     font-size: 17px;
-}
+  }
 
-.warning-msg {
+  .warning-msg {
     color: rgba(4, 189, 29, 0.76);
     font-weight: 700;
     font-size: 16px;
-}
+  }
 
-.mnemonic_holder {
+  .mnemonic_holder {
     margin-bottom: 15px;
-}
+  }
 
-.input-mnemonic {
+  .input-mnemonic {
     width: 80%;
     text-align: center;
     margin-right: 10px;
     background-color: rgba(100, 149, 237, 0.3);
     border-radius: 40px;
-
     font-family: Georgia, serif;
-}
+  }
 
-.toast-msg {
+  .toast-msg {
     width: 15%;
     text-align: center;
     margin-left: 83%;
     background-color: rgba(68, 67, 67, 0.35);
-}
+  }
 
-.close-button {
+  .close-button {
     width: 50%;
     margin-left: 25%;
-}
+  }
 
-.w-025 {
+  .w-025 {
     width: 25%;
+  }
 }

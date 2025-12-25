@@ -1,0 +1,281 @@
+<template>
+  <div class="relative">
+    <div class="client-container">
+      <div class="grid grid-cols-1 md:grid-cols-2 bg-white h-dvh">
+        <!-- Form Section -->
+        <div class="self-center">
+          <h1 class="font-bold text-3xl md:text-4xl text-[#3751FE] mb-11 animate-slideFromLeft">
+            Register your product
+          </h1>
+          <div class="mr-0 md:mr-16 lg:mr-28 animate-slideFromLeft">
+            <!-- Project Name -->
+            <div class="relative border border-[#C1BBBB]">
+              <input
+                type="text"
+                id="name"
+                v-model="name"
+                @focus="isNameFocused = true"
+                @blur="isNameFocused = false"
+                class="w-full px-4 pt-10 pb-3 border-l-4 focus:border-blue-500 focus:outline-none text-lg text-[#3751FE]"
+                :placeholder="isNameFocused ? 'Project name' : ' '"
+              />
+              <label
+                for="name"
+                class="absolute left-0 px-4 mt-6 transition-all duration-300 origin-0 text-[#636363] text-lg cursor-text"
+                :class="{ '-top-4': isNameFocused || name }"
+              >
+                Project name
+              </label>
+            </div>
+
+            <!-- Redirect URL -->
+            <div class="relative border border-[#C1BBBB]">
+              <input
+                type="text"
+                id="redirect_uri"
+                v-model="redirect_uri"
+                @focus="isRUFocused = true"
+                @blur="isRUFocused = false"
+                class="w-full px-4 pt-10 pb-3 border-l-4 focus:border-blue-500 focus:outline-none text-lg text-[#3751FE]"
+                :placeholder="isRUFocused ? 'https://www.example.com/oauth_redirect' : ' '"
+              />
+              <label
+                for="redirect_uri"
+                class="absolute left-0 px-4 mt-6 transition-all duration-300 origin-0 text-[#636363] text-lg cursor-text"
+                :class="{ '-top-4': isRUFocused || redirect_uri }"
+              >
+                Redirect URL
+              </label>
+            </div>
+
+            <!-- Backend URL -->
+            <div class="relative border border-[#C1BBBB]">
+              <input
+                type="text"
+                id="backend_uri"
+                v-model="backend_uri"
+                @focus="isBUFocused = true"
+                @blur="checkBackendUri"
+                class="w-full px-4 pt-10 pb-3 border-l-4 focus:border-blue-500 focus:outline-none text-lg text-[#3751FE]"
+                :placeholder="isBUFocused ? 'www.example.com' : ' '"
+              />
+              <label
+                for="backend_uri"
+                class="absolute left-0 px-4 mt-6 transition-all duration-300 origin-0 text-[#636363] text-lg cursor-text"
+                :class="{ '-top-4': isBUFocused || backend_uri }"
+              >
+                Backend URL
+              </label>
+            </div>
+
+            <!-- Username -->
+            <div class="relative border border-[#C1BBBB]">
+              <input
+                type="text"
+                id="username"
+                v-model="username"
+                @focus="isUsernameFocused = true"
+                @blur="isUsernameFocused = false"
+                class="w-full px-4 pt-10 pb-3 border-l-4 focus:border-blue-500 focus:outline-none text-lg text-[#3751FE]"
+                :placeholder="isUsernameFocused ? 'Username' : ' '"
+              />
+              <label
+                for="username"
+                class="absolute left-0 px-4 mt-6 transition-all duration-300 origin-0 text-[#636363] text-lg cursor-text"
+                :class="{ '-top-4': isUsernameFocused || username }"
+              >
+                Username
+              </label>
+            </div>
+
+            <!-- Password -->
+            <div class="relative border border-[#C1BBBB] mb-9">
+              <input
+                type="password"
+                id="password"
+                v-model="password"
+                @focus="isPasswordFocused = true"
+                @blur="isPasswordFocused = false"
+                class="w-full px-4 pt-10 pb-3 border-l-4 focus:border-blue-500 focus:outline-none text-lg text-[#3751FE]"
+                :placeholder="isPasswordFocused ? 'Password' : ' '"
+              />
+              <label
+                for="password"
+                class="absolute left-0 px-4 mt-6 transition-all duration-300 origin-0 text-[#636363] text-lg cursor-text"
+                :class="{ '-top-4': isPasswordFocused || password }"
+              >
+                Password
+              </label>
+            </div>
+
+            <button
+              @click="registerClient"
+              class="animate-bounce w-full py-4 border border-[#3751FE] text-[#3751FE] mb-7 hover:shadow-lg hover:text-white hover:bg-[#3751FE]"
+            >
+              Register
+            </button>
+
+            <a
+              class="text-sm text-[#414141] font-normal text-start block cursor-pointer"
+              href="/client-login-page"
+            >
+              Already have an account? <span class="font-bold">Login</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- Right Image Section -->
+    <div
+      class="hidden md:flex lg:flex items-center absolute bg-[#E5E5E5] right-0 top-0 w-1/2 h-dvh pt-[8%]"
+    >
+      <img
+        class="m-auto mt-10 animate-slideFromRight"
+        src="@/assets/images/client-image.png"
+      />
+    </div>
+
+    <!-- Toast -->
+    <div
+      :class="showToast ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+      class="fixed top-3 right-3 bg-red-500 text-white p-2 rounded-md transition-opacity ease-in-out duration-500 z-50"
+    >
+      {{ toastMessage }}
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref } from "vue";
+
+export default {
+  name: "Register",
+  setup() {
+    const name = ref("");
+    const redirect_uri = ref("");
+    const backend_uri = ref("");
+    const username = ref("");
+    const password = ref("");
+    const isRegistered = ref(false);
+    const isNameFocused = ref(false);
+    const isRUFocused = ref(false);
+    const isBUFocused = ref(false);
+    const isUsernameFocused = ref(false);
+    const isPasswordFocused = ref(false);
+    const showToast = ref(false);
+    const toastMessage = ref("");
+    const backendUriText = ref("");
+    const isBackendUrlUsed = ref(false);
+
+    const showToastMessage = (message, type) => {
+      toastMessage.value = message;
+      showToast.value = true;
+      setTimeout(() => (showToast.value = false), 3000);
+    };
+
+    const checkBackendUri = async () => {
+      try {
+        isBUFocused.value = false;
+        const response = await fetch("[[ .ProxyURL ]]/api/v1/check-backend-uri", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ backend_uri: backend_uri.value }),
+        });
+        isBackendUrlUsed.value = await response.json();
+        if (isBackendUrlUsed.value) {
+          showToastMessage(`${backend_uri.value} is already registered to the other user!`, "error");
+          backendUriText.value = backend_uri.value;
+          backend_uri.value = "";
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const registerClient = async () => {
+      try {
+        if (isBackendUrlUsed.value) {
+          showToastMessage(`${backendUriText.value} is already registered to the other user!`, "error");
+          return;
+        }
+        if (!name.value || !redirect_uri.value || !backend_uri.value || !username.value || !password.value) {
+          showToastMessage("Please enter all fields!", "error");
+          return;
+        }
+
+        const responseOne = await fetch("[[ .ProxyURL ]]/api/v1/register-client-precheck", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: username.value }),
+        });
+
+        const precheckBody = await responseOne.json();
+        if (responseOne.status !== 201) {
+          showToastMessage("Something went wrong!", "error");
+          return;
+        }
+
+        const { data } = scram.keysHMAC(
+          password.value,
+          precheckBody.data.salt,
+          precheckBody.data.iterationCount
+        );
+
+        const resp = await fetch("[[ .ProxyURL ]]/api/v1/register-client", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.value,
+            redirect_uri: redirect_uri.value,
+            backend_uri: backend_uri.value,
+            username: username.value,
+            stored_key: data.storedKey,
+            server_key: data.serverKey,
+          }),
+        });
+
+        const registerBody = await resp.json();
+        if (resp.status === 201) {
+          showToastMessage(registerBody.message, "success");
+          window.location.href = "[[ .ProxyURL ]]/client-login-page";
+        } else if (registerBody.message) {
+          showToastMessage(registerBody.message, "error");
+        } else {
+          showToastMessage("Something went wrong!", "error");
+        }
+      } catch (error) {
+        console.error(error);
+        showToastMessage("Registration failed!", "error");
+      }
+    };
+
+    return {
+      name,
+      redirect_uri,
+      backend_uri,
+      username,
+      password,
+      isRegistered,
+      isNameFocused,
+      isRUFocused,
+      isBUFocused,
+      isUsernameFocused,
+      isPasswordFocused,
+      showToast,
+      toastMessage,
+      backendUriText,
+      isBackendUrlUsed,
+      showToastMessage,
+      checkBackendUri,
+      registerClient,
+    };
+  },
+};
+</script>
+
+<style scoped>
+/* Add any component-specific CSS here */
+</style>

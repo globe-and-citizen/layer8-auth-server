@@ -1,0 +1,299 @@
+<template>
+  <div class="relative">
+    <!-- Mobile overlay sidebar -->
+    <div
+      v-show="isUserPortalSidebar"
+      @click="showSidebar(false)"
+      class="absolute block md:hidden lg:hidden top-0 left-0 h-dvh w-full bg-opacity-50 backdrop-blur-lg text-black"
+    >
+      <div class="w-[70%] h-dvh md:col-span-1 bg-white rounded-r-2xl p-3">
+        <div class="h-dvh block md:hidden lg:hidden">
+          <span class="flex justify-end cursor-pointer" @click="showSidebar(false)">&#x2715;</span>
+          <div class="bg-white px-2 py-4">
+            <img
+              src="@/assets/images/L8Logo.png"
+              alt="Layer8"
+              width="250"
+              height="535"
+              class="mb-8"
+            />
+            <div>
+              <div
+                class="flex space-x-2.5 items-center justify-center py-2 cursor-pointer mb-2 rounded-md bg-[#4F80E1]"
+              >
+                <img src="@/assets/images/icons/dashboard-logo.svg" alt="">
+                <span class="font-medium text-white text-base">Dashboard</span>
+              </div>
+              <div
+                @click="logoutUser"
+                class="flex space-x-2.5 items-center justify-center py-2 cursor-pointer mb-2"
+              >
+                <img src="@/assets/images/icons/logout-icons-user-portal.svg" alt="">
+                <span class="font-medium text-black text-base">Log out</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="grid md:grid-cols-9 lg:grid-cols-9">
+      <div class="hidden md:block lg:block col-span-2 border-r border-[#E6E6E6] h-dvh">
+        <div class="bg-white px-3 md:px-5 lg:px-7 py-4 md:py-7 lg:py-9">
+          <img
+            src="@/assets/images/L8Logo.png"
+            alt="Layer8"
+            width="250"
+            height="535"
+            class="md:mb-8 lg:mb-12"
+          />
+          <div>
+            <div
+              class="flex space-x-2.5 items-center md:pl-4 lg:pl-7 py-2.5 cursor-pointer md:mb-3 lg:mb-5 rounded-md bg-[#4F80E1]"
+            >
+              <img src="@/assets/images/icons/dashboard-logo.svg" alt="">
+              <span class="font-medium text-white text-base">Dashboard</span>
+            </div>
+            <div
+              @click="logoutUser"
+              class="flex space-x-2.5 items-center md:pl-4 lg:pl-7 py-3 cursor-pointer md:mb-3 lg:mb-5"
+            >
+              <img src="@/assets/images/icons/logout-icons-user-portal.svg" alt="">
+              <span class="font-medium text-black text-base">Log out</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="md:col-span-7 lg:col-span-7">
+        <div class="bg-white py-2 md:py-5 mx-4 md:mx-10 flex justify-between md:justify-end items-center">
+          <div class="block md:hidden lg:hidden cursor-pointer" @click="showSidebar(true)">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 6C2 5.44772 2.44772 5 3 5H21C21.5523 5 22 5.44772 22 6C22 6.55228 21.5523 7 21 7H3C2.44772 7 2 6.55228 2 6Z" fill="currentColor" /><path d="M2 12.0322C2 11.4799 2.44772 11.0322 3 11.0322H21C21.5523 11.0322 22 11.4799 22 12.0322C22 12.5845 21.5523 13.0322 21 13.0322H3C2.44772 13.0322 2 12.5845 2 12.0322Z" fill="currentColor" /><path d="M3 17.0645C2.44772 17.0645 2 17.5122 2 18.0645C2 18.6167 2.44772 19.0645 3 19.0645H21C21.5523 19.0645 22 18.6167 22 18.0645C22 17.5122 21.5523 17.0645 21 17.0645H3Z" fill="currentColor" /></svg>
+          </div>
+          <div class="flex space-x-4 items-center">
+            <div>
+              <div class="font-bold text-sm text-[#8F8F8F] text-end">
+                {{ user.username }}
+              </div>
+            </div>
+            <img
+              class="w-12 h-12"
+              src="@/assets/images/user_avatar.png"
+            />
+          </div>
+        </div>
+        <div class="bg-[#F6F8FF] p-4 md:p-6 lg:p-10">
+          <div class="hidden md:block lg:block">
+            <div class="flex flex-col md:flex-row md:justify-between items-center mb-3 md:mb-5">
+              <div>
+                <div class="font-bold text-2xl md:text-2xl lg:text-3xl text-black mb text-center md:text-start">
+                  Settings
+                </div>
+                <div class="font-normal text-base text-black mb-4 text-start">
+                  Manage your account settings
+                </div>
+              </div>
+              <div class="flex space-x-5">
+                <button
+                  @click="updateUserMetadata"
+                  class="w-[128px] bg-white border-2 border-[#4F80E1] rounded-lg py-1 md:py-2 lg:py-3 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
+                >
+                  Save change
+                </button>
+                <button
+                  class="w-[128px] bg-white border-2 border-[#4F80E1] rounded-lg py-1 md:py-2 lg:py-3 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl border-none p-4 md:p-8 lg:p-12">
+            <div class="pb-3 mb-5 border-b border-[#D9D9D9]">
+              <div class="font-bold text-xl md:text-3xl text-black mb-3 text-start">
+                General Information
+              </div>
+              <div class="font-normal text-sm md:text-xs text-black text-start">
+                Lorem ipsum dolor sit amet consectetur.
+              </div>
+            </div>
+            <div class="flex space-x-2 md:space-x-5 items-center mb-4 md:mb-8">
+              <img
+                class="w-12 md:w-16 h-12 md:h-16"
+                src="@/assets/images/user_avatar.svg"
+              />
+              <div>
+                <div class="font-bold text-sm text-[#8F8F8F] text-start">
+                  {{ user.username }}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: row; gap: 2rem; margin-bottom: 1.5rem;">
+              <!-- Left side - User inputs -->
+              <div style="flex: none; width: 40%; display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Username</label>
+                  <input class="border border-[#BDC3CA] rounded-lg bg-[#ECF4FD] px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" placeholder="Username" readonly :value="user.username" />
+                </div>
+                <div>
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Display Name</label>
+                  <input class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" type="text" v-model="newDisplayName" placeholder="Display Name" />
+                </div>
+                <div>
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Favourite Color</label>
+                  <input class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" type="text" v-model="newColor" placeholder="Favourite Color" />
+                </div>
+              </div>
+
+              <!-- Right side - Bio section -->
+              <div style="flex: none; width: 60%;">
+                <div>
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Bio</label>
+                  <textarea class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none" rows="4" v-model="newBio" placeholder="Bio"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Verification section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+              <div class="self-center text-base md:text-xl">Phone number is <span v-if="!user.phone_number_verified">not</span> verified.</div>
+              <button
+                v-if="!user.phone_number_verified"
+                @click="verifyPhoneNumber"
+                class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 md:py-3 lg:py-4 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
+              >
+                Verify Phone Number
+              </button>
+              <div class="self-center text-base md:text-xl">Email is <span v-if="!user.email_verified">not</span> verified.</div>
+              <button
+                v-if="!user.email_verified"
+                @click="verifyEmail"
+                class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 md:py-3 lg:py-4 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
+              >
+                Verify Email
+              </button>
+            </div>
+            <div class="block md:hidden lg:hidden">
+              <div class="flex justify-between items-center">
+                <button
+                  @click="updateUserMetadata"
+                  class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
+                >
+                  Save change
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from "vue"
+
+const token = ref<string | null>(localStorage.getItem("token"))
+
+const user = ref({
+  username: "",
+  display_name: "",
+  color: "",
+  bio: "",
+  email_verified: false,
+  phone_number_verified: false,
+})
+
+const newDisplayName = ref("")
+const newColor = ref("")
+const newBio = ref("")
+const isUserPortalSidebar = ref(false)
+
+const getUserDetails = async () => {
+  try {
+    const resp = await fetch("/api/v1/profile", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
+    })
+
+    const data = await resp.json()
+    user.value = data
+
+    newDisplayName.value = data.display_name
+    newColor.value = data.color
+    newBio.value = data.bio
+  } catch (err) {
+    console.error(err)
+    newDisplayName.value = "data.display_name"
+    newColor.value = "data.color"
+    newBio.value = "data.bio"
+  }
+}
+
+const updateUserMetadata = async () => {
+  try {
+    const resp = await fetch("/api/v1/update-user-metadata", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
+      body: JSON.stringify({
+        display_name: newDisplayName.value,
+        color: newColor.value,
+        bio: newBio.value,
+      }),
+    })
+
+    if (resp.status === 200) {
+      alert("Data updated successfully!")
+    } else {
+      alert("Failed to update data")
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const logoutUser = () => {
+  localStorage.removeItem("token")
+  window.location.href = "/"
+}
+
+const verifyEmail = () => {
+  window.location.href = "/input-your-email-page"
+}
+
+const verifyPhoneNumber = () => {
+  window.location.href = "/verify-phone-number-page"
+}
+
+const showSidebar = (value: boolean) => {
+  isUserPortalSidebar.value = value
+  document.body.style.overflow = value ? "hidden" : "auto"
+}
+
+onMounted(getUserDetails)
+</script>
+
+
+<style scoped>
+.input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #bdc3ca;
+  border-radius: 8px;
+}
+.btn {
+  border: 2px solid #4f80e1;
+  color: #4f80e1;
+  padding: 12px;
+  border-radius: 8px;
+}
+.btn:hover {
+  background: #4f80e1;
+  color: white;
+}
+</style>

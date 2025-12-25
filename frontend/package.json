@@ -15,6 +15,10 @@
     "lint": "eslint . --fix --cache"
   },
   "dependencies": {
+    "@wagmi/core": "^3.0.1",
+    "@web3modal/wagmi": "^5.1.11",
+    "chart.js": "^4.5.1",
+    "viem": "^2.43.3",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },

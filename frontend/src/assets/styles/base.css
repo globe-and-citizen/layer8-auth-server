@@ -1,95 +1,36 @@
- @media (max-width: 640px) {
-     .welcome-container {
-         max-width: 48rem;
-         margin-right: auto;
-         margin-left: auto;
-         padding-right: 1rem;
-         padding-left: 1rem;
-     }
+@layer components {
+  /*
+    Layout containers
+    Legacy styles aligned with Tailwind layering
+  */
 
-     .user-container {
-        max-width: 48rem;
-        margin-right: auto;
-        margin-left: auto;
-        padding-right: 1rem;
-        padding-left: 1rem;
-    }
-    
-     .client-container {
-        max-width: 48rem;
-        margin-right: auto;
-        margin-left: auto;
-        padding-right: 1rem;
-        padding-left: 1rem;
-    }
- }
+  .welcome-container,
+  .user-container,
+  .client-container {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 
- @media (min-width: 640px) {
-     .welcome-container {
-         margin-right: auto;
-         margin-left: auto;
-         padding-right: 1rem;
-         padding-left: 1rem;
-     }
-
-     .user-container {
-        margin-right: auto;
-        margin-left: auto;
-        padding-right: 1rem;
-        padding-left: 1rem;
-    }
-     .client-container {
-        margin-right: auto;
-        margin-left: auto;
-        padding-right: 1rem;
-        padding-left: 1rem;
-    }
- }
-
- @media (min-width: 1024px) {
-     .welcome-container {
-         max-width: 1200px;
-         margin-right: auto;
-         margin-left: auto;
-         padding-right: 2rem;
-         padding-left: 2rem;
-     }
-
-     .user-container {
-        max-width: 1220px;
-        margin-right: auto;
-        margin-left: auto;
-        padding-right: 2rem;
-        padding-left: 2rem;
+  /* Desktop layout */
+  @media (min-width: 1024px) {
+    .welcome-container {
+      max-width: 1200px;
+      padding-left: 2rem;
+      padding-right: 2rem;
     }
 
-     .client-container {
-        max-width: 1120px;
-        margin-right: auto;
-        margin-left: auto;
-        padding-right: 2rem;
-        padding-left: 2rem;
+    .user-container {
+      max-width: 1220px;
+      padding-left: 2rem;
+      padding-right: 2rem;
     }
- }
 
- @keyframes slideFromRight {
-    0% {
-        transform: translateX(100%);
-        opacity: 0;
+    .client-container {
+      max-width: 1120px;
+      padding-left: 2rem;
+      padding-right: 2rem;
     }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideFromLeft {
-    0% {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
-    }
+  }
 }
