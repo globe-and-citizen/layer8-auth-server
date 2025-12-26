@@ -3,8 +3,6 @@ package tokenRepo
 import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/models"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
-
-	layer8Utils "github.com/globe-and-citizen/layer8-utils"
 )
 
 type ITokenRepository interface {
@@ -12,7 +10,6 @@ type ITokenRepository interface {
 	VerifyUserJWTToken(tokenString string) (models.UserClaims, error)
 	GenerateClientJWTToken(client gormModels.Client) (string, error)
 	VerifyClientJWTToken(tokenString string) (models.ClientClaims, error)
-	GenerateClientAuthJWTToken(client gormModels.Client, authClaims layer8Utils.AuthCodeClaims) (string, error)
 }
 
 func NewTokenRepository(userJWTSecret []byte, clientJWTSecret []byte) ITokenRepository {

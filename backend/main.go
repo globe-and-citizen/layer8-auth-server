@@ -4,12 +4,10 @@ import (
 	_ "encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/config"
-	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/authH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/clientH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/middlewareH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/userH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
-	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/authRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/emailRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/phoneRepo"
@@ -17,7 +15,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/zkRepo"
-	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/authUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/clientUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/middlewareUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/userUC"
@@ -132,13 +129,8 @@ func main() {
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
 	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
 	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
-	oauthRepository := authRepo.NewAuthenticationRepository()
 
 	router := app.Group("/")
-	authUsecase := authUC.NewAuthorizationUsecase(postgresRepository, oauthRepository, tokenRepository)
-	authHandler := authH.NewAuthorizationHandler(router, authUsecase)
-	authHandler.RegisterHandler()
-
 	router = app.Group("/api/v1")
 
 	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository, postgresRepository)
