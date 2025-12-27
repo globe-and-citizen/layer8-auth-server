@@ -1,14 +1,12 @@
 package clientUC
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/internal/consts"
 	"globe-and-citizen/layer8/auth-server/backend/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/backend/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/backend/pkg/scram"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
 )
 
@@ -25,12 +23,12 @@ func (uc *ClientUsecase) PrecheckRegister(
 	req requestdto.ClientRegisterPrecheck,
 	iterCount int,
 ) (responsedto.ClientRegisterPrecheck, error) {
-	rmSalt := utils.GenerateRandomSalt(consts.SaltSize)
+	scramMsg := scram.CreateServerRegisterFirstMessage(iterCount)
 
 	client := gormModels.Client{
-		Username:       req.Username,
-		Salt:           rmSalt,
-		IterationCount: iterCount,
+		Username:            req.Username,
+		ScramSalt:           scramMsg.Salt,
+		ScramIterationCount: iterCount,
 	}
 
 	err := uc.postgres.PrecheckClientRegister(client)
@@ -39,8 +37,7 @@ func (uc *ClientUsecase) PrecheckRegister(
 	}
 
 	return responsedto.ClientRegisterPrecheck{
-		Salt:           rmSalt,
-		IterationCount: iterCount,
+		ServerRegisterFirstMessage: scramMsg,
 	}, nil
 }
 
@@ -50,31 +47,28 @@ func (uc *ClientUsecase) Register(req requestdto.ClientRegister) error {
 	backendURI := utils.RemoveProtocolFromURL(req.BackendURI)
 
 	newClient := gormModels.Client{
-		ID:          clientUUID,
-		Secret:      clientSecret,
-		Name:        req.Name,
-		RedirectURI: req.RedirectURI,
-		BackendURI:  backendURI,
-		Username:    req.Username,
-		StoredKey:   req.StoredKey,
-		ServerKey:   req.ServerKey,
+		ID:             clientUUID,
+		Secret:         clientSecret,
+		Name:           req.Name,
+		RedirectURI:    req.RedirectURI,
+		BackendURI:     backendURI,
+		Username:       req.Username,
+		ScramStoredKey: req.StoredKey,
+		ScramServerKey: req.ServerKey,
 	}
 
 	return uc.postgres.AddClient(newClient)
 }
 
 func (uc *ClientUsecase) PrecheckLogin(req requestdto.ClientLoginPrecheck) (responsedto.ClientLoginPrecheck, error) {
-	sNonce := utils.GenerateRandomSalt(consts.SaltSize)
-
 	client, err := uc.postgres.GetClientByUsername(req.Username)
 	if err != nil {
 		return responsedto.ClientLoginPrecheck{}, err
 	}
 
+	scramMsg := scram.CreateServerLoginFirstMessage(client.ScramSalt, client.ScramIterationCount, req.ClientLoginFirstMessage)
 	loginPrecheckResp := responsedto.ClientLoginPrecheck{
-		Salt:      client.Salt,
-		IterCount: client.IterationCount,
-		Nonce:     req.CNonce + sNonce,
+		ServerLoginFirstMessage: scramMsg,
 	}
 
 	return loginPrecheckResp, nil
@@ -86,43 +80,11 @@ func (uc *ClientUsecase) Login(req requestdto.ClientLogin) (responsedto.ClientLo
 		return responsedto.ClientLogin{}, err
 	}
 
-	storedKeyBytes, err := hex.DecodeString(client.StoredKey)
+	scramMsg, err := scram.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce,
+		client.ScramSalt, client.ScramIterationCount, client.ScramStoredKey, client.ScramServerKey)
 	if err != nil {
-		return responsedto.ClientLogin{}, fmt.Errorf("error decoding stored key: %v", err)
+		return responsedto.ClientLogin{}, fmt.Errorf("error creating final message: %v", err)
 	}
-
-	authMessage := fmt.Sprintf("[n=%s,r=%s,s=%s,i=%d,r=%s]", req.Username, req.CNonce, client.Salt, client.IterationCount, req.Nonce)
-	authMessageBytes := []byte(authMessage)
-
-	clientSignatureHMAC := hmac.New(sha256.New, storedKeyBytes)
-	clientSignatureHMAC.Write(authMessageBytes)
-	clientSignature := clientSignatureHMAC.Sum(nil)
-
-	clientProofBytes, err := hex.DecodeString(req.ClientProof)
-	if err != nil {
-		return responsedto.ClientLogin{}, fmt.Errorf("error decoding client proof: %v", err)
-	}
-
-	clientKeyBytes, err := utils.XorBytes(clientSignature, clientProofBytes)
-	if err != nil {
-		return responsedto.ClientLogin{}, fmt.Errorf("error performing XOR operation: %v", err)
-	}
-
-	clientKeyHash := sha256.Sum256(clientKeyBytes)
-
-	clientKeyHashStr := hex.EncodeToString(clientKeyHash[:])
-	if clientKeyHashStr != client.StoredKey {
-		return responsedto.ClientLogin{}, fmt.Errorf("server failed to authenticate the user")
-	}
-
-	serverKeyBytes, err := hex.DecodeString(client.ServerKey)
-	if err != nil {
-		return responsedto.ClientLogin{}, fmt.Errorf("error decoding server key: %v", err)
-	}
-
-	serverSignatureHMAC := hmac.New(sha256.New, serverKeyBytes)
-	serverSignatureHMAC.Write(authMessageBytes)
-	serverSignatureHex := hex.EncodeToString(serverSignatureHMAC.Sum(nil))
 
 	tokenString, err := uc.token.GenerateClientJWTToken(client)
 	if err != nil {
@@ -130,8 +92,8 @@ func (uc *ClientUsecase) Login(req requestdto.ClientLogin) (responsedto.ClientLo
 	}
 
 	return responsedto.ClientLogin{
-		ServerSignature: serverSignatureHex,
-		Token:           tokenString,
+		ServerLoginFinalMessage: scramMsg,
+		Token:                   tokenString,
 	}, nil
 }
 
@@ -147,7 +109,7 @@ func (uc *ClientUsecase) GetProfile(username string) (responsedto.ClientProfile,
 		Name:            clientData.Name,
 		RedirectURI:     clientData.RedirectURI,
 		BackendURI:      clientData.BackendURI,
-		X509Certificate: clientData.X509Certificate,
+		X509Certificate: clientData.NTorX509Certificate,
 	}
 	return clientModel, nil
 }

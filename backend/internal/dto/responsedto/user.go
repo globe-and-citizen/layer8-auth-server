@@ -1,19 +1,22 @@
 package responsedto
 
+import "globe-and-citizen/layer8/auth-server/backend/pkg/scram"
+
 type UserRegisterPrecheck struct {
-	Salt           string `json:"salt"`
-	IterationCount int    `json:"iterationCount"`
+	scram.ServerRegisterFirstMessage `json:",inline"`
 }
 
 type UserLoginPrecheck struct {
-	Salt      string `json:"salt"`
-	IterCount int    `json:"iter_count"`
-	Nonce     string `json:"nonce"`
+	scram.ServerLoginFirstMessage `json:",inline"`
 }
 
 type UserLogin struct {
-	ServerSignature string `json:"server_signature"`
-	Token           string `json:"token"`
+	scram.ServerLoginFinalMessage `json:",inline"`
+	Token                         string `json:"token"`
+}
+
+type UserResetPasswordPrecheck struct {
+	scram.ServerRegisterFirstMessage `json:",inline"`
 }
 
 type UserProfile struct {
@@ -27,9 +30,4 @@ type UserProfile struct {
 
 type UserGetTelegramSessionID struct {
 	SessionID string `json:"session_id"`
-}
-
-type UserResetPasswordPrecheck struct {
-	Salt           string `json:"salt"`
-	IterationCount int    `json:"iterationCount"`
 }

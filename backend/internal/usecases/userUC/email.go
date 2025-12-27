@@ -12,7 +12,7 @@ func (uc *UserUsecase) VerifyEmail(userID uint, userEmail string) error {
 		return err
 	}
 
-	verificationCode, err := uc.code.GenerateEmailVerificationCode(user.Salt, userEmail)
+	verificationCode, err := uc.code.GenerateEmailVerificationCode(user.ScramSalt, userEmail)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (uc *UserUsecase) SaveProofOfEmailVerification(userID uint, req requestdto.
 		return "Failed to get user", err
 	}
 
-	zkProof, zkKeyPairId, err := uc.zk.GenerateProof(user.Salt, req.Email, req.Code)
+	zkProof, zkKeyPairId, err := uc.zk.GenerateProof(user.ScramSalt, req.Email, req.Code)
 	if err != nil {
 		return "Failed to generate zk proof of email verification", err
 	}

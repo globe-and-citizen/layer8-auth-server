@@ -108,6 +108,9 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { mnemonic } from "@/utils/mnemonic.ts"
+import { scram } from "@/utils/scram.ts"
+import {getAPI, UserResetPasswordPath, UserResetPasswordPrecheckPath} from "@/api/paths.ts";
 
 /**
  * State
@@ -151,7 +154,7 @@ const resetPassword = async () => {
 
   try {
     const precheckResp = await fetch(
-      "[[ .ProxyURL ]]/api/v1/reset-password-precheck",
+      getAPI(UserResetPasswordPrecheckPath),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,11 +173,11 @@ const resetPassword = async () => {
     const { data } = scram.keysHMAC(
       newPassword.value,
       precheckBody.data.salt,
-      precheckBody.data.iterationCount
+      precheckBody.data.iteration_count
     );
 
     const resetResp = await fetch(
-      "[[ .ProxyURL ]]/api/v1/reset-password",
+      getAPI(UserResetPasswordPath),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,7 +194,7 @@ const resetPassword = async () => {
 
     if (resetBody.is_success === true) {
       alert(resetBody.message);
-      window.location.href = "[[ .ProxyURL ]]/user-login-page";
+      window.location.href = "/user-login";
     } else {
       console.error(resetBody.errors);
       alert("Error: " + resetBody.message);

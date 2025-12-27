@@ -37,6 +37,7 @@ var serverConfig config.ServerConfig
 var emailConfig config.EmailConfig
 var zkConfig config.ZkConfig
 var phoneConfig config.PhoneConfig
+var userConfig config.UserConfig
 var clientConfig config.ClientConfig
 
 func readConfig() {
@@ -66,6 +67,10 @@ func readConfig() {
 	phoneConfig = config.PhoneConfig{
 		TelegramApiKey:         os.Getenv("TELEGRAM_API_KEY"),
 		VerificationCodeExpiry: time.Minute * 10,
+	}
+
+	userConfig = config.UserConfig{
+		ScramIterationCount: 4096,
 	}
 
 	// TODO: read from env variables or config files
@@ -153,7 +158,7 @@ func main() {
 		zkRepository,
 		phoneRepository,
 	)
-	userHandler := userH.NewUserHandler(router, userUsecase, config.UserConfig{})
+	userHandler := userH.NewUserHandler(router, userUsecase, userConfig)
 	userHandler.RegisterHandler(middlewareHandler.AuthenticateUser)
 
 	clientUsecase := clientUC.NewClientUsecase(

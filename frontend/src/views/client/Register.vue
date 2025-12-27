@@ -229,7 +229,7 @@ export default {
         const { data } = scram.keysHMAC(
           password.value,
           precheckBody.data.salt,
-          precheckBody.data.iterationCount
+          precheckBody.data.iteration_count
         );
 
         const resp = await fetch(getAPI(ClientRegisterPath), {

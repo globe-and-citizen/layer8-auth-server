@@ -20,7 +20,7 @@ func (uc *UserUsecase) VerifyPhoneNumber(userID uint) (string, error) {
 		return "failed to get phone number via telegram bot", err
 	}
 
-	verificationCode, err := uc.code.GeneratePhoneVerificationCode(user.Salt, phoneNumber)
+	verificationCode, err := uc.code.GeneratePhoneVerificationCode(user.ScramSalt, phoneNumber)
 	if err != nil {
 		return "failed to generate phone number verification code", err
 	}
@@ -30,7 +30,7 @@ func (uc *UserUsecase) VerifyPhoneNumber(userID uint) (string, error) {
 		return "failed to send verification code", err
 	}
 
-	zkProof, zkPairID, err := uc.zk.GenerateProof(user.Salt, phoneNumber, verificationCode)
+	zkProof, zkPairID, err := uc.zk.GenerateProof(user.ScramSalt, phoneNumber, verificationCode)
 	if err != nil {
 		return "failed to generate the zk proof of phone number verification", err
 	}

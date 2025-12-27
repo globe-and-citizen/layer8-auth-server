@@ -137,13 +137,13 @@ const loginClient = async () => {
     const {data} = scram.keysHMAC(
       password.value,
       precheckBody.data.salt,
-      precheckBody.data.iter_count
+      precheckBody.data.iteration_count
     )
 
     // @ts-ignore
     const clientKeyBytes = scram.hexStringToBytes(data.clientKey)
 
-    const authMessage = `[n=${username.value},r=${cNonce.value},s=${precheckBody.data.salt},i=${precheckBody.data.iter_count},r=${precheckBody.data.nonce}]`
+    const authMessage = `[n=${username.value},r=${cNonce.value},s=${precheckBody.data.salt},i=${precheckBody.data.iteration_count},r=${precheckBody.data.nonce}]`
 
     // @ts-ignore
     const clientSignature = scram.signatureHMAC(authMessage, data.storedKey)
@@ -167,14 +167,14 @@ const loginClient = async () => {
 
     const loginBody = await loginRes.json()
 
-    if (loginBody.data?.server_signature) {
+    if (loginBody.data?.verifier) {
       // @ts-ignore
       const serverSigCheck = scram.signatureHMAC(
         authMessage,
         data.serverKey
       )
 
-      if (serverSigCheck === loginBody.data.server_signature) {
+      if (serverSigCheck === loginBody.data.verifier) {
         localStorage.setItem("clientToken", loginBody.data.token)
         showToastMessage("Login successful!")
         window.location.href = "/client/profile"

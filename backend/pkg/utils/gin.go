@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/internal/consts"
-	"globe-and-citizen/layer8/auth-server/backend/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/log"
 	"net/http"
 	"strings"
@@ -11,11 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Response struct {
+	IsSuccess bool        `json:"is_success"`
+	Message   string      `json:"message"`
+	Error     interface{} `json:"errors"`
+	Data      interface{} `json:"data"`
+}
+
 func HandleError(c *gin.Context, status int, message string, err error) {
 	l := log.Get()
 	l.Err(err)
 
-	c.AbortWithStatusJSON(status, responsedto.Response{
+	c.AbortWithStatusJSON(status, Response{
 		IsSuccess: false,
 		Message:   message,
 		Error:     strings.Split(err.Error(), "\n"),
@@ -23,7 +29,7 @@ func HandleError(c *gin.Context, status int, message string, err error) {
 }
 
 func ReturnOK(c *gin.Context, message string, data interface{}) {
-	c.JSON(http.StatusOK, responsedto.Response{
+	c.JSON(http.StatusOK, Response{
 		IsSuccess: true,
 		Message:   message,
 		Data:      data,
@@ -31,7 +37,7 @@ func ReturnOK(c *gin.Context, message string, data interface{}) {
 }
 
 func ReturnCreated(c *gin.Context, message string, data interface{}) {
-	c.JSON(http.StatusCreated, responsedto.Response{
+	c.JSON(http.StatusCreated, Response{
 		IsSuccess: true,
 		Message:   message,
 		Data:      data,

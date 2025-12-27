@@ -2,6 +2,8 @@ const UserRegisterPrecheckPath = '/user-register-precheck';
 const UserRegisterPath = '/user-register';
 const UserLoginPrecheckPath = '/user-login-precheck';
 const UserLoginPath = '/user-login';
+const UserResetPasswordPrecheckPath = '/user-reset-password-precheck';
+const UserResetPasswordPath = '/user-reset-password';
 const UserProfilePath = '/user/profile';
 
 const ClientCheckBackendURIPath = '/check-backend-uri';
@@ -20,6 +22,8 @@ export {
   UserRegisterPath,
   UserLoginPrecheckPath,
   UserLoginPath,
+  UserResetPasswordPrecheckPath,
+  UserResetPasswordPath,
   UserProfilePath,
 
   ClientCheckBackendURIPath,

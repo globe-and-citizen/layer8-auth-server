@@ -169,7 +169,7 @@ const loginUser = async () => {
 
     const clientKeyBytes = scram.hexStringToBytes(data.clientKey);
 
-    const authMessage = `[n=${loginUsername.value},r=${cNonce.value},s=${precheckBody.data.salt},i=${precheckBody.data.iter_count},r=${precheckBody.data.nonce}]`;
+    const authMessage = `[n=${loginUsername.value},r=${cNonce.value},s=${precheckBody.data.salt},i=${precheckBody.data.iteration_count},r=${precheckBody.data.nonce}]`;
 
     const clientSignature = scram.signatureHMAC(authMessage, data.storedKey);
     const clientProof = scram.bytesToHexString(
@@ -195,9 +195,9 @@ const loginUser = async () => {
 
     const loginJSON = await loginRes.json();
 
-    if (loginJSON.data?.server_signature) {
+    if (loginJSON.data?.verifier) {
       const serverCheck = scram.signatureHMAC(authMessage, data.serverKey);
-      if (serverCheck === loginJSON.data.server_signature) {
+      if (serverCheck === loginJSON.data.verifier) {
         token.value = loginJSON.data.token;
         localStorage.setItem("token", token.value);
         showToastMessage("Login successful!");

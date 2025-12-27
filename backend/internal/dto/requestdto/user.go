@@ -1,26 +1,32 @@
 package requestdto
 
+import "globe-and-citizen/layer8/auth-server/backend/pkg/scram"
+
 type UserRegisterPrecheck struct {
 	Username string `json:"username" validate:"required,min=3,max=50"`
 }
 
 type UserRegister struct {
-	Username  string `json:"username" validate:"required,min=3,max=50"`
-	PublicKey []byte `json:"public_key" validate:"required"`
-	StoredKey string `json:"stored_key" validate:"required"`
-	ServerKey string `json:"server_key" validate:"required"`
+	PublicKey                        []byte `json:"public_key" validate:"required"`
+	scram.ClientRegisterFinalMessage `json:",inline"`
 }
 
 type UserLoginPrecheck struct {
-	Username string `json:"username" validate:"required"`
-	CNonce   string `json:"c_nonce" validate:"required"`
+	scram.ClientLoginFirstMessage `json:",inline"`
 }
 
 type UserLogin struct {
-	Username    string `json:"username" validate:"required"`
-	Nonce       string `json:"nonce" validate:"required"`
-	CNonce      string `json:"c_nonce" validate:"required"`
-	ClientProof string `json:"client_proof" validate:"required"`
+	CNonce                        string `json:"c_nonce" validate:"required"` // fixme ClientNonce shouldn't be here, needs to be saved from precheck message
+	scram.ClientLoginFinalMessage `json:",inline"`
+}
+
+type UserResetPasswordPrecheck struct {
+	Username string `json:"username" validate:"required"`
+}
+
+type UserResetPassword struct {
+	Signature                        []byte `json:"signature" validate:"required"`
+	scram.ClientRegisterFinalMessage `json:",inline"`
 }
 
 type UserMetadataUpdate struct {
@@ -40,15 +46,4 @@ type UserCheckEmailVerificationCode struct {
 
 type UserCheckPhoneNumberVerificationCode struct {
 	VerificationCode string `json:"verification_code"`
-}
-
-type UserResetPasswordPrecheck struct {
-	Username string `json:"username" validate:"required"`
-}
-
-type UserResetPassword struct {
-	Username  string `json:"username" validate:"required,min=3,max=50"`
-	Signature []byte `json:"signature" validate:"required"`
-	StoredKey string `json:"stored_key" validation:"required,min=1"`
-	ServerKey string `json:"server_key" validation:"required,min=1"`
 }

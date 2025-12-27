@@ -16,8 +16,8 @@ func (r *PostgresRepository) AddClient(newClient gormModels.Client) error {
 			"backend_uri":  newClient.BackendURI,
 			"id":           newClient.ID,
 			"secret":       newClient.Secret,
-			"stored_key":   newClient.StoredKey,
-			"server_key":   newClient.ServerKey,
+			"stored_key":   newClient.ScramStoredKey,
+			"server_key":   newClient.ScramServerKey,
 		})
 
 	if result.Error != nil {

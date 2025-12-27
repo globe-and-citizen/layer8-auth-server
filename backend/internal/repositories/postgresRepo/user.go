@@ -15,8 +15,8 @@ func (r *PostgresRepository) UpdateUser(updates gormModels.User) error {
 
 	err := tx.Model(&user).Updates(map[string]interface{}{
 		"public_key": updates.PublicKey,
-		"stored_key": updates.StoredKey,
-		"server_key": updates.ServerKey,
+		"stored_key": updates.ScramStoredKey,
+		"server_key": updates.ScramServerKey,
 	}).Error
 	if err != nil {
 		tx.Rollback()
