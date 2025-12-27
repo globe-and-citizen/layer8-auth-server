@@ -54,7 +54,7 @@
               Login
             </button>
 
-            <a href="/client-register-page" class="text-sm text-[#414141]">
+            <a href="/client-register" class="text-sm text-[#414141]">
               Don’t have an account? <span class="font-bold">Register</span>
             </a>
           </div>
@@ -83,7 +83,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import {ref} from "vue"
+import {scram} from "@/utils/scram.ts"
+import {ClientLoginPath, ClientLoginPrecheckPath, getAPI} from "@/api/paths.ts";
 
 const username = ref("")
 const password = ref("")
@@ -113,10 +115,10 @@ const loginClient = async () => {
     cNonce.value = scram.generateCnonce()
 
     const precheckRes = await fetch(
-      "/api/v1/login-client-precheck",
+      getAPI(ClientLoginPrecheckPath),
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           username: username.value,
           c_nonce: cNonce.value,
@@ -132,7 +134,7 @@ const loginClient = async () => {
     const precheckBody = await precheckRes.json()
 
     // @ts-ignore
-    const { data } = scram.keysHMAC(
+    const {data} = scram.keysHMAC(
       password.value,
       precheckBody.data.salt,
       precheckBody.data.iter_count
@@ -152,9 +154,9 @@ const loginClient = async () => {
     // @ts-ignore
     const clientProof = scram.bytesToHexString(clientProofBytes)
 
-    const loginRes = await fetch("/api/v1/login-client", {
+    const loginRes = await fetch(getAPI(ClientLoginPath), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         username: username.value,
         nonce: precheckBody.data.nonce,
@@ -175,7 +177,7 @@ const loginClient = async () => {
       if (serverSigCheck === loginBody.data.server_signature) {
         localStorage.setItem("clientToken", loginBody.data.token)
         showToastMessage("Login successful!")
-        window.location.href = "/client-profile"
+        window.location.href = "/client/profile"
       }
     } else {
       showToastMessage(loginBody.message || "Login failed")

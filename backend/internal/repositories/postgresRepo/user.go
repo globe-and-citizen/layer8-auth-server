@@ -5,17 +5,18 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
 )
 
-func (r *PostgresRepository) AddUser(newUser gormModels.User) error {
+func (r *PostgresRepository) UpdateUser(updates gormModels.User) error {
 	tx := r.db.Begin()
-	if err := tx.Where("username = ?", newUser.Username).First(&newUser).Error; err != nil {
+	user := gormModels.User{}
+	if err := tx.Where("username = ?", updates.Username).First(&user).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("could not find user: %e", err)
 	}
 
-	err := tx.Model(&r).Updates(map[string]interface{}{
-		"public_key": newUser.PublicKey,
-		"stored_key": newUser.StoredKey,
-		"server_key": newUser.ServerKey,
+	err := tx.Model(&user).Updates(map[string]interface{}{
+		"public_key": updates.PublicKey,
+		"stored_key": updates.StoredKey,
+		"server_key": updates.ServerKey,
 	}).Error
 	if err != nil {
 		tx.Rollback()
@@ -23,7 +24,7 @@ func (r *PostgresRepository) AddUser(newUser gormModels.User) error {
 	}
 
 	userMetadata := gormModels.UserMetadata{
-		ID:              newUser.ID,
+		ID:              user.ID,
 		IsEmailVerified: false,
 		DisplayName:     "",
 		Color:           "",

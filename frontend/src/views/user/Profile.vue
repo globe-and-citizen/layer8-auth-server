@@ -66,9 +66,21 @@
         </div>
       </div>
       <div class="md:col-span-7 lg:col-span-7">
-        <div class="bg-white py-2 md:py-5 mx-4 md:mx-10 flex justify-between md:justify-end items-center">
+        <div
+          class="bg-white py-2 md:py-5 mx-4 md:mx-10 flex justify-between md:justify-end items-center">
           <div class="block md:hidden lg:hidden cursor-pointer" @click="showSidebar(true)">
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 6C2 5.44772 2.44772 5 3 5H21C21.5523 5 22 5.44772 22 6C22 6.55228 21.5523 7 21 7H3C2.44772 7 2 6.55228 2 6Z" fill="currentColor" /><path d="M2 12.0322C2 11.4799 2.44772 11.0322 3 11.0322H21C21.5523 11.0322 22 11.4799 22 12.0322C22 12.5845 21.5523 13.0322 21 13.0322H3C2.44772 13.0322 2 12.5845 2 12.0322Z" fill="currentColor" /><path d="M3 17.0645C2.44772 17.0645 2 17.5122 2 18.0645C2 18.6167 2.44772 19.0645 3 19.0645H21C21.5523 19.0645 22 18.6167 22 18.0645C22 17.5122 21.5523 17.0645 21 17.0645H3Z" fill="currentColor" /></svg>
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M2 6C2 5.44772 2.44772 5 3 5H21C21.5523 5 22 5.44772 22 6C22 6.55228 21.5523 7 21 7H3C2.44772 7 2 6.55228 2 6Z"
+                fill="currentColor"/>
+              <path
+                d="M2 12.0322C2 11.4799 2.44772 11.0322 3 11.0322H21C21.5523 11.0322 22 11.4799 22 12.0322C22 12.5845 21.5523 13.0322 21 13.0322H3C2.44772 13.0322 2 12.5845 2 12.0322Z"
+                fill="currentColor"/>
+              <path
+                d="M3 17.0645C2.44772 17.0645 2 17.5122 2 18.0645C2 18.6167 2.44772 19.0645 3 19.0645H21C21.5523 19.0645 22 18.6167 22 18.0645C22 17.5122 21.5523 17.0645 21 17.0645H3Z"
+                fill="currentColor"/>
+            </svg>
           </div>
           <div class="flex space-x-4 items-center">
             <div>
@@ -86,7 +98,8 @@
           <div class="hidden md:block lg:block">
             <div class="flex flex-col md:flex-row md:justify-between items-center mb-3 md:mb-5">
               <div>
-                <div class="font-bold text-2xl md:text-2xl lg:text-3xl text-black mb text-center md:text-start">
+                <div
+                  class="font-bold text-2xl md:text-2xl lg:text-3xl text-black mb text-center md:text-start">
                   Settings
                 </div>
                 <div class="font-normal text-base text-black mb-4 text-start">
@@ -130,18 +143,28 @@
             </div>
             <div style="display: flex; flex-direction: row; gap: 2rem; margin-bottom: 1.5rem;">
               <!-- Left side - User inputs -->
-              <div style="flex: none; width: 40%; display: flex; flex-direction: column; gap: 1rem;">
+              <div
+                style="flex: none; width: 40%; display: flex; flex-direction: column; gap: 1rem;">
                 <div>
-                  <label class="font-normal text-black text-sm text-start mb-2 block">Username</label>
-                  <input class="border border-[#BDC3CA] rounded-lg bg-[#ECF4FD] px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" placeholder="Username" readonly :value="user.username" />
+                  <label
+                    class="font-normal text-black text-sm text-start mb-2 block">Username</label>
+                  <input
+                    class="border border-[#BDC3CA] rounded-lg bg-[#ECF4FD] px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
+                    placeholder="Username" readonly :value="user.username"/>
                 </div>
                 <div>
-                  <label class="font-normal text-black text-sm text-start mb-2 block">Display Name</label>
-                  <input class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" type="text" v-model="newDisplayName" placeholder="Display Name" />
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Display
+                    Name</label>
+                  <input
+                    class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
+                    type="text" v-model="newDisplayName" placeholder="Display Name"/>
                 </div>
                 <div>
-                  <label class="font-normal text-black text-sm text-start mb-2 block">Favourite Color</label>
-                  <input class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" type="text" v-model="newColor" placeholder="Favourite Color" />
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Favourite
+                    Color</label>
+                  <input
+                    class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
+                    type="text" v-model="newColor" placeholder="Favourite Color"/>
                 </div>
               </div>
 
@@ -149,14 +172,18 @@
               <div style="flex: none; width: 60%;">
                 <div>
                   <label class="font-normal text-black text-sm text-start mb-2 block">Bio</label>
-                  <textarea class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none" rows="4" v-model="newBio" placeholder="Bio"></textarea>
+                  <textarea
+                    class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none"
+                    rows="4" v-model="newBio" placeholder="Bio"></textarea>
                 </div>
               </div>
             </div>
 
             <!-- Verification section -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-              <div class="self-center text-base md:text-xl">Phone number is <span v-if="!user.phone_number_verified">not</span> verified.</div>
+              <div class="self-center text-base md:text-xl">Phone number is <span
+                v-if="!user.phone_number_verified">not</span> verified.
+              </div>
               <button
                 v-if="!user.phone_number_verified"
                 @click="verifyPhoneNumber"
@@ -164,7 +191,9 @@
               >
                 Verify Phone Number
               </button>
-              <div class="self-center text-base md:text-xl">Email is <span v-if="!user.email_verified">not</span> verified.</div>
+              <div class="self-center text-base md:text-xl">Email is <span
+                v-if="!user.email_verified">not</span> verified.
+              </div>
               <button
                 v-if="!user.email_verified"
                 @click="verifyEmail"
@@ -191,7 +220,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import {onMounted, ref} from "vue"
+import {getAPI, UserProfilePath} from "@/api/paths.ts";
 
 const token = ref<string | null>(localStorage.getItem("token"))
 
@@ -211,7 +241,7 @@ const isUserPortalSidebar = ref(false)
 
 const getUserDetails = async () => {
   try {
-    const resp = await fetch("/api/v1/profile", {
+    const resp = await fetch(getAPI(UserProfilePath), {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token.value}`,
@@ -226,9 +256,6 @@ const getUserDetails = async () => {
     newBio.value = data.bio
   } catch (err) {
     console.error(err)
-    newDisplayName.value = "data.display_name"
-    newColor.value = "data.color"
-    newBio.value = "data.bio"
   }
 }
 
@@ -263,11 +290,11 @@ const logoutUser = () => {
 }
 
 const verifyEmail = () => {
-  window.location.href = "/input-your-email-page"
+  window.location.href = "/user/verify-email"
 }
 
 const verifyPhoneNumber = () => {
-  window.location.href = "/verify-phone-number-page"
+  window.location.href = "/user/verify-phone-number"
 }
 
 const showSidebar = (value: boolean) => {
@@ -286,12 +313,14 @@ onMounted(getUserDetails)
   border: 1px solid #bdc3ca;
   border-radius: 8px;
 }
+
 .btn {
   border: 2px solid #4f80e1;
   color: #4f80e1;
   padding: 12px;
   border-radius: 8px;
 }
+
 .btn:hover {
   background: #4f80e1;
   color: white;

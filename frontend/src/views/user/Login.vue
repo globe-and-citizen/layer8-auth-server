@@ -111,6 +111,8 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import {scram} from "@/utils/scram.ts"
+import {getAPI, UserLoginPath, UserLoginPrecheckPath} from "@/api/paths.js";
 
 const loginUsername = ref("");
 const loginPassword = ref("");
@@ -141,7 +143,7 @@ const loginUser = async () => {
     cNonce.value = btoa(String.fromCharCode(...cNonceBytes));
 
     const precheckRes = await fetch(
-      "[[ .ProxyURL ]]/api/v1/login-precheck",
+      getAPI(UserLoginPrecheckPath),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,7 +164,7 @@ const loginUser = async () => {
     const { data } = scram.keysHMAC(
       loginPassword.value,
       precheckBody.data.salt,
-      precheckBody.data.iter_count
+      precheckBody.data.iteration_count
     );
 
     const clientKeyBytes = scram.hexStringToBytes(data.clientKey);
@@ -178,7 +180,7 @@ const loginUser = async () => {
     );
 
     const loginRes = await fetch(
-      "[[ .ProxyURL ]]/api/v1/login-user",
+      getAPI(UserLoginPath),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -199,7 +201,7 @@ const loginUser = async () => {
         token.value = loginJSON.data.token;
         localStorage.setItem("token", token.value);
         showToastMessage("Login successful!");
-        window.location.href = "[[ .ProxyURL ]]/user";
+        window.location.href = "/user/profile";
       }
     } else {
       showToastMessage(loginJSON.message || "Login failed");

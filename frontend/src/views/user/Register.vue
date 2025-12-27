@@ -3,7 +3,7 @@
     <!-- NAVBAR -->
     <div class="user-container">
       <div class="bg-white justify-center items-center my-4">
-        <img src="@/assets/images/L8Logo.png" width="250" height="535" />
+        <img src="@/assets/images/L8Logo.png" width="250" height="535"/>
       </div>
     </div>
 
@@ -18,19 +18,19 @@
           <div class="mb-3">
             <label class="text-sm text-[#414141] mb-1 block">Username</label>
             <input
-              class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
-              v-model="registerUsername"
-              placeholder="Username"
+                class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
+                v-model="registerUsername"
+                placeholder="Username"
             />
           </div>
 
           <div class="mb-3">
             <label class="text-sm text-[#414141] mb-1 block">Password</label>
             <input
-              class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
-              type="password"
-              v-model="registerPassword"
-              placeholder="Password"
+                class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
+                type="password"
+                v-model="registerPassword"
+                placeholder="Password"
             />
           </div>
 
@@ -39,23 +39,23 @@
             >Confirm password</label
             >
             <input
-              class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
-              type="password"
-              v-model="confirmedPassword"
-              placeholder="Confirm Password"
+                class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
+                type="password"
+                v-model="confirmedPassword"
+                placeholder="Confirm Password"
             />
           </div>
 
           <button
-            class="w-full bg-[#4F80E1] rounded-lg text-white py-4 mb-4"
-            @click="registerUser"
+              class="w-full bg-[#4F80E1] rounded-lg text-white py-4 mb-4"
+              @click="registerUser"
           >
             Register
           </button>
 
           <a
-            href="/user-login-page"
-            class="text-sm text-[#414141] block text-center"
+              href="/user-login-page"
+              class="text-sm text-[#414141] block text-center"
           >
             Already have an account?
             <span class="font-bold">Login</span>
@@ -65,7 +65,7 @@
 
       <!-- RIGHT -->
       <div class="bg-white hidden md:flex items-center">
-        <img src="@/assets/images/cyber-computer.png" />
+        <img src="@/assets/images/cyber-computer.png"/>
       </div>
     </div>
 
@@ -82,17 +82,17 @@
           </div>
 
           <div
-            class="toast-msg text-white rounded-md transition-opacity"
-            :class="mnemonicCopied ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+              class="toast-msg text-white rounded-md transition-opacity"
+              :class="mnemonicCopied ? 'opacity-100' : 'opacity-0 pointer-events-none'"
           >
             Copied!
           </div>
 
           <div class="mnemonic_holder">
             <input
-              class="input-mnemonic"
-              readonly
-              :value="currMnemonic"
+                class="input-mnemonic"
+                readonly
+                :value="currMnemonic"
             />
             <button @click="copyToClipboard">
               📋
@@ -106,8 +106,8 @@
 
         <div class="modal__footer">
           <button
-            class="bg-[#4F80E1] rounded-lg text-white py-4 w-full"
-            @click="backToLogin"
+              class="bg-[#4F80E1] rounded-lg text-white py-4 w-full"
+              @click="backToLogin"
           >
             Got it!
           </button>
@@ -122,8 +122,8 @@
       <div class="bg-white flex justify-between items-center my-8">
         <div>
           <img
-            src="@/assets/images/L8Logo.png"
-            class="mb-6 h-[35px] md:h-[70px]"
+              src="@/assets/images/L8Logo.png"
+              class="mb-6 h-[35px] md:h-[70px]"
           />
           <p class="font-bold text-sm">©Layer8security 2023.</p>
         </div>
@@ -141,8 +141,8 @@
 
     <!-- TOAST -->
     <div
-      class="fixed top-3 right-3 bg-red-500 text-white p-2 rounded-md transition-opacity z-50"
-      :class="showToast ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+        class="fixed top-3 right-3 bg-red-500 text-white p-2 rounded-md transition-opacity z-50"
+        :class="showToast ? 'opacity-100' : 'opacity-0 pointer-events-none'"
     >
       {{ toastMessage }}
     </div>
@@ -150,7 +150,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import {ref} from "vue"
+import {getAPI, UserRegisterPath, UserRegisterPrecheckPath} from "@/api/paths.ts";
+import {mnemonic} from "@/utils/mnemonic.ts"
+import {scram} from "@/utils/scram.ts"
 
 const registerUsername = ref("")
 const registerPassword = ref("")
@@ -173,7 +176,7 @@ const copyToClipboard = async () => {
 }
 
 const backToLogin = () => {
-  window.location.href = "/user-login-page"
+  window.location.href = "/user-login"
 }
 
 const showToastMessage = (message: string) => {
@@ -187,9 +190,9 @@ const showToastMessage = (message: string) => {
 const registerUser = async () => {
   try {
     if (
-      registerUsername.value === "" ||
-      registerPassword.value === "" ||
-      confirmedPassword.value === ""
+        registerUsername.value === "" ||
+        registerPassword.value === "" ||
+        confirmedPassword.value === ""
     ) {
       showToastMessage("Please enter all details!")
       return
@@ -206,7 +209,7 @@ const registerUser = async () => {
     // @ts-ignore – provided by bundled.js
     const keyPair = mnemonic.getPrivateAndPublicKeys(currMnemonic.value)
 
-    const precheckResp = await fetch("/api/v1/register-user-precheck", {
+    const precheckResp = await fetch(getAPI(UserRegisterPrecheckPath), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -223,13 +226,13 @@ const registerUser = async () => {
     }
 
     // @ts-ignore – provided by scram-bundled.js
-    const { data } = scram.keysHMAC(
-      registerPassword.value,
-      precheckBody.data.salt,
-      precheckBody.data.iterationCount
+    const {data} = scram.keysHMAC(
+        registerPassword.value,
+        precheckBody.data.salt,
+        precheckBody.data.iteration_count
     )
 
-    const registerResp = await fetch("/api/v1/register-user", {
+    const registerResp = await fetch(getAPI(UserRegisterPath), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -26,17 +26,17 @@ func NewClientHandler(
 }
 
 func (h ClientHandler) RegisterHandler(authentication gin.HandlerFunc, middlewares ...gin.HandlerFunc) {
-	unauthenticatedGroup := h.router.Group("clients")
+	unauthenticatedGroup := h.router.Group("")
 	unauthenticatedGroup.POST("/check-backend-uri", h.CheckBackendURI)
-	unauthenticatedGroup.POST("/register-precheck", h.PrecheckRegister)
-	unauthenticatedGroup.POST("/register", h.Register)
-	unauthenticatedGroup.POST("/login-precheck", h.PrecheckLogin)
-	unauthenticatedGroup.POST("/login", h.Login)
+	unauthenticatedGroup.POST("/client-register-precheck", h.PrecheckRegister)
+	unauthenticatedGroup.POST("/client-register", h.Register)
+	unauthenticatedGroup.POST("/client-login-precheck", h.PrecheckLogin)
+	unauthenticatedGroup.POST("/client-login", h.Login)
 
 	authenticatedGroup := h.router.Group("client")
 	authenticatedGroup.Use(authentication)
 	authenticatedGroup.Use(middlewares...)
-	authenticatedGroup.POST("/profile", h.GetProfile)
+	authenticatedGroup.GET("/profile", h.GetProfile)
 	authenticatedGroup.GET("/usage-stats", h.GetUsageStatistics)
 	authenticatedGroup.GET("/client-unpaid-amount", h.GetUnpaidAmount)
 	authenticatedGroup.POST("/upload-certificate", h.UploadNTorCertificate)

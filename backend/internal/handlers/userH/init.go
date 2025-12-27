@@ -23,13 +23,13 @@ func NewUserHandler(router *gin.RouterGroup, uc userUC.IUserUsecase, config conf
 
 func (h UserHandler) RegisterHandler(authentication gin.HandlerFunc, middlewares ...gin.HandlerFunc) {
 
-	unauthenticatedGroup := h.router.Group("users")
-	unauthenticatedGroup.POST("/register-precheck", h.PrecheckRegister)
-	unauthenticatedGroup.POST("/register", h.Register)
-	unauthenticatedGroup.POST("/login-precheck", h.PrecheckLogin)
-	unauthenticatedGroup.POST("/login", h.Login)
-	unauthenticatedGroup.POST("/reset-password-precheck", h.PrecheckResetPassword)
-	unauthenticatedGroup.POST("/reset-password", h.ResetPassword)
+	unauthenticatedGroup := h.router.Group("")
+	unauthenticatedGroup.POST("/user-register-precheck", h.PrecheckRegister)
+	unauthenticatedGroup.POST("/user-register", h.Register)
+	unauthenticatedGroup.POST("/user-login-precheck", h.PrecheckLogin)
+	unauthenticatedGroup.POST("/user-login", h.Login)
+	unauthenticatedGroup.POST("/user-reset-password-precheck", h.PrecheckResetPassword)
+	unauthenticatedGroup.POST("/user-reset-password", h.ResetPassword)
 
 	authenticatedGroup := h.router.Group("user")
 	authenticatedGroup.Use(authentication)

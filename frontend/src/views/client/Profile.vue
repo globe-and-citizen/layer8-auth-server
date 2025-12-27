@@ -101,6 +101,7 @@
 import {onMounted, ref} from "vue"
 import UsageStatisticsSection from "@/views/client/profile/UsageStatisticsSection.vue";
 import UserDataSection from "@/views/client/profile/UserDataSection.vue";
+import {ClientProfilePath, getAPI} from "@/api/paths.ts";
 
 const isCopied = ref("");
 const token = ref(localStorage.getItem("clientToken"))
@@ -146,23 +147,23 @@ const handleX509CertificateUpload = async (e) => {
 }
 
 onMounted(async () => {
-  // if (!token.value) {
-  //   window.location.href = "/client-login-page"
-  //   return
-  // }
-
-  // const userResp = await fetch("/api/v1/client-profile", {
-  //   headers: { Authorization: `Bearer ${token.value}` },
-  // })
-  // user.value = await userResp.json()
-  user.value = {
-    id: "e7fd0e02-8eff-4c91-8f9e-56d2680c371a",
-    secret: "bbbfe7bc65aa274a8e96b775ce71cfe6",
-    name: "layer8",
-    redirect_uri: "http://localhost:5173/oauth2/callback",
-    backend_uri: "10.10.10.102:6193",
-    x509_certificate: "-----BEGIN CERTIFICATE-----\nMIH4MIGroAMCAQICFCAy9VJULMTDz4YxgT3Yj3gny6HTMAUGAytlcDAcMRowGAYD\nVQQDDBFyZXZlcnNlX3Byb3h5LmNvbTAeFw0yNTA3MTYxMDMzMzdaFw0yNjA3MTYx\nMDMzMzdaMB0xGzAZBgNVBAMMElJldmVyc2VQcm94eVNlcnZlcjAqMAUGAytlbgMh\nAIPSJGUnvz2lHXBelXjKvaqXPvdH0P+QrTTf792Z4SgKMAUGAytlcANBANMvwCl1\nB8oRatOTicKGmPlO6wUj3bmhd5ldOcd3xLB1h47HTRJs8mdTWD3pqayPGGnuYRsX\nNjCXOCyH/VbUlQM=\n-----END CERTIFICATE-----"
+  if (!token.value) {
+    window.location.href = "/client-login"
+    return
   }
+
+  const userResp = await fetch(getAPI(ClientProfilePath), {
+    headers: { Authorization: `Bearer ${token.value}` },
+  })
+  user.value = await userResp.json()
+  // user.value = {
+  //   id: "e7fd0e02-8eff-4c91-8f9e-56d2680c371a",
+  //   secret: "bbbfe7bc65aa274a8e96b775ce71cfe6",
+  //   name: "layer8",
+  //   redirect_uri: "http://localhost:5173/oauth2/callback",
+  //   backend_uri: "10.10.10.102:6193",
+  //   x509_certificate: "-----BEGIN CERTIFICATE-----\nMIH4MIGroAMCAQICFCAy9VJULMTDz4YxgT3Yj3gny6HTMAUGAytlcDAcMRowGAYD\nVQQDDBFyZXZlcnNlX3Byb3h5LmNvbTAeFw0yNTA3MTYxMDMzMzdaFw0yNjA3MTYx\nMDMzMzdaMB0xGzAZBgNVBAMMElJldmVyc2VQcm94eVNlcnZlcjAqMAUGAytlbgMh\nAIPSJGUnvz2lHXBelXjKvaqXPvdH0P+QrTTf792Z4SgKMAUGAytlcANBANMvwCl1\nB8oRatOTicKGmPlO6wUj3bmhd5ldOcd3xLB1h47HTRJs8mdTWD3pqayPGGnuYRsX\nNjCXOCyH/VbUlQM=\n-----END CERTIFICATE-----"
+  // }
 
 
   // new Chart(document.getElementById("statisticChart"), {

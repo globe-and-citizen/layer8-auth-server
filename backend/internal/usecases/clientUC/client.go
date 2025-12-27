@@ -18,7 +18,6 @@ func (uc *ClientUsecase) CheckBackendURI(req requestdto.ClientCheckBackendURI) (
 		return false, err
 	}
 
-	// todo validate format?
 	return response, nil
 }
 

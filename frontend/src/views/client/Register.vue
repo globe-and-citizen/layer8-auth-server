@@ -150,6 +150,13 @@
 
 <script>
 import { ref } from "vue";
+import {scram} from "@/utils/scram.ts"
+import {
+  ClientCheckBackendURIPath,
+  ClientRegisterPath,
+  ClientRegisterPrecheckPath,
+  getAPI
+} from "@/api/paths.js";
 
 export default {
   name: "Register",
@@ -179,13 +186,14 @@ export default {
     const checkBackendUri = async () => {
       try {
         isBUFocused.value = false;
-        const response = await fetch("[[ .ProxyURL ]]/api/v1/check-backend-uri", {
+        const response = await fetch(getAPI(ClientCheckBackendURIPath), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ backend_uri: backend_uri.value }),
         });
         isBackendUrlUsed.value = await response.json();
-        if (isBackendUrlUsed.value) {
+        console.log("checkbackenduri", isBackendUrlUsed.value.data);
+        if (isBackendUrlUsed.value?.data) {
           showToastMessage(`${backend_uri.value} is already registered to the other user!`, "error");
           backendUriText.value = backend_uri.value;
           backend_uri.value = "";
@@ -197,7 +205,7 @@ export default {
 
     const registerClient = async () => {
       try {
-        if (isBackendUrlUsed.value) {
+        if (isBackendUrlUsed.value.data) {
           showToastMessage(`${backendUriText.value} is already registered to the other user!`, "error");
           return;
         }
@@ -206,7 +214,7 @@ export default {
           return;
         }
 
-        const responseOne = await fetch("[[ .ProxyURL ]]/api/v1/register-client-precheck", {
+        const responseOne = await fetch(getAPI(ClientRegisterPrecheckPath), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username: username.value }),
@@ -224,7 +232,7 @@ export default {
           precheckBody.data.iterationCount
         );
 
-        const resp = await fetch("[[ .ProxyURL ]]/api/v1/register-client", {
+        const resp = await fetch(getAPI(ClientRegisterPath), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -240,7 +248,7 @@ export default {
         const registerBody = await resp.json();
         if (resp.status === 201) {
           showToastMessage(registerBody.message, "success");
-          window.location.href = "[[ .ProxyURL ]]/client-login-page";
+          window.location.href = "/client-login";
         } else if (registerBody.message) {
           showToastMessage(registerBody.message, "error");
         } else {

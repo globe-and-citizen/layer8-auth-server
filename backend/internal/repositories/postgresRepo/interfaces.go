@@ -26,7 +26,7 @@ type IClientRepositories interface {
 }
 
 type IUserRepository interface {
-	AddUser(newUser gormModels.User) error
+	UpdateUser(newUser gormModels.User) error
 	FindUserByID(userId uint) (gormModels.User, error)
 	GetUserByUsername(username string) (gormModels.User, error)
 	GetUserProfile(userID uint) (gormModels.User, gormModels.UserMetadata, error)

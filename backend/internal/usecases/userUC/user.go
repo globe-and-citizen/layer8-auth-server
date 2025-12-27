@@ -42,7 +42,7 @@ func (uc *UserUsecase) Register(req requestdto.UserRegister) error {
 		ServerKey: req.ServerKey,
 	}
 
-	return uc.postgres.AddUser(newUser)
+	return uc.postgres.UpdateUser(newUser)
 }
 
 func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
