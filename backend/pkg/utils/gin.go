@@ -19,7 +19,7 @@ type Response struct {
 
 func HandleError(c *gin.Context, status int, message string, err error) {
 	l := log.Get()
-	l.Err(err)
+	l.Err(err).Msg(message)
 
 	c.AbortWithStatusJSON(status, Response{
 		IsSuccess: false,

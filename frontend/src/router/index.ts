@@ -53,6 +53,22 @@ const router = createRouter({
       name: 'ClientProfile',
       component: () => import('@/views/client/Profile.vue'),
     },
+    {
+      path: '/oauth-login',
+      name: 'OAuthLogin',
+      component: () => import('@/views/oauth/Login.vue'),
+    },
+    {
+      // http://localhost:5001/authorize?client_id=e7fd0e02-8eff-4c91-8f9e-56d2680c371a&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Foauth2%2Fcallback&response_type=code&state=&scope=read%3Auser
+      path: '/oauth/authorize',
+      name: 'OAuthAuthorize',
+      component: () => import('@/views/oauth/Authorize.vue'),
+    },
+    {
+      path: '/oauth/error',
+      name: 'OAuthError',
+      component: () => import('@/views/oauth/Error.vue'),
+    },
   ],
 })
 

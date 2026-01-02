@@ -40,7 +40,7 @@ func (r *PostgresRepository) UpdateUser(updates gormModels.User) error {
 	return nil
 }
 
-func (r *PostgresRepository) FindUserByID(userId uint) (gormModels.User, error) {
+func (r *PostgresRepository) GetUserByID(userId uint) (gormModels.User, error) {
 	var user gormModels.User
 	e := r.db.Where("id = ?", userId).First(&user).Error
 

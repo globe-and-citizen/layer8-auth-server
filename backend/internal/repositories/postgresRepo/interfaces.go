@@ -27,7 +27,7 @@ type IClientRepositories interface {
 
 type IUserRepository interface {
 	UpdateUser(newUser gormModels.User) error
-	FindUserByID(userId uint) (gormModels.User, error)
+	GetUserByID(userId uint) (gormModels.User, error)
 	GetUserByUsername(username string) (gormModels.User, error)
 	GetUserProfile(userID uint) (gormModels.User, gormModels.UserMetadata, error)
 	PrecheckUserRegister(user gormModels.User) error

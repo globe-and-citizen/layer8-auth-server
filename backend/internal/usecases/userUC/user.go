@@ -42,7 +42,6 @@ func (uc *UserUsecase) Register(req requestdto.UserRegister) error {
 }
 
 func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
-
 	user, err := uc.postgres.GetUserByUsername(req.Username)
 	if err != nil {
 		return responsedto.UserLoginPrecheck{}, err

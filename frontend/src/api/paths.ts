@@ -13,8 +13,13 @@ const ClientLoginPrecheckPath = '/client-login-precheck';
 const ClientLoginPath = '/client-login';
 const ClientProfilePath = '/client/profile';
 
+const OAuthUserPrecheckLoginPath = '/oauth-login-precheck';
+const OAuthUserLoginPath = '/oauth-login';
+const OAuthGetAuthorizeContextPath = "/oauth/authorize";
+const OAuthPostAuthorizeDecisionPath = "/oauth/authorize";
+
 const getAPI = (api: string) => {
-  return import.meta.env.VITE_BACKEND_BASE_URL + `/api/v1${api}`;
+  return `/api/v1${api}`;
 }
 
 export {
@@ -32,6 +37,11 @@ export {
   ClientLoginPrecheckPath,
   ClientLoginPath,
   ClientProfilePath,
+
+  OAuthUserPrecheckLoginPath,
+  OAuthUserLoginPath,
+  OAuthGetAuthorizeContextPath,
+  OAuthPostAuthorizeDecisionPath,
 
   getAPI
 }

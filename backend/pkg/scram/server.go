@@ -62,8 +62,6 @@ func CreateServerLoginFinalMessage(
 	clientKeyHash := sha256.Sum256(clientKeyBytes)
 
 	clientKeyHashStr := hex.EncodeToString(clientKeyHash[:])
-	fmt.Println("client key:", clientKeyHashStr)
-	fmt.Println("stored key:", storedKey)
 	if clientKeyHashStr != storedKey {
 		return ServerLoginFinalMessage{}, fmt.Errorf("server failed to authenticate the user")
 	}

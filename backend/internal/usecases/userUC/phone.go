@@ -10,7 +10,7 @@ import (
 )
 
 func (uc *UserUsecase) VerifyPhoneNumber(userID uint) (string, error) {
-	user, err := uc.postgres.FindUserByID(userID)
+	user, err := uc.postgres.GetUserByID(userID)
 	if err != nil {
 		return "failed to get user", err
 	}

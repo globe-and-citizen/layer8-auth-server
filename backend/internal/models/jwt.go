@@ -15,3 +15,14 @@ type ClientClaims struct {
 	ClientID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
+
+// OAuthAuthenticationClaims represents the claims of an OAuth authentication token
+type OAuthAuthenticationClaims struct {
+	jwt.RegisteredClaims
+}
+
+type ClientAccessTokenClaims struct {
+	UserID uint   `json:"user_id"`
+	Scopes string `json:"scopes"`
+	jwt.RegisteredClaims
+}

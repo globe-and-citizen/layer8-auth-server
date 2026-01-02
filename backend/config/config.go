@@ -50,3 +50,8 @@ type InfluxDB2Config struct {
 	Bucket      string `env:"INFLUXDB_BUCKET" default:"layer8"`
 	Token       string `env:"INFLUXDB_TOKEN" default:"DEFAULT_TOKEN_FOR_TESTING"`
 }
+
+type OAuthConfig struct {
+	CookieMaxAge       int   `env:"OAUTH_COOKIE_MAX_AGE" default:"3600"` // in seconds
+	AuthzCodeExpiryMin int64 `env:"OAUTH_AUTHZ_CODE_EXPIRY_MIN" default:"10"`
+}

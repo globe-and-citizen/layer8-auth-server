@@ -2,8 +2,10 @@ package utils
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -24,6 +26,16 @@ func GenerateSecret(secretSize int) string {
 	}
 
 	return hex.EncodeToString(randomBytes[:])
+}
+
+func GenerateRandomBase64String(size int) (string, error) {
+	buf := make([]byte, size)
+	_, err := io.ReadFull(rand.Reader, buf)
+	if err != nil {
+		return "", fmt.Errorf("could not generate random bytes: %s", err)
+	}
+
+	return base64.URLEncoding.EncodeToString(buf), nil
 }
 
 func RemoveProtocolFromURL(url string) string {

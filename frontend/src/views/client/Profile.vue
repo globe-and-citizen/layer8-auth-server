@@ -165,7 +165,6 @@ onMounted(async () => {
   //   x509_certificate: "-----BEGIN CERTIFICATE-----\nMIH4MIGroAMCAQICFCAy9VJULMTDz4YxgT3Yj3gny6HTMAUGAytlcDAcMRowGAYD\nVQQDDBFyZXZlcnNlX3Byb3h5LmNvbTAeFw0yNTA3MTYxMDMzMzdaFw0yNjA3MTYx\nMDMzMzdaMB0xGzAZBgNVBAMMElJldmVyc2VQcm94eVNlcnZlcjAqMAUGAytlbgMh\nAIPSJGUnvz2lHXBelXjKvaqXPvdH0P+QrTTf792Z4SgKMAUGAytlcANBANMvwCl1\nB8oRatOTicKGmPlO6wUj3bmhd5ldOcd3xLB1h47HTRJs8mdTWD3pqayPGGnuYRsX\nNjCXOCyH/VbUlQM=\n-----END CERTIFICATE-----"
   // }
 
-
   // new Chart(document.getElementById("statisticChart"), {
   //   type: "line",
   //   data: {

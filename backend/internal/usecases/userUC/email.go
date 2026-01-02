@@ -7,7 +7,7 @@ import (
 )
 
 func (uc *UserUsecase) VerifyEmail(userID uint, userEmail string) error {
-	user, err := uc.postgres.FindUserByID(userID)
+	user, err := uc.postgres.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (uc *UserUsecase) CheckEmailVerificationCode(userId uint, code string) erro
 }
 
 func (uc *UserUsecase) SaveProofOfEmailVerification(userID uint, req requestdto.UserCheckEmailVerificationCode) (string, error) {
-	user, err := uc.postgres.FindUserByID(userID)
+	user, err := uc.postgres.GetUserByID(userID)
 	if err != nil {
 		return "Failed to get user", err
 	}

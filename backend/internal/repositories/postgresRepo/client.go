@@ -90,12 +90,6 @@ func (r *PostgresRepository) SaveX509Certificate(clientID string, certificate st
 }
 
 func (r *PostgresRepository) GetClientByID(id string) (gormModels.Client, error) {
-	//if func() bool {
-	//	var prefix string = "client:"
-	//	return len(id) >= len(prefix) && id[0:len(prefix)] == prefix
-	//}() {
-	//	id = strings.TrimPrefix(id, "client:")
-	//} todo in which case the input id will include a prefix? - I don't know so I comment it out for now, but if we need to do it, it should be done outside of this function
 	var client gormModels.Client
 	err := r.db.Where("id = ?", id).First(&client).Error
 	if err != nil {

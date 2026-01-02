@@ -6,6 +6,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/config"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/clientH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/middlewareH"
+	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/oauthH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/userH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/codeGenRepo"
@@ -17,6 +18,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/clientUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/middlewareUC"
+	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/oauthUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/userUC"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/code"
 	apiLog "globe-and-citizen/layer8/auth-server/backend/pkg/log"
@@ -52,7 +54,7 @@ func readConfig() {
 
 	serverConfig = config.ServerConfig{
 		Host:      "localhost",
-		Port:      5002,
+		Port:      5001,
 		JWTSecret: "5b0b18dc37004b97946367ca5d82673918a6c6e7a817bf84236abe1c0907b9bf",
 	}
 
@@ -137,15 +139,22 @@ func main() {
 	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
 	postgresRepository.Migrate()
 
-	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
+	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
 	emailRepository := emailRepo.NewEmailRepository(emailConfig)
 	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
 	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
 	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
 
-	router := app.Group("/")
-	router = app.Group("/api/v1")
+	// Serve static assets
+	app.Static("/assets", "../frontend/dist/assets")
+
+	// SPA fallback
+	app.NoRoute(func(c *gin.Context) {
+		c.File("../frontend/dist/index.html")
+	})
+
+	apiGroup := app.Group("/api/v1")
 
 	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository, postgresRepository)
 	middlewareHandler := middlewareH.NewMiddlewareHandler(middlewareUsecase)
@@ -158,7 +167,7 @@ func main() {
 		zkRepository,
 		phoneRepository,
 	)
-	userHandler := userH.NewUserHandler(router, userUsecase, userConfig)
+	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
 	userHandler.RegisterHandler(middlewareHandler.AuthenticateUser)
 
 	clientUsecase := clientUC.NewClientUsecase(
@@ -166,8 +175,12 @@ func main() {
 		tokenRepository,
 		statsRepository,
 	)
-	clientHandler := clientH.NewClientHandler(router, config.ClientConfig{}, clientUsecase)
+	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
 	clientHandler.RegisterHandler(middlewareHandler.AuthenticateClient)
+
+	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
+	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
+	oauthHandler.RegisterHandlers(middlewareHandler.AuthenticateOAuth, middlewareHandler.ValidateAccessToken)
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
