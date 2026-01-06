@@ -45,14 +45,14 @@ func (h OAuthHandler) getAuthenticatedUserID(c *gin.Context) (uint, error) {
 	return userID, nil
 }
 
-func (h OAuthHandler) RegisterHandlers(authHandler gin.HandlerFunc, validateAccessToken gin.HandlerFunc, middlewares ...gin.HandlerFunc) {
+func (h OAuthHandler) RegisterHandlers() {
 	h.router.POST("/oauth-login", h.UserLogin)
 	h.router.POST("/oauth-login-precheck", h.PrecheckUserLogin)
 
 	oauthGroup := h.router.Group("/oauth")
-	oauthGroup.GET("/authorize", authHandler, h.AuthorizeContext)
-	oauthGroup.POST("/authorize", authHandler, h.AuthorizeDecision)
+	oauthGroup.GET("/authorize", h.AuthenticateOAuth, h.AuthorizeContext)
+	oauthGroup.POST("/authorize", h.AuthenticateOAuth, h.AuthorizeDecision)
 
 	oauthGroup.POST("/token", h.GetAccessToken)
-	oauthGroup.POST("/zk-metadata", validateAccessToken, h.GetZkUserMetadata)
+	oauthGroup.POST("/zk-metadata", h.ValidateAccessToken, h.GetZkUserMetadata)
 }

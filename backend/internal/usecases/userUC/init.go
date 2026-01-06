@@ -26,6 +26,7 @@ type IUserUsecase interface { // todo usecase methods should return custom error
 	GenerateAndSaveTelegramSessionIDHash(userID uint) (sessionID []byte, msg string, err error)
 	PrecheckResetPassword(req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error)
 	ResetPassword(request requestdto.UserResetPassword) (httpStatus int, msg string, err error)
+	VerifyUserJWTToken(tokenString string) (userID uint, userUsername string, err error)
 }
 
 type UserUsecase struct {

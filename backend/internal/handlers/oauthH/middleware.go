@@ -9,6 +9,44 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h OAuthHandler) AuthenticateOAuth(c *gin.Context) {
+	token, err := c.Cookie(consts.OAuthCookieName)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		return
+	}
+
+	userID, username, err := h.uc.VerifyOAuthJWTToken(token)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		return
+	}
+
+	// save claims in context for further handlers
+	c.Set(consts.MiddlewareKeyUserUsername, username)
+	c.Set(consts.MiddlewareKeyUserUserID, userID)
+	c.Next()
+}
+
+func (h OAuthHandler) ValidateAccessToken(c *gin.Context) {
+	token, err := utils.GetBearerToken(c)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		return
+	}
+
+	userID, scopes, err := h.uc.VerifyAccessToken(token)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		return
+	}
+
+	// save claims in context for further handlers
+	c.Set(consts.MiddlewareKeyOAuthScopes, scopes)
+	c.Set(consts.MiddlewareKeyUserUserID, userID)
+	c.Next()
+}
+
 func (h OAuthHandler) getAccessTokenUserID(c *gin.Context) (uint, error) {
 	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 

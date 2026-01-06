@@ -15,6 +15,8 @@ type IOAuthUsecase interface {
 	AuthorizeDecision(req requestdto.OAuthAuthorizeDecision, userID uint, authzCodeExpiry int64) (*responsedto.OAuthAuthorizeDecision, *errors.OAuthError)
 	GetAccessToken(req requestdto.OAuthAccessToken) (*responsedto.OAuthAccessToken, *errors.OAuthError)
 	GetZkUserMetadata(req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *errors.OAuthError)
+	VerifyOAuthJWTToken(tokenString string) (userID uint, userUsername string, err error)
+	VerifyAccessToken(tokenString string) (userID uint, scopes string, err error)
 }
 
 func NewOAuthUsecase(postgres postgresRepo.IPostgresRepository, token tokenRepo.ITokenRepository) IOAuthUsecase {

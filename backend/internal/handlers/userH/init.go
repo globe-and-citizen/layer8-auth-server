@@ -21,7 +21,7 @@ func NewUserHandler(router *gin.RouterGroup, uc userUC.IUserUsecase, config conf
 	}
 }
 
-func (h UserHandler) RegisterHandler(authentication gin.HandlerFunc, middlewares ...gin.HandlerFunc) {
+func (h UserHandler) RegisterHandler() {
 
 	unauthenticatedGroup := h.router.Group("")
 	unauthenticatedGroup.POST("/user-register-precheck", h.PrecheckRegister)
@@ -32,8 +32,7 @@ func (h UserHandler) RegisterHandler(authentication gin.HandlerFunc, middlewares
 	unauthenticatedGroup.POST("/user-reset-password", h.ResetPassword)
 
 	authenticatedGroup := h.router.Group("user")
-	authenticatedGroup.Use(authentication)
-	authenticatedGroup.Use(middlewares...)
+	authenticatedGroup.Use(h.AuthenticateUser)
 
 	authenticatedGroup.GET("/profile", h.GetProfile)
 	authenticatedGroup.POST("/verify-email", h.VerifyEmail)

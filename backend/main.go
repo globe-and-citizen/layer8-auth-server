@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/config"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/clientH"
-	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/middlewareH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/oauthH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/handlers/userH"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
@@ -17,7 +16,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/clientUC"
-	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/middlewareUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/oauthUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/userUC"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/code"
@@ -156,9 +154,6 @@ func main() {
 
 	apiGroup := app.Group("/api/v1")
 
-	middlewareUsecase := middlewareUC.NewMiddlewareUsecase(tokenRepository, postgresRepository)
-	middlewareHandler := middlewareH.NewMiddlewareHandler(middlewareUsecase)
-
 	userUsecase := userUC.NewUserUsecase(
 		postgresRepository,
 		tokenRepository,
@@ -168,7 +163,7 @@ func main() {
 		phoneRepository,
 	)
 	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
-	userHandler.RegisterHandler(middlewareHandler.AuthenticateUser)
+	userHandler.RegisterHandler()
 
 	clientUsecase := clientUC.NewClientUsecase(
 		postgresRepository,
@@ -176,11 +171,11 @@ func main() {
 		statsRepository,
 	)
 	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
-	clientHandler.RegisterHandler(middlewareHandler.AuthenticateClient)
+	clientHandler.RegisterHandler()
 
 	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
 	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
-	oauthHandler.RegisterHandlers(middlewareHandler.AuthenticateOAuth, middlewareHandler.ValidateAccessToken)
+	oauthHandler.RegisterHandlers()
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)

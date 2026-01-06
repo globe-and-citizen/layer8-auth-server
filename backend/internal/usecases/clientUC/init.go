@@ -18,6 +18,7 @@ type IClientUsecase interface {
 	GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error)
 	GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error)
 	SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error
+	VerifyClientJWTToken(tokenString string) (clientID string, clientUsername string, err error)
 }
 
 type ClientUsecase struct {

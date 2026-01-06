@@ -8,6 +8,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h ClientHandler) AuthenticateClient(c *gin.Context) {
+	token, err := utils.GetBearerToken(c)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		return
+	}
+
+	clientID, username, err := h.uc.VerifyClientJWTToken(token)
+	if err != nil {
+		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		return
+	}
+
+	// save claims in context for further handlers
+	c.Set(consts.MiddlewareKeyClientUsername, username)
+	c.Set(consts.MiddlewareKeyClientClientID, clientID)
+	c.Next()
+}
+
 func (h ClientHandler) getAuthenticatedUsername(c *gin.Context) (string, error) {
 	username := c.GetString(consts.MiddlewareKeyClientUsername)
 	if username == "" {
