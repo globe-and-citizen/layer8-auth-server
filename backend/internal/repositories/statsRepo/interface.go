@@ -11,29 +11,58 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-type IStatisticsRepository interface {
+type IInfluxdbRepository interface {
+	IsConnected(ctx context.Context) error
 	GetTotalRequestsInLastXDaysByClient(days int, clientID string) (models.Statistics, error)
 	GetTotalByDateRangeByClient(start time.Time, end time.Time, clientID string) (float64, error)
 	GetTotalUsageStatisticsByDateRangeForEachClient(start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error)
 }
 
-func NewStatisticsRepository(conf config.InfluxDB2Config) IStatisticsRepository {
+func NewInfluxdbRepository(conf config.InfluxDB2Config) IInfluxdbRepository {
 	influxdb2Client := influxdb2.NewClient(conf.Url, conf.Token)
-	return &StatisticsRepository{
-		config:          conf,
-		influxdb2Client: influxdb2Client,
+
+	return &InfluxdbRepository{
+		config: conf,
+		client: influxdb2Client,
 	}
 }
 
-type StatisticsRepository struct {
-	config          config.InfluxDB2Config
-	influxdb2Client influxdb2.Client
+type InfluxdbRepository struct {
+	config config.InfluxDB2Config
+	client influxdb2.Client
 }
 
-func (r *StatisticsRepository) GetTotalRequestsInLastXDaysByClient(days int, clientID string) (models.Statistics, error) {
+// IsConnected returns nil if InfluxDB responds to a trivial query, else an error.
+func (r *InfluxdbRepository) IsConnected(ctx context.Context) error {
+	queryAPI := r.client.QueryAPI(r.config.Org)
+
+	// lightweight flux query; uses the configured bucket and a short time range
+	query := fmt.Sprintf(`from(bucket: "%s")
+	|> range(start: -1m)
+	|> limit(n:1)`, r.config.Bucket)
+
+	result, err := queryAPI.Query(ctx, query)
+	if err != nil {
+		return err
+	}
+	// ensure we consume and check for query errors
+	defer result.Close()
+
+	for result.Next() {
+		// got at least one record -> healthy
+		return nil
+	}
+	if result.Err() != nil {
+		return result.Err()
+	}
+	// no records but no error -> server responded; treat as healthy
+	return nil
+}
+
+func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(days int, clientID string) (models.Statistics, error) {
 	result := make([]models.UsageStatisticPerDate, 0)
 
-	queryAPI := r.influxdb2Client.QueryAPI(r.config.Org)
+	queryAPI := r.client.QueryAPI(r.config.Org)
 
 	query := fmt.Sprintf(`from(bucket: "%s")
 	|> range(start: -%dd)
@@ -77,14 +106,14 @@ func (r *StatisticsRepository) GetTotalRequestsInLastXDaysByClient(days int, cli
 	}
 
 	return models.Statistics{
-		Total:            totalRequest,
-		Average:          averageRequest,
-		StatisticDetails: result,
+		Total:   totalRequest,
+		Average: averageRequest,
+		Details: result,
 	}, nil
 }
 
-func (r *StatisticsRepository) GetTotalByDateRangeByClient(start time.Time, end time.Time, clientID string) (float64, error) {
-	queryAPI := r.influxdb2Client.QueryAPI(r.config.Org)
+func (r *InfluxdbRepository) GetTotalByDateRangeByClient(start time.Time, end time.Time, clientID string) (float64, error) {
+	queryAPI := r.client.QueryAPI(r.config.Org)
 
 	query := fmt.Sprintf(`
 	from(bucket: "%s")
@@ -94,8 +123,6 @@ func (r *StatisticsRepository) GetTotalByDateRangeByClient(start time.Time, end 
 	|> filter(fn: (r) => r["_field"] == "counter")
 	|> group(columns: ["client_id"])
 	|> sum()`, r.config.Bucket, start.Format(time.RFC3339), end.Format(time.RFC3339), clientID)
-
-	fmt.Println(query)
 
 	rawDataFromInflux, err := queryAPI.Query(context.Background(), query)
 	if err != nil {
@@ -116,8 +143,8 @@ func (r *StatisticsRepository) GetTotalByDateRangeByClient(start time.Time, end 
 	return decimalValueTotal, err
 }
 
-func (r *StatisticsRepository) GetTotalUsageStatisticsByDateRangeForEachClient(start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error) {
-	queryAPI := r.influxdb2Client.QueryAPI(r.config.Org)
+func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error) {
+	queryAPI := r.client.QueryAPI(r.config.Org)
 
 	query := fmt.Sprintf(`
 	from(bucket: "%s")

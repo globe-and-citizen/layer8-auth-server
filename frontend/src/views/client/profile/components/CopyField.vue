@@ -1,7 +1,7 @@
 <template>
   <input readonly
          class="bg-[#ECF4FD] border border-[#EADFD8] p-1 md:p-3 rounded-lg w-full font-medium"
-         placeholder="Secret"
+         :placeholder="placeholder"
          :value="value"/>
   <button value="Secret" v-if="copied !== value" @click="$emit('copy', value)">
     <svg fill="#000000" width="30px" height="30px" viewBox="0 0 16 16"
@@ -24,6 +24,7 @@
 
 <script setup>
 defineProps({
+  placeholder: String,
   value: String,
   copied: String,
 })

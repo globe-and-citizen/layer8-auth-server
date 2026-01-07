@@ -50,6 +50,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import Chart from "chart.js/auto";
+import {ClientStatisticsPath, getAPI} from "@/api/paths.js";
+
+const token = ref(localStorage.getItem("clientToken"))
 
 const stats = ref({
   metric_type: "",
@@ -66,64 +69,64 @@ const stats = ref({
   },
 })
 
-onMounted(() => {
-  // const statsResp = await fetch("/api/v1/usage-stats", {
-  //   headers: { Authorization: `Bearer ${token.value}` },
-  // })
-  // stats.value = (await statsResp.json()).data
+onMounted(async () => {
+  const statsResp = await fetch(getAPI(ClientStatisticsPath), {
+    headers: {Authorization: `Bearer ${token.value}`},
+  })
+  stats.value = (await statsResp.json()).data
 
-  stats.value = {
-    metric_type: "data_transferred",
-    unit_of_measurement: "GB",
-    month_to_date: {
-      month: "December",
-      month_to_date_usage: 0,
-      forecasted_end_of_month_usage: 0
-    },
-    last_thirty_days_statistic: {
-      total: 0.007913035,
-      average: 0.0002552591935483871,
-      details: [
-        {date: "Wed, 26 Nov 2025", total: 0},
-        {date: "Thu, 27 Nov 2025", total: 0},
-        {date: "Fri, 28 Nov 2025", total: 0.007913035},
-        {date: "Sat, 29 Nov 2025", total: 0},
-        {date: "Sun, 30 Nov 2025", total: 0},
-        {date: "Mon, 01 Dec 2025", total: 0},
-        {date: "Tue, 02 Dec 2025", total: 0},
-        {date: "Wed, 03 Dec 2025", total: 0},
-        {date: "Thu, 04 Dec 2025", total: 0},
-        {date: "Fri, 05 Dec 2025", total: 0},
-        {date: "Sat, 06 Dec 2025", total: 0},
-        {date: "Sun, 07 Dec 2025", total: 0},
-        {date: "Mon, 08 Dec 2025", total: 0},
-        {date: "Tue, 09 Dec 2025", total: 0},
-        {date: "Wed, 10 Dec 2025", total: 0},
-        {date: "Thu, 11 Dec 2025", total: 0},
-        {date: "Fri, 12 Dec 2025", total: 0},
-        {date: "Sat, 13 Dec 2025", total: 0},
-        {date: "Sun, 14 Dec 2025", total: 0},
-        {
-          date: "Mon, 15 Dec 2025",
-          total: 0
-        }, {date: "Tue, 16 Dec 2025", total: 0}, {
-          date: "Wed, 17 Dec 2025",
-          total: 0
-        }, {date: "Thu, 18 Dec 2025", total: 0}, {
-          date: "Fri, 19 Dec 2025",
-          total: 0
-        }, {date: "Sat, 20 Dec 2025", total: 0}, {
-          date: "Sun, 21 Dec 2025",
-          total: 0
-        }, {date: "Mon, 22 Dec 2025", total: 0}, {
-          date: "Tue, 23 Dec 2025",
-          total: 0
-        }, {date: "Wed, 24 Dec 2025", total: 0}, {
-          date: "Thu, 25 Dec 2025",
-          total: 0
-        }, {date: "Thu, 25 Dec 2025", total: 0}]
-    }
-  }
+  // stats.value = {
+  //   metric_type: "data_transferred",
+  //   unit_of_measurement: "GB",
+  //   month_to_date: {
+  //     month: "December",
+  //     month_to_date_usage: 0,
+  //     forecasted_end_of_month_usage: 0
+  //   },
+  //   last_thirty_days_statistic: {
+  //     total: 0.007913035,
+  //     average: 0.0002552591935483871,
+  //     details: [
+  //       {date: "Wed, 26 Nov 2025", total: 0},
+  //       {date: "Thu, 27 Nov 2025", total: 0},
+  //       {date: "Fri, 28 Nov 2025", total: 0.007913035},
+  //       {date: "Sat, 29 Nov 2025", total: 0},
+  //       {date: "Sun, 30 Nov 2025", total: 0},
+  //       {date: "Mon, 01 Dec 2025", total: 0},
+  //       {date: "Tue, 02 Dec 2025", total: 0},
+  //       {date: "Wed, 03 Dec 2025", total: 0},
+  //       {date: "Thu, 04 Dec 2025", total: 0},
+  //       {date: "Fri, 05 Dec 2025", total: 0},
+  //       {date: "Sat, 06 Dec 2025", total: 0},
+  //       {date: "Sun, 07 Dec 2025", total: 0},
+  //       {date: "Mon, 08 Dec 2025", total: 0},
+  //       {date: "Tue, 09 Dec 2025", total: 0},
+  //       {date: "Wed, 10 Dec 2025", total: 0},
+  //       {date: "Thu, 11 Dec 2025", total: 0},
+  //       {date: "Fri, 12 Dec 2025", total: 0},
+  //       {date: "Sat, 13 Dec 2025", total: 0},
+  //       {date: "Sun, 14 Dec 2025", total: 0},
+  //       {
+  //         date: "Mon, 15 Dec 2025",
+  //         total: 0
+  //       }, {date: "Tue, 16 Dec 2025", total: 0}, {
+  //         date: "Wed, 17 Dec 2025",
+  //         total: 0
+  //       }, {date: "Thu, 18 Dec 2025", total: 0}, {
+  //         date: "Fri, 19 Dec 2025",
+  //         total: 0
+  //       }, {date: "Sat, 20 Dec 2025", total: 0}, {
+  //         date: "Sun, 21 Dec 2025",
+  //         total: 0
+  //       }, {date: "Mon, 22 Dec 2025", total: 0}, {
+  //         date: "Tue, 23 Dec 2025",
+  //         total: 0
+  //       }, {date: "Wed, 24 Dec 2025", total: 0}, {
+  //         date: "Thu, 25 Dec 2025",
+  //         total: 0
+  //       }, {date: "Thu, 25 Dec 2025", total: 0}]
+  //   }
+  // }
 
   const mappedValue = stats.value.last_thirty_days_statistic?.details?.map(v => {
     v.total = (v.total * 1000000).toFixed(4)

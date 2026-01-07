@@ -24,13 +24,13 @@ type IClientUsecase interface {
 type ClientUsecase struct {
 	postgres postgresRepo.IClientRepositories
 	token    tokenRepo.ITokenRepository
-	stats    statsRepo.IStatisticsRepository
+	stats    statsRepo.IInfluxdbRepository
 }
 
 func NewClientUsecase(
 	postgres postgresRepo.IClientRepositories,
 	token tokenRepo.ITokenRepository,
-	stats statsRepo.IStatisticsRepository,
+	stats statsRepo.IInfluxdbRepository,
 ) IClientUsecase {
 	return &ClientUsecase{
 		postgres: postgres,

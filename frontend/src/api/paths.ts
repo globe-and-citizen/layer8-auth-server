@@ -12,6 +12,7 @@ const ClientRegisterPath = '/client-register';
 const ClientLoginPrecheckPath = '/client-login-precheck';
 const ClientLoginPath = '/client-login';
 const ClientProfilePath = '/client/profile';
+const ClientStatisticsPath = '/client/usage-stats'
 
 const OAuthUserPrecheckLoginPath = '/oauth-login-precheck';
 const OAuthUserLoginPath = '/oauth-login';
@@ -37,6 +38,7 @@ export {
   ClientLoginPrecheckPath,
   ClientLoginPath,
   ClientProfilePath,
+  ClientStatisticsPath,
 
   OAuthUserPrecheckLoginPath,
   OAuthUserLoginPath,

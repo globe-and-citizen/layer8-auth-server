@@ -60,6 +60,10 @@ export function bytesToHexString(bytes: number[]): string {
 }
 
 export function xorBytes(bytesA: number[], bytesB: number[]): number[] {
+  if (bytesA.length !== bytesB.length) {
+    throw new Error("Byte arrays must have the same length");
+  }
+
   return bytesA.map((byte, index) => byte ^ bytesB[index]);
 }
 

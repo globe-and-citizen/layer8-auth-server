@@ -7,7 +7,7 @@
         <div class="hidden md:block lg:block">
           <div class="flex space-x-4 items-center">
             <!--            <img src="/assets-v1/templates/assets/images/user_image.png" />-->
-            <div>{{ user.name }}</div>
+            <div>{{ userName }}</div>
           </div>
         </div>
         <div class="cursor-pointer block md:hidden lg:hidden" @click="showSidebar(true)">
@@ -70,17 +70,14 @@
         <!-- Main Content -->
         <main class="md:col-span-4">
           <div class="font-bold text-2xl md:text-4xl text-[#2F80ED] text-center my-4 md:my-9">
-            Welcome “{{ user.name }}!”
+            Welcome “{{ userName }}!”
             Client Portal
           </div>
 
           <div class="grid md:grid-cols-1 md:gap-x-4">
             <!-- User Data -->
             <UserDataSection
-              @copy="copyToClipboard"
-              @upload-cert="handleX509CertificateUpload"
-              :user="user"
-              :is-copied="isCopied"
+              @user-data=getUser
             />
 
             <!-- Statistics -->
@@ -91,48 +88,20 @@
     </div>
   </div>
 
-  <div :class="showToast ? 'opacity-100' : 'opacity-0 pointer-events-none'"
-       class="fixed top-3 right-3 bg-green-500 text-white p-2 rounded-md transition-opacity ease-in-out duration-500 z-50">
-    {{ toastMessage }}
-  </div>
+
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from "vue"
+import {ref} from "vue"
 import UsageStatisticsSection from "@/views/client/profile/UsageStatisticsSection.vue";
 import UserDataSection from "@/views/client/profile/UserDataSection.vue";
-import {ClientProfilePath, getAPI} from "@/api/paths.ts";
 
-const isCopied = ref("");
-const token = ref(localStorage.getItem("clientToken"))
+const userName = ref("")
 const sidebarShow = ref(false)
-const showToast = ref(false)
-const toastMessage = ref("")
 
-const user = ref({
-  id: "",
-  name: "",
-  secret: "",
-  redirect_uri: "",
-  backend_uri: "",
-  x509_certificate: "",
-})
-
-const showSidebar = (v) => {
+const showSidebar = (v: boolean) => {
   sidebarShow.value = v
   document.body.style.overflow = v ? "hidden" : "auto"
-}
-
-const showToastMessage = (msg) => {
-  toastMessage.value = msg
-  showToast.value = true
-  setTimeout(() => (showToast.value = false), 3000)
-}
-
-const copyToClipboard = async (text) => {
-  isCopied.value = text
-  await navigator.clipboard.writeText(text)
-  showToastMessage("Copied to clipboard")
 }
 
 const logoutUser = () => {
@@ -140,47 +109,10 @@ const logoutUser = () => {
   window.location.href = "/"
 }
 
-const handleX509CertificateUpload = async (e) => {
-  const cert = await e.target.files[0].text()
-  user.value.x509_certificate = cert
-  showToastMessage("Certificate uploaded")
+const getUser = (text: string) => {
+  userName.value = text
+  console.log("user name", userName.value)
 }
-
-onMounted(async () => {
-  if (!token.value) {
-    window.location.href = "/client-login"
-    return
-  }
-
-  const userResp = await fetch(getAPI(ClientProfilePath), {
-    headers: { Authorization: `Bearer ${token.value}` },
-  })
-  user.value = await userResp.json()
-  // user.value = {
-  //   id: "e7fd0e02-8eff-4c91-8f9e-56d2680c371a",
-  //   secret: "bbbfe7bc65aa274a8e96b775ce71cfe6",
-  //   name: "layer8",
-  //   redirect_uri: "http://localhost:5173/oauth2/callback",
-  //   backend_uri: "10.10.10.102:6193",
-  //   x509_certificate: "-----BEGIN CERTIFICATE-----\nMIH4MIGroAMCAQICFCAy9VJULMTDz4YxgT3Yj3gny6HTMAUGAytlcDAcMRowGAYD\nVQQDDBFyZXZlcnNlX3Byb3h5LmNvbTAeFw0yNTA3MTYxMDMzMzdaFw0yNjA3MTYx\nMDMzMzdaMB0xGzAZBgNVBAMMElJldmVyc2VQcm94eVNlcnZlcjAqMAUGAytlbgMh\nAIPSJGUnvz2lHXBelXjKvaqXPvdH0P+QrTTf792Z4SgKMAUGAytlcANBANMvwCl1\nB8oRatOTicKGmPlO6wUj3bmhd5ldOcd3xLB1h47HTRJs8mdTWD3pqayPGGnuYRsX\nNjCXOCyH/VbUlQM=\n-----END CERTIFICATE-----"
-  // }
-
-  // new Chart(document.getElementById("statisticChart"), {
-  //   type: "line",
-  //   data: {
-  //     datasets: [
-  //       {
-  //         label: "Usage",
-  //         data: stats.value.last_thirty_days_statistic.details,
-  //       },
-  //     ],
-  //   },
-  //   options: {
-  //     parsing: { xAxisKey: "date", yAxisKey: "total" },
-  //     plugins: { legend: false },
-  //   },
-  // })
-})
 </script>
 
 <style scoped>

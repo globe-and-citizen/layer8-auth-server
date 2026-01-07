@@ -39,9 +39,9 @@ var zkConfig config.ZkConfig
 var phoneConfig config.PhoneConfig
 var userConfig config.UserConfig
 var clientConfig config.ClientConfig
+var influxdbConfig config.InfluxDB2Config
 
 func readConfig() {
-
 	postgresConfig = config.PostgresConfig{
 		Host:     "localhost",
 		Port:     5432,
@@ -54,6 +54,16 @@ func readConfig() {
 		Host:      "localhost",
 		Port:      5001,
 		JWTSecret: "5b0b18dc37004b97946367ca5d82673918a6c6e7a817bf84236abe1c0907b9bf",
+	}
+
+	influxdbConfig = config.InfluxDB2Config{
+		Url:         "http://localhost:8086",
+		TelegrafURL: "http://host.docker.internal:8086",
+		Username:    "admin",
+		Password:    "somethingthatyoudontknow",
+		Org:         "layer8",
+		Bucket:      "layer8",
+		Token:       "DEFAULT_TOKEN_FOR_TESTING",
 	}
 
 	emailConfig = config.EmailConfig{
@@ -74,6 +84,78 @@ func readConfig() {
 	}
 
 	// TODO: read from env variables or config files
+}
+
+func main() {
+	readConfig()
+
+	app := gin.Default()
+	app.Use(apiLog.AccessLog)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Vue dev server
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
+	postgresRepository.Migrate()
+
+	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
+	emailRepository := emailRepo.NewEmailRepository(emailConfig)
+	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
+	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
+	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
+	statsRepository := statsRepo.NewInfluxdbRepository(influxdbConfig)
+	err := statsRepository.IsConnected(&gin.Context{})
+	if err != nil {
+		panic(err)
+	}
+
+	// Serve static assets
+	app.Static("/assets", "../frontend/dist/assets")
+
+	// SPA fallback
+	app.NoRoute(func(c *gin.Context) {
+		c.File("../frontend/dist/index.html")
+	})
+
+	apiGroup := app.Group("/api/v1")
+
+	userUsecase := userUC.NewUserUsecase(
+		postgresRepository,
+		tokenRepository,
+		emailRepository,
+		codeGenRepository,
+		zkRepository,
+		phoneRepository,
+	)
+	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
+	userHandler.RegisterHandler()
+
+	clientUsecase := clientUC.NewClientUsecase(
+		postgresRepository,
+		tokenRepository,
+		statsRepository,
+	)
+	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
+	clientHandler.RegisterHandler()
+
+	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
+	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
+	oauthHandler.RegisterHandlers()
+
+	gin.SetMode(gin.ReleaseMode)
+	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
+	log := apiLog.Get()
+	log.Info().Msg("Server start at: http://" + addr)
+	err = app.Run(addr)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig config.ZkConfig) zk.IProofProcessor {
@@ -117,74 +199,4 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 	}
 
 	return zk.NewProofProcessor(cs, zkKeyPairId, provingKey, verifyingKey)
-}
-
-func main() {
-
-	readConfig()
-
-	app := gin.Default()
-	app.Use(apiLog.AccessLog)
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // Vue dev server
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-
-	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
-	postgresRepository.Migrate()
-
-	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
-	emailRepository := emailRepo.NewEmailRepository(emailConfig)
-	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
-	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
-	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
-	statsRepository := statsRepo.NewStatisticsRepository(config.InfluxDB2Config{})
-
-	// Serve static assets
-	app.Static("/assets", "../frontend/dist/assets")
-
-	// SPA fallback
-	app.NoRoute(func(c *gin.Context) {
-		c.File("../frontend/dist/index.html")
-	})
-
-	apiGroup := app.Group("/api/v1")
-
-	userUsecase := userUC.NewUserUsecase(
-		postgresRepository,
-		tokenRepository,
-		emailRepository,
-		codeGenRepository,
-		zkRepository,
-		phoneRepository,
-	)
-	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
-	userHandler.RegisterHandler()
-
-	clientUsecase := clientUC.NewClientUsecase(
-		postgresRepository,
-		tokenRepository,
-		statsRepository,
-	)
-	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
-	clientHandler.RegisterHandler()
-
-	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
-	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
-	oauthHandler.RegisterHandlers()
-
-	gin.SetMode(gin.ReleaseMode)
-	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
-	log := apiLog.Get()
-	log.Info().Msg("Server start at: http://" + addr)
-	err := app.Run(addr)
-
-	if err != nil {
-		panic(err)
-	}
-
 }

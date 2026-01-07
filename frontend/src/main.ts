@@ -5,7 +5,6 @@ import router from './router'
 import '@/assets/styles/output.css'
 import '@/assets/styles/base.css'
 import '@/assets/styles/modal.css'
-import '@/assets/styles/oauth.css'
 
 const app = createApp(App)
 

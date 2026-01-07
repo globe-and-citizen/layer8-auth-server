@@ -27,6 +27,11 @@ export function getPrivateAndPublicKeys(mnemonic: string): KeyPair {
   const binarySeed = getBinarySeed(mnemonic)
   // generate a master key
   const hdKey = bip32.HDKey.fromMasterSeed(binarySeed)
+
+  if (!hdKey.privateKey || !hdKey.publicKey) {
+    throw new Error("Failed to derive key pair from mnemonic");
+  }
+
   return {
     privateKey: hdKey.privateKey,
     publicKey: hdKey.publicKey

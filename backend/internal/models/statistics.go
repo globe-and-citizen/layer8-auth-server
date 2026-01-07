@@ -7,9 +7,9 @@ type MonthToDateStatistic struct {
 }
 
 type Statistics struct {
-	Total            float64                 `json:"total"`
-	Average          float64                 `json:"average"`
-	StatisticDetails []UsageStatisticPerDate `json:"details"`
+	Total   float64                 `json:"total"`
+	Average float64                 `json:"average"`
+	Details []UsageStatisticPerDate `json:"details"`
 }
 
 type UsageStatisticPerDate struct {
