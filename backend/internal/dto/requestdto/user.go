@@ -30,9 +30,9 @@ type UserResetPassword struct {
 }
 
 type UserMetadataUpdate struct {
-	DisplayName string `json:"display_name" validate:"required"`
-	Color       string `json:"color" validate:"required"`
-	Bio         string `json:"bio" validate:"required"`
+	DisplayName string `json:"display_name"`
+	Color       string `json:"color"`
+	Bio         string `json:"bio"`
 }
 
 type UserEmailVerify struct {

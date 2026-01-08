@@ -109,7 +109,7 @@ func (uc *ClientUsecase) GetProfile(username string) (responsedto.ClientProfile,
 		Name:            clientData.Name,
 		RedirectURI:     clientData.RedirectURI,
 		BackendURI:      clientData.BackendURI,
-		X509Certificate: clientData.NTorX509Certificate,
+		NTorCertificate: clientData.NTorX509Certificate,
 	}
 	return clientModel, nil
 }

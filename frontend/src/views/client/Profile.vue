@@ -6,7 +6,10 @@
         class="py-3 px-4 md:px-7 mb-2 md:mb-4 bg-white rounded-b-2xl flex justify-between items-center">
         <div class="hidden md:block lg:block">
           <div class="flex space-x-4 items-center">
-            <!--            <img src="/assets-v1/templates/assets/images/user_image.png" />-->
+            <img
+              class="w-12 h-12"
+              src="@/assets/images/user_avatar.png"
+            />
             <div>{{ userName }}</div>
           </div>
         </div>
@@ -111,7 +114,6 @@ const logoutUser = () => {
 
 const getUser = (text: string) => {
   userName.value = text
-  console.log("user name", userName.value)
 }
 </script>
 

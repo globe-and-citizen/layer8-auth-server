@@ -35,6 +35,7 @@ func (h UserHandler) RegisterHandler() {
 	authenticatedGroup.Use(h.AuthenticateUser)
 
 	authenticatedGroup.GET("/profile", h.GetProfile)
+	authenticatedGroup.POST("/update-metadata", h.UpdateMetadata)
 	authenticatedGroup.POST("/verify-email", h.VerifyEmail)
 	authenticatedGroup.POST("/check-email-verification-code", h.CheckEmailVerificationCode)
 	authenticatedGroup.POST("/verify-phone-number-via-bot", h.VerifyPhoneNumber)

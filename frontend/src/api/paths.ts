@@ -5,6 +5,7 @@ const UserLoginPath = '/user-login';
 const UserResetPasswordPrecheckPath = '/user-reset-password-precheck';
 const UserResetPasswordPath = '/user-reset-password';
 const UserProfilePath = '/user/profile';
+const UserUpdateMetadataPath = "/user/update-metadata"
 
 const ClientCheckBackendURIPath = '/check-backend-uri';
 const ClientRegisterPrecheckPath = '/client-register-precheck';
@@ -13,6 +14,7 @@ const ClientLoginPrecheckPath = '/client-login-precheck';
 const ClientLoginPath = '/client-login';
 const ClientProfilePath = '/client/profile';
 const ClientStatisticsPath = '/client/usage-stats'
+const ClientUploadNTorCertPath = '/client/upload-certificate'
 
 const OAuthUserPrecheckLoginPath = '/oauth-login-precheck';
 const OAuthUserLoginPath = '/oauth-login';
@@ -31,6 +33,7 @@ export {
   UserResetPasswordPrecheckPath,
   UserResetPasswordPath,
   UserProfilePath,
+  UserUpdateMetadataPath,
 
   ClientCheckBackendURIPath,
   ClientRegisterPrecheckPath,
@@ -39,6 +42,7 @@ export {
   ClientLoginPath,
   ClientProfilePath,
   ClientStatisticsPath,
+  ClientUploadNTorCertPath,
 
   OAuthUserPrecheckLoginPath,
   OAuthUserLoginPath,

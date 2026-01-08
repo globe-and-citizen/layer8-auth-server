@@ -24,7 +24,7 @@ type ClientProfile struct {
 	Name            string `json:"name"`
 	RedirectURI     string `json:"redirect_uri"`
 	BackendURI      string `json:"backend_uri"`
-	X509Certificate string `json:"x509_certificate"`
+	NTorCertificate string `json:"ntor_certificate"`
 }
 
 type ClientUsageStatistic struct {

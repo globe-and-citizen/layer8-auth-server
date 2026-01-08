@@ -157,14 +157,14 @@
                     Name</label>
                   <input
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
-                    type="text" v-model="newDisplayName" placeholder="Display Name"/>
+                    type="text" v-model="user.display_name" placeholder="Display Name"/>
                 </div>
                 <div>
                   <label class="font-normal text-black text-sm text-start mb-2 block">Favourite
                     Color</label>
                   <input
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
-                    type="text" v-model="newColor" placeholder="Favourite Color"/>
+                    type="text" v-model="user.color" placeholder="Favourite Color"/>
                 </div>
               </div>
 
@@ -174,7 +174,7 @@
                   <label class="font-normal text-black text-sm text-start mb-2 block">Bio</label>
                   <textarea
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none"
-                    rows="4" v-model="newBio" placeholder="Bio"></textarea>
+                    rows="4" v-model="user.bio" placeholder="Bio"></textarea>
                 </div>
               </div>
             </div>
@@ -221,7 +221,7 @@
 
 <script setup lang="ts">
 import {onMounted, ref} from "vue"
-import {getAPI, UserProfilePath} from "@/api/paths.ts";
+import {getAPI, UserProfilePath, UserUpdateMetadataPath} from "@/api/paths.ts";
 
 const token = ref<string | null>(localStorage.getItem("token"))
 
@@ -234,9 +234,6 @@ const user = ref({
   phone_number_verified: false,
 })
 
-const newDisplayName = ref("")
-const newColor = ref("")
-const newBio = ref("")
 const isUserPortalSidebar = ref(false)
 
 const getUserDetails = async () => {
@@ -249,11 +246,7 @@ const getUserDetails = async () => {
     })
 
     const data = await resp.json()
-    user.value = data
-
-    newDisplayName.value = data.display_name
-    newColor.value = data.color
-    newBio.value = data.bio
+    user.value = data.data
   } catch (err) {
     console.error(err)
   }
@@ -261,21 +254,24 @@ const getUserDetails = async () => {
 
 const updateUserMetadata = async () => {
   try {
-    const resp = await fetch("/api/v1/update-user-metadata", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token.value}`,
-      },
-      body: JSON.stringify({
-        display_name: newDisplayName.value,
-        color: newColor.value,
-        bio: newBio.value,
-      }),
-    })
+    const resp = await fetch(
+      getAPI(UserUpdateMetadataPath),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token.value}`,
+        },
+        body: JSON.stringify({
+          display_name: user.value.display_name,
+          color: user.value.color,
+          bio: user.value.bio,
+        }),
+      })
 
     if (resp.status === 200) {
       alert("Data updated successfully!")
+      await getUserDetails()
     } else {
       alert("Failed to update data")
     }

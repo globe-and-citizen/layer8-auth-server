@@ -12,7 +12,7 @@
         <li class="font-bold md:text-xl text-sm text-black">Backend URI:</li>
         <li class="font-bold md:text-xl text-sm text-black">UUID:</li>
         <li class="font-bold md:text-xl text-sm text-black">Secret:</li>
-        <li class="font-bold md:text-xl text-sm text-black">X509 Certificate:</li>
+        <li class="font-bold md:text-xl text-sm text-black">NTor Certificate:</li>
       </ul>
 
       <div class="col-span-2 flex flex-col space-y-2">
@@ -40,12 +40,12 @@
 
         <div class="flex items-center space-x-2">
           <CopyField
-            :placeholder="labels.x509_certificate"
-            :value="user.x509_certificate"
+            :placeholder="labels.ntor_certificate"
+            :value="user.ntor_certificate"
             :copied="isCopied"
             @copy="copyToClipboard"
           />
-          <input type="file" accept=".crt,.pem" @change="handleX509CertificateUpload"/>
+          <input type="file" accept=".crt,.pem" @change="handleNTorCertificateUpload"/>
         </div>
       </div>
     </div>
@@ -61,7 +61,7 @@
 import CopyField from "@/views/client/profile/components/CopyField.vue";
 import InputField from "@/views/client/profile/components/ReadonlyField.vue";
 import {onMounted, ref} from "vue";
-import {ClientProfilePath, getAPI} from "@/api/paths.js";
+import {ClientProfilePath, ClientUploadNTorCertPath, getAPI} from "@/api/paths.js";
 
 const token = ref(localStorage.getItem("clientToken"))
 const toastMessage = ref("")
@@ -73,7 +73,7 @@ const labels = {
   backend_uri: "Backend URI:",
   id: "UUID:",
   secret: "Secret:",
-  x509_certificate: "X509 Certificate:",
+  ntor_certificate: "nTor Certificate:",
 }
 
 const isCopied = ref();
@@ -83,7 +83,7 @@ const user = ref({
   secret: "",
   redirect_uri: "",
   backend_uri: "",
-  x509_certificate: "",
+  ntor_certificate: "",
 })
 
 const emit = defineEmits(["user-data"]);
@@ -105,9 +105,28 @@ const copyToClipboard = async (text) => {
   showToastMessage("Copied to clipboard")
 }
 
-const handleX509CertificateUpload = async (e) => {
+const handleNTorCertificateUpload = async (e) => {
   const cert = await e.target.files[0].text()
-  user.value.x509_certificate = cert
+  user.value.ntor_certificate = cert
+
+  const res = await fetch(
+    getAPI(ClientUploadNTorCertPath),
+    {
+      method: "POST",
+      headers: {
+        ContentType: "application/json",
+        Authorization: `Bearer ${token.value}`
+      },
+      body: JSON.stringify({
+        certificate: cert
+      }),
+    }
+  )
+
+  if (!res.ok) {
+    showToastMessage("Upload certificate failed!")
+  }
+
   showToastMessage("Certificate uploaded")
 }
 
@@ -119,9 +138,7 @@ onMounted(async () => {
 
   const userResp = await fetch(getAPI(ClientProfilePath),
     {
-      // method: "GET",
       headers: {
-        // ContentType: "application/json",
         Authorization: `Bearer ${token.value}`
       },
     })
@@ -133,7 +150,5 @@ onMounted(async () => {
 
   user.value = (await userResp.json()).data
   emit('user-data', user.value.name)
-  console.log(user)
 })
-
 </script>

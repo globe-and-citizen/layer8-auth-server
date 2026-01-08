@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h UserHandler) UpdateUserMetadata(c *gin.Context) {
+func (h UserHandler) UpdateMetadata(c *gin.Context) {
 	userID, err := h.getAuthenticatedUserID(c)
 	if err != nil {
 		return
