@@ -1,6 +1,7 @@
 package clientH
 
 import (
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/internal/consts"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
 	"net/http"
@@ -24,6 +25,16 @@ func (h ClientHandler) AuthenticateClient(c *gin.Context) {
 	// save claims in context for further handlers
 	c.Set(consts.MiddlewareKeyClientUsername, username)
 	c.Set(consts.MiddlewareKeyClientClientID, clientID)
+	c.Next()
+}
+
+func (h ClientHandler) AuthenticateForwardProxy(c *gin.Context) {
+	_, _, ok := c.Request.BasicAuth()
+	if !ok {
+		utils.HandleError(c, http.StatusUnauthorized, "authentication failed", fmt.Errorf("authentication failed"))
+	}
+
+	//todo update later
 	c.Next()
 }
 

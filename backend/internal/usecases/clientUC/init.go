@@ -16,9 +16,10 @@ type IClientUsecase interface {
 	Login(req requestdto.ClientLogin) (responsedto.ClientLogin, error)
 	GetProfile(username string) (responsedto.ClientProfile, error)
 	GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error)
-	GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error)
+	GetUnpaidAmount(clientID string) (responsedto.ClientGetUnpaidAmount, error)
 	SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error
 	VerifyClientJWTToken(tokenString string) (clientID string, clientUsername string, err error)
+	GetNTorCertificate(req requestdto.ClientGetNTorCertificate) (*responsedto.ClientGetNTorCertificate, error)
 }
 
 type ClientUsecase struct {

@@ -55,3 +55,7 @@ type OAuthConfig struct {
 	CookieMaxAge       int   `env:"OAUTH_COOKIE_MAX_AGE" default:"3600"` // in seconds
 	AuthzCodeExpiryMin int64 `env:"OAUTH_AUTHZ_CODE_EXPIRY_MIN" default:"10"`
 }
+
+type ExternalConfig struct {
+	// todo add authenticate forward proxy config
+}

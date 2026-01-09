@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"strings"
+	"net/url"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/google/uuid"
@@ -38,12 +38,6 @@ func GenerateRandomBase64String(size int) (string, error) {
 	return base64.URLEncoding.EncodeToString(buf), nil
 }
 
-func RemoveProtocolFromURL(url string) string {
-	cleanedURL := strings.Replace(url, "http://", "", -1)
-	cleanedURL = strings.Replace(cleanedURL, "https://", "", -1)
-	return cleanedURL
-}
-
 func ValidateSignature(message string, signature []byte, publicKey []byte) error {
 	msgHash := crypto.Keccak256([]byte(message))
 	verified := crypto.VerifySignature(publicKey, msgHash, signature)
@@ -53,4 +47,28 @@ func ValidateSignature(message string, signature []byte, publicKey []byte) error
 	}
 
 	return nil
+}
+
+func GetURLHostPort(raw string) (string, error) {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "", err
+	}
+
+	// If no scheme, url.Parse treats host as path
+	if u.Host == "" {
+		u, err = url.Parse("https://" + raw)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	host := u.Hostname()
+	port := u.Port()
+
+	if port != "" {
+		return host + ":" + port, nil
+	}
+
+	return host, nil
 }

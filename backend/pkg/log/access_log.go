@@ -16,6 +16,7 @@ func AccessLog(ctx *gin.Context) {
 		Str("Protocol", ctx.Request.Proto).
 		Str("User-Agent", ctx.Request.UserAgent()).
 		Str("Content-Type", ctx.Request.Header.Get("Content-Type")).
+		Str("Authorization", ctx.Request.Header.Get("Authorization")).
 		Msg("REQUEST")
 	ctx.Next()
 	logger.Info().

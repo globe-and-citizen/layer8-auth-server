@@ -28,7 +28,7 @@ func (h OAuthHandler) AuthenticateOAuth(c *gin.Context) {
 	c.Next()
 }
 
-func (h OAuthHandler) ValidateAccessToken(c *gin.Context) {
+func (h OAuthHandler) AuthenticateClient(c *gin.Context) {
 	token, err := utils.GetBearerToken(c)
 	if err != nil {
 		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
@@ -66,4 +66,15 @@ func (h OAuthHandler) getAccessTokenScopes(c *gin.Context) (string, error) {
 	}
 
 	return username, nil
+}
+
+func (h OAuthHandler) getAuthenticatedUserID(c *gin.Context) (uint, error) {
+	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+
+	if userID == 0 {
+		utils.HandleError(c, http.StatusInternalServerError, "authenticate error", fmt.Errorf("Failed to get authenticated user ID from context"))
+		return 0, consts.ErrUserUnauthorized
+	}
+
+	return userID, nil
 }

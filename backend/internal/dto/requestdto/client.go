@@ -29,3 +29,7 @@ type ClientCheckBackendURI struct {
 type ClientUploadNTorCertificate struct {
 	Certificate string `json:"certificate" validate:"required"`
 }
+
+type ClientGetNTorCertificate struct {
+	BackendURI string
+}

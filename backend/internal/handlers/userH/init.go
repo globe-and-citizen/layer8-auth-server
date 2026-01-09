@@ -21,7 +21,7 @@ func NewUserHandler(router *gin.RouterGroup, uc userUC.IUserUsecase, config conf
 	}
 }
 
-func (h UserHandler) RegisterHandler() {
+func (h UserHandler) RegisterAPIs() {
 
 	unauthenticatedGroup := h.router.Group("")
 	unauthenticatedGroup.POST("/user-register-precheck", h.PrecheckRegister)

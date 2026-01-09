@@ -25,7 +25,7 @@ func NewClientHandler(
 	}
 }
 
-func (h ClientHandler) RegisterHandler() {
+func (h ClientHandler) RegisterAPIs() {
 	unauthenticatedGroup := h.router.Group("")
 	unauthenticatedGroup.POST("/check-backend-uri", h.CheckBackendURI)
 	unauthenticatedGroup.POST("/client-register-precheck", h.PrecheckRegister)
@@ -37,6 +37,9 @@ func (h ClientHandler) RegisterHandler() {
 	authenticatedGroup.Use(h.AuthenticateClient)
 	authenticatedGroup.GET("/profile", h.GetProfile)
 	authenticatedGroup.GET("/usage-stats", h.GetUsageStatistics)
-	authenticatedGroup.GET("/client-unpaid-amount", h.GetUnpaidAmount)
+	authenticatedGroup.GET("/unpaid-amount", h.GetUnpaidAmount)
 	authenticatedGroup.POST("/upload-certificate", h.UploadNTorCertificate)
+
+	extGroup := h.router.Group("ext")
+	extGroup.GET("/client-cert", h.AuthenticateForwardProxy, h.GetNTorCertificate)
 }

@@ -114,13 +114,13 @@ func main() {
 		panic(err)
 	}
 
-	// Serve static assets
-	app.Static("/assets", "../frontend/dist/assets")
-
-	// SPA fallback
-	app.NoRoute(func(c *gin.Context) {
-		c.File("../frontend/dist/index.html")
-	})
+	//// Serve static assets
+	//app.Static("/assets", "../frontend/dist/assets")
+	//
+	//// SPA fallback
+	//app.NoRoute(func(c *gin.Context) {
+	//	c.File("../frontend/dist/index.html")
+	//})
 
 	apiGroup := app.Group("/api/v1")
 
@@ -133,7 +133,7 @@ func main() {
 		phoneRepository,
 	)
 	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
-	userHandler.RegisterHandler()
+	userHandler.RegisterAPIs()
 
 	clientUsecase := clientUC.NewClientUsecase(
 		postgresRepository,
@@ -141,11 +141,11 @@ func main() {
 		statsRepository,
 	)
 	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
-	clientHandler.RegisterHandler()
+	clientHandler.RegisterAPIs()
 
 	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
 	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
-	oauthHandler.RegisterHandlers()
+	oauthHandler.RegisterAPIs()
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)

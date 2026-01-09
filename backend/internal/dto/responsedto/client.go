@@ -34,6 +34,11 @@ type ClientUsageStatistic struct {
 	LastThirtyDaysStatistic models.Statistics           `json:"last_thirty_days_statistic"`
 }
 
-type ClientUnpaidAmount struct {
+type ClientGetUnpaidAmount struct {
 	UnpaidAmount int `json:"unpaid_amount"`
+}
+
+type ClientGetNTorCertificate struct {
+	ClientID    string `json:"client_id"`
+	Certificate string `json:"cert"`
 }

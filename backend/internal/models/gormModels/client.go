@@ -11,7 +11,7 @@ type Client struct {
 	ScramIterationCount int    `gorm:"column:iteration_count" json:"iteration_count"`
 	ScramServerKey      string `gorm:"column:server_key" json:"server_key"`
 	ScramStoredKey      string `gorm:"column:stored_key" json:"stored_key"`
-	NTorX509Certificate string `gorm:"column:x509_certificate_bytes" json:"x509_certificate_bytes"`
+	NTorX509Certificate []byte `gorm:"column:x509_certificate_bytes" json:"x509_certificate_bytes"`
 }
 
 func (Client) TableName() string {

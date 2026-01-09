@@ -44,7 +44,10 @@ func (uc *ClientUsecase) PrecheckRegister(
 func (uc *ClientUsecase) Register(req requestdto.ClientRegister) error {
 	clientUUID := utils.GenerateUUID()
 	clientSecret := utils.GenerateSecret(consts.SecretSize)
-	backendURI := utils.RemoveProtocolFromURL(req.BackendURI)
+	backendURI, err := utils.GetURLHostPort(req.BackendURI)
+	if err != nil {
+		return err
+	}
 
 	newClient := gormModels.Client{
 		ID:             clientUUID,
@@ -109,18 +112,18 @@ func (uc *ClientUsecase) GetProfile(username string) (responsedto.ClientProfile,
 		Name:            clientData.Name,
 		RedirectURI:     clientData.RedirectURI,
 		BackendURI:      clientData.BackendURI,
-		NTorCertificate: clientData.NTorX509Certificate,
+		NTorCertificate: string(clientData.NTorX509Certificate),
 	}
 	return clientModel, nil
 }
 
-func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientUnpaidAmount, error) {
+func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientGetUnpaidAmount, error) {
 	stats, err := uc.postgres.GetClientTrafficStatistics(clientID)
 	if err != nil {
-		return responsedto.ClientUnpaidAmount{}, err
+		return responsedto.ClientGetUnpaidAmount{}, err
 	}
 
-	return responsedto.ClientUnpaidAmount{
+	return responsedto.ClientGetUnpaidAmount{
 		UnpaidAmount: stats.UnpaidAmount,
 	}, nil
 }
@@ -128,4 +131,16 @@ func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientUnp
 func (uc *ClientUsecase) SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error {
 	// todo validate certificate
 	return uc.postgres.SaveX509Certificate(clientID, req.Certificate)
+}
+
+func (uc *ClientUsecase) GetNTorCertificate(req requestdto.ClientGetNTorCertificate) (*responsedto.ClientGetNTorCertificate, error) {
+	client, err := uc.postgres.GetClientByBackendURI(req.BackendURI)
+	if err != nil {
+		return nil, err
+	}
+
+	return &responsedto.ClientGetNTorCertificate{
+		ClientID:    client.ID,
+		Certificate: string(client.NTorX509Certificate),
+	}, nil
 }
