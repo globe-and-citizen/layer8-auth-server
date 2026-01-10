@@ -35,7 +35,7 @@ type IUserRepository interface {
 }
 
 type IClientRepository interface {
-	AddClient(newClient gormModels.Client) error
+	UpdateClient(newClient gormModels.Client) error
 	GetClientByName(name string) (gormModels.Client, error)
 	GetClientByBackendURI(backendURI string) (gormModels.Client, error)
 	IsBackendURIExists(backendURL string) (bool, error)

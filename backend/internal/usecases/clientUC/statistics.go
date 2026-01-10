@@ -1,6 +1,7 @@
 package clientUC
 
 import (
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models"
 	"net/http"
@@ -40,4 +41,42 @@ func (uc *ClientUsecase) GetUsageStatistics(clientID string) (responsedto.Client
 	}
 
 	return finalResponse, http.StatusOK, "", nil
+}
+
+func (uc *ClientUsecase) UpdateUsageStatistics(now time.Time) error {
+	//fmt.Printf("Updating client traffic stats, timestamp: %d\n", now.UnixMilli())
+
+	allClientStatistics, err := uc.postgres.GetAllClientStatistics()
+	if err != nil {
+		return err
+	}
+
+	for _, clientStat := range allClientStatistics {
+		//fmt.Printf("client %s; statistics from: %s; to: %s\n",
+		//	clientStat.ClientId, clientStat.LastTrafficUpdateTimestamp.String(), now.UTC().String(),
+		//)
+
+		consumedBytesFloat, err := uc.stats.GetTotalByDateRangeByClient(
+			clientStat.LastTrafficUpdateTimestamp, now.UTC(), clientStat.ClientId,
+		)
+
+		//fmt.Printf("consumed %f bytes", consumedBytesFloat)
+
+		if err != nil {
+			return fmt.Errorf("failed to get traffic updates for client %s: %e", clientStat.ClientId, err)
+		}
+
+		if consumedBytesFloat == 0 {
+			continue
+		}
+
+		consumedBytes := int(consumedBytesFloat)
+
+		err = uc.postgres.AddClientTrafficUsage(clientStat.ClientId, consumedBytes, now.UTC())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

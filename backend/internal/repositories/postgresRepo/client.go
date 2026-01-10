@@ -5,12 +5,12 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
 )
 
-func (r *PostgresRepository) AddClient(newClient gormModels.Client) error {
+func (r *PostgresRepository) UpdateClient(newClient gormModels.Client) error {
 	tx := r.db.Begin()
 
 	result := tx.Model(&gormModels.Client{}).
 		Where("username = ?", newClient.Username).
-		Updates(map[string]interface{}{ // why use map here? because gorm doesn't support updating struct with zero values
+		Updates(map[string]interface{}{ // why use map here? - because gorm doesn't support updating struct with zero values
 			"name":         newClient.Name,
 			"redirect_uri": newClient.RedirectURI,
 			"backend_uri":  newClient.BackendURI,
@@ -28,6 +28,16 @@ func (r *PostgresRepository) AddClient(newClient gormModels.Client) error {
 	if result.RowsAffected == 0 {
 		tx.Rollback()
 		return fmt.Errorf("no client found with username: %s", newClient.Username)
+	}
+
+	stats := gormModels.ClientTrafficStatistics{
+		ClientId: newClient.ID,
+	}
+
+	err := tx.Create(&stats).Error
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("could not create client stats entry: %e", err)
 	}
 
 	tx.Commit()

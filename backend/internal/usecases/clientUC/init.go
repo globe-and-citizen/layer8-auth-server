@@ -6,6 +6,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/tokenRepo"
+	"time"
 )
 
 type IClientUsecase interface {
@@ -16,6 +17,7 @@ type IClientUsecase interface {
 	Login(req requestdto.ClientLogin) (responsedto.ClientLogin, error)
 	GetProfile(username string) (responsedto.ClientProfile, error)
 	GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error)
+	UpdateUsageStatistics(now time.Time) error
 	GetUnpaidAmount(clientID string) (responsedto.ClientGetUnpaidAmount, error)
 	SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error
 	VerifyClientJWTToken(tokenString string) (clientID string, clientUsername string, err error)

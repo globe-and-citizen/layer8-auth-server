@@ -114,7 +114,7 @@ const handleNTorCertificateUpload = async (e) => {
     {
       method: "POST",
       headers: {
-        ContentType: "application/json",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token.value}`
       },
       body: JSON.stringify({
@@ -149,6 +149,6 @@ onMounted(async () => {
   }
 
   user.value = (await userResp.json()).data
-  emit('user-data', user.value.name)
+  emit('user-data', user.value)
 })
 </script>

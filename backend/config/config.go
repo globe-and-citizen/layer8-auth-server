@@ -38,7 +38,8 @@ type PhoneConfig struct {
 }
 
 type ClientConfig struct {
-	ScramIterationCount int `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
+	ScramIterationCount int           `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
+	StatsUpdateInterval time.Duration `env:"STATS_UPDATE_INTERVAL" default:"15m"`
 }
 
 type InfluxDB2Config struct {

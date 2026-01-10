@@ -60,7 +60,7 @@ func (uc *ClientUsecase) Register(req requestdto.ClientRegister) error {
 		ScramServerKey: req.ServerKey,
 	}
 
-	return uc.postgres.AddClient(newClient)
+	return uc.postgres.UpdateClient(newClient)
 }
 
 func (uc *ClientUsecase) PrecheckLogin(req requestdto.ClientLoginPrecheck) (responsedto.ClientLoginPrecheck, error) {

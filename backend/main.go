@@ -22,6 +22,7 @@ import (
 	apiLog "globe-and-citizen/layer8/auth-server/backend/pkg/log"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/zk"
+	"log"
 	"os"
 	"time"
 
@@ -83,6 +84,11 @@ func readConfig() {
 		ScramIterationCount: 4096,
 	}
 
+	clientConfig = config.ClientConfig{
+		ScramIterationCount: 4096,
+		StatsUpdateInterval: time.Minute * 2,
+	}
+
 	// TODO: read from env variables or config files
 }
 
@@ -114,13 +120,13 @@ func main() {
 		panic(err)
 	}
 
-	//// Serve static assets
-	//app.Static("/assets", "../frontend/dist/assets")
-	//
-	//// SPA fallback
-	//app.NoRoute(func(c *gin.Context) {
-	//	c.File("../frontend/dist/index.html")
-	//})
+	// Serve static assets
+	app.Static("/assets", "../frontend/dist/assets")
+
+	// SPA fallback
+	app.NoRoute(func(c *gin.Context) {
+		c.File("../frontend/dist/index.html")
+	})
 
 	apiGroup := app.Group("/api/v1")
 
@@ -146,6 +152,17 @@ func main() {
 	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
 	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
 	oauthHandler.RegisterAPIs()
+
+	go func() {
+		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
+
+		for currTime := range ticker.C {
+			err := clientUsecase.UpdateUsageStatistics(currTime)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}()
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
