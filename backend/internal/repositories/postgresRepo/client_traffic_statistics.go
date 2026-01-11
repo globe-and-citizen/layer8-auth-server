@@ -23,7 +23,7 @@ func (r *PostgresRepository) GetClientTrafficStatistics(clientId string) (*gormM
 	return &clientStatistics, nil
 }
 
-func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedBytes int, now time.Time) error {
+func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedBytes int, ratePerByte float64, now time.Time) error {
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 
 	var clientStatistics gormModels.ClientTrafficStatistics
@@ -37,7 +37,7 @@ func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedByte
 	}
 
 	newTrafficBytes := clientStatistics.TotalUsageBytes + consumedBytes
-	newUnpaidAmount := clientStatistics.UnpaidAmount + consumedBytes*clientStatistics.RatePerByte
+	newUnpaidAmount := float64(clientStatistics.UnpaidAmount) + float64(consumedBytes)*ratePerByte
 
 	err = r.db.Model(&gormModels.ClientTrafficStatistics{}).
 		Where("client_id = ?", clientId).
@@ -56,7 +56,7 @@ func (r *PostgresRepository) AddClientTrafficUsage(clientId string, consumedByte
 	return nil
 }
 
-func (r *PostgresRepository) PayClientTrafficUsage(clientId string, amountPaid int) error {
+func (r *PostgresRepository) PayClientTrafficUsage(clientId string, amountPaid float64) error {
 	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 
 	var clientStatistics gormModels.ClientTrafficStatistics

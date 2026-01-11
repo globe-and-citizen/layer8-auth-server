@@ -15,6 +15,7 @@ const ClientLoginPath = '/client-login';
 const ClientProfilePath = '/client/profile';
 const ClientStatisticsPath = '/client/usage-stats'
 const ClientUploadNTorCertPath = '/client/upload-certificate'
+const ClientUnpaidAmountPath = '/client/unpaid-amount'
 
 const OAuthUserPrecheckLoginPath = '/oauth-login-precheck';
 const OAuthUserLoginPath = '/oauth-login';
@@ -22,7 +23,8 @@ const OAuthGetAuthorizeContextPath = "/oauth/authorize";
 const OAuthPostAuthorizeDecisionPath = "/oauth/authorize";
 
 const getAPI = (api: string) => {
-  return `/api/v1${api}`;
+  const base_url = import.meta.env.VITE_BACKEND_BASE_URL || ""
+  return base_url + `/api/v1${api}`;
 }
 
 export {
@@ -43,6 +45,7 @@ export {
   ClientProfilePath,
   ClientStatisticsPath,
   ClientUploadNTorCertPath,
+  ClientUnpaidAmountPath,
 
   OAuthUserPrecheckLoginPath,
   OAuthUserLoginPath,

@@ -48,8 +48,8 @@ type IClientRepository interface {
 
 type IClientTrafficStatisticsRepository interface {
 	GetClientTrafficStatistics(clientId string) (*gormModels.ClientTrafficStatistics, error)
-	AddClientTrafficUsage(clientId string, consumedBytes int, now time.Time) error
-	PayClientTrafficUsage(clientId string, amountPaid int) error
+	AddClientTrafficUsage(clientId string, consumedBytes int, ratePerByte float64, now time.Time) error
+	PayClientTrafficUsage(clientId string, amountPaid float64) error
 	GetAllClientStatistics() ([]gormModels.ClientTrafficStatistics, error)
 }
 

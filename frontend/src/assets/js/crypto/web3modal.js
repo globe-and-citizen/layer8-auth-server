@@ -6,7 +6,7 @@ const WALLET_CONNECT_PROJECT_ID = "339b2396ae9c42ea2ffd29ab386c8a9e"
 const WALLET_CONNECT_METADATA = {
     name: 'Layer8',
     description: 'Reverse Proxy Implementing the Layer8 protocol',
-    url: 'https://layer8proxy.net',
+    url: 'http://localhost:5173', // todo: watch later https://layer8proxy.net',
     icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 

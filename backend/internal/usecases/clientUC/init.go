@@ -17,7 +17,7 @@ type IClientUsecase interface {
 	Login(req requestdto.ClientLogin) (responsedto.ClientLogin, error)
 	GetProfile(username string) (responsedto.ClientProfile, error)
 	GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error)
-	UpdateUsageStatistics(now time.Time) error
+	UpdateUsageStatistics(ratePerByte float64, now time.Time) error
 	GetUnpaidAmount(clientID string) (responsedto.ClientGetUnpaidAmount, error)
 	SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error
 	VerifyClientJWTToken(tokenString string) (clientID string, clientUsername string, err error)

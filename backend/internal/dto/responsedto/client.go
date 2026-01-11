@@ -35,7 +35,7 @@ type ClientUsageStatistic struct {
 }
 
 type ClientGetUnpaidAmount struct {
-	UnpaidAmount int `json:"unpaid_amount"`
+	UnpaidAmount float64 `json:"unpaid_amount"`
 }
 
 type ClientGetNTorCertificate struct {

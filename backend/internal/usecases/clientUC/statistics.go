@@ -43,7 +43,7 @@ func (uc *ClientUsecase) GetUsageStatistics(clientID string) (responsedto.Client
 	return finalResponse, http.StatusOK, "", nil
 }
 
-func (uc *ClientUsecase) UpdateUsageStatistics(now time.Time) error {
+func (uc *ClientUsecase) UpdateUsageStatistics(ratePerByte float64, now time.Time) error {
 	//fmt.Printf("Updating client traffic stats, timestamp: %d\n", now.UnixMilli())
 
 	allClientStatistics, err := uc.postgres.GetAllClientStatistics()
@@ -72,7 +72,7 @@ func (uc *ClientUsecase) UpdateUsageStatistics(now time.Time) error {
 
 		consumedBytes := int(consumedBytesFloat)
 
-		err = uc.postgres.AddClientTrafficUsage(clientStat.ClientId, consumedBytes, now.UTC())
+		err = uc.postgres.AddClientTrafficUsage(clientStat.ClientId, consumedBytes, ratePerByte, now.UTC())
 		if err != nil {
 			return err
 		}

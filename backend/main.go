@@ -87,6 +87,7 @@ func readConfig() {
 	clientConfig = config.ClientConfig{
 		ScramIterationCount: 4096,
 		StatsUpdateInterval: time.Minute * 2,
+		BillingRatePerByte:  1,
 	}
 
 	// TODO: read from env variables or config files
@@ -157,7 +158,7 @@ func main() {
 		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
 
 		for currTime := range ticker.C {
-			err := clientUsecase.UpdateUsageStatistics(currTime)
+			err := clientUsecase.UpdateUsageStatistics(clientConfig.BillingRatePerByte, currTime)
 			if err != nil {
 				log.Println(err)
 			}
