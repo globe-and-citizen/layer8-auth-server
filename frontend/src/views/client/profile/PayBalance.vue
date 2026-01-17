@@ -26,84 +26,48 @@
   <PayWithCryptoModal
     :active="modalWindowActive"
     :unpaidAmountETH="unpaidAmountETH"
-    :paymentAmount="paymentAmount"
+    v-model:paymentAmount="paymentAmount"
     @cancel="cancelModel"
     @pay="payWithCrypto"
   ></PayWithCryptoModal>
 </template>
 
 <script setup lang="ts">
-import PayWithCryptoModal from "@/views/client/profile/PayWithCryptoModal.vue";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
+import {formatEther, parseEther} from "viem";
 import {ClientUnpaidAmountPath, getAPI} from "@/api/paths.ts";
+import PayWithCryptoModal from "@/views/client/profile/PayWithCryptoModal.vue";
+
+// Import the new hook
+import {useTrafficContract} from "@/utils/paywithcrypto/usePaymentContract.ts";
 
 const props = defineProps<{
   userID: string
 }>()
 
 /* =========================
-   Reactive State (UNCHANGED)
+   Reactive State
    ========================= */
-
 const token = ref<string | null>(localStorage.getItem('clientToken'))
 const modalWindowActive = ref(false)
 const unpaidAmount = ref<bigint>(0n)
 const paymentAmount = ref('')
 const unpaidAmountETH = ref('')
-const walletConnected = ref(false)
+
+const {
+  connection,
+  payTraffic,
+  isPending,
+  isSuccess,
+  writeError,
+  hash
+} = useTrafficContract()
 
 /* =========================
-   External Modules (lazy-loaded)
+   Lifecycle & Data Fetching
    ========================= */
-
-let reconnect: any
-let watchConnections: any
-let parseEther: any
-let formatEther: any
-let WAGMI_CONFIG: any
-let setupWeb3Modal: any
-let payBill: any
-
-/* =========================
-   Lifecycle
-   ========================= */
-
 onMounted(async () => {
-  if (!token.value) {
-    return
-  }
-
-  const [
-    wagmi,
-    viem,
-    web3modal,
-    pay,
-  ] = await Promise.all([
-    // @ts-expect-error – remote ESM import, resolved at runtime
-    import(/* @vite-ignore */ 'https://esm.sh/@wagmi/core@2.11.6'),
-
-    // @ts-expect-error – remote ESM import, resolved at runtime
-    import(/* @vite-ignore */ 'https://esm.sh/viem@2.17.0'),
-
-    import('@/assets/js/crypto/web3modal.js'),
-    import('@/assets/js/crypto/pay.js'),
-  ])
-
-  reconnect = wagmi.reconnect
-  watchConnections = wagmi.watchConnections
-
-  parseEther = viem.parseEther
-  formatEther = viem.formatEther
-
-  WAGMI_CONFIG = web3modal.WAGMI_CONFIG
-  setupWeb3Modal = web3modal.setupWeb3Modal
-
-  payBill = pay.payBill
-
-  reconnect(WAGMI_CONFIG)
-  await checkWalletConnections()
-  setupWeb3Modal()
-
+  if (!token.value) return
   await getOwingBalance()
 })
 
@@ -111,9 +75,7 @@ async function getOwingBalance() {
   const unpaidAmountResponse = await fetch(
     getAPI(ClientUnpaidAmountPath),
     {
-      headers: {
-        Authorization: `Bearer ${token.value}`
-      }
+      headers: {Authorization: `Bearer ${token.value}`}
     }
   )
 
@@ -123,60 +85,51 @@ async function getOwingBalance() {
   }
 
   const unpaidAmountBody = await unpaidAmountResponse.json()
-
   unpaidAmount.value = BigInt(unpaidAmountBody.data.unpaid_amount)
   unpaidAmountETH.value = formatEther(unpaidAmount.value)
 }
 
 /* =========================
-   Wallet Logic
+   Payment Logic
    ========================= */
-
-const checkWalletConnections = async () => {
-  watchConnections(WAGMI_CONFIG, {
-    onChange(data: any[]) {
-      walletConnected.value = data.length !== 0
-    },
-  })
-}
-
-/* =========================
-   Payment Logic (UNCHANGED)
-   ========================= */
-
 const cancelModel = async () => {
   modalWindowActive.value = false
 }
 
 const payWithCrypto = async () => {
   try {
-    const currentAmount = parseEther(paymentAmount.value)
-
-    if (currentAmount < unpaidAmount.value) {
-      alert(
-        'Too small payment amount, at least ' +
-        unpaidAmount.value +
-        ' must be paid'
-      )
+    if (parseEther(paymentAmount.value) < unpaidAmount.value) {
+      alert(`Too small payment amount, at least ${unpaidAmountETH.value} ETH must be paid`)
       return
     }
 
-    const transactionHash = await payBill(
-      '[[ .SmartContractAddress ]]',
-      props.userID,
-      currentAmount
-    )
-
-    modalWindowActive.value = false
-
-    alert(
-      'Invoice was paid successfully! You can track your transaction at https://polygonscan.com/tx/' +
-      transactionHash
-    )
+    await payTraffic(props.userID, paymentAmount.value)
   } catch (error) {
-    alert('Payment failed, error: ' + error)
+    alert('Payment failed to initiate: ' + error)
   }
 }
+
+/* =========================
+   Watchers for Feedback
+   ========================= */
+// Watch for successful transaction hash generation
+watch(isSuccess, (newSuccess) => {
+  if (newSuccess && hash.value) {
+    modalWindowActive.value = false
+    console.log('txhash:', hash.value)
+    alert(
+      'Transaction sent successfully! You can track it at txhash:' +
+      hash.value
+    )
+  }
+})
+
+// Watch for contract errors
+watch(writeError, (newError) => {
+  if (newError) {
+    alert('Transaction error: ' + (newError as any).shortMessage || newError.message)
+  }
+})
 </script>
 
 <style scoped>
