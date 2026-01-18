@@ -1,4 +1,4 @@
-package statsRepo
+package influxdbRepo
 
 import (
 	"context"

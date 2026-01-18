@@ -3,10 +3,9 @@ package clientUC
 import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/backend/internal/dto/responsedto"
+	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/influxdbRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/postgresRepo"
-	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/tokenRepo"
-	"time"
 )
 
 type IClientUsecase interface {
@@ -17,7 +16,6 @@ type IClientUsecase interface {
 	Login(req requestdto.ClientLogin) (responsedto.ClientLogin, error)
 	GetProfile(username string) (responsedto.ClientProfile, error)
 	GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error)
-	UpdateUsageStatistics(ratePerByte float64, now time.Time) error
 	GetUnpaidAmount(clientID string) (responsedto.ClientGetUnpaidAmount, error)
 	SaveNTorCertificate(clientID string, req requestdto.ClientUploadNTorCertificate) error
 	VerifyClientJWTToken(tokenString string) (clientID string, clientUsername string, err error)
@@ -27,17 +25,17 @@ type IClientUsecase interface {
 type ClientUsecase struct {
 	postgres postgresRepo.IClientRepositories
 	token    tokenRepo.ITokenRepository
-	stats    statsRepo.IInfluxdbRepository
+	influxdb influxdbRepo.IInfluxdbRepository
 }
 
 func NewClientUsecase(
 	postgres postgresRepo.IClientRepositories,
 	token tokenRepo.ITokenRepository,
-	stats statsRepo.IInfluxdbRepository,
+	influxdb influxdbRepo.IInfluxdbRepository,
 ) IClientUsecase {
 	return &ClientUsecase{
 		postgres: postgres,
 		token:    token,
-		stats:    stats,
+		influxdb: influxdb,
 	}
 }

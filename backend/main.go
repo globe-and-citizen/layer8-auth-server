@@ -10,14 +10,15 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/emailRepo"
+	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/influxdbRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/phoneRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/postgresRepo"
-	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/statsRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/clientUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/oauthUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/userUC"
+	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/workerUC"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/code"
 	apiLog "globe-and-citizen/layer8/auth-server/backend/pkg/log"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
@@ -107,29 +108,27 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
-	postgresRepository.Migrate()
-
-	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
-	emailRepository := emailRepo.NewEmailRepository(emailConfig)
-	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
-	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
-	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
-	statsRepository := statsRepo.NewInfluxdbRepository(influxdbConfig)
-	err := statsRepository.IsConnected(&gin.Context{})
-	if err != nil {
-		panic(err)
-	}
-
 	// Serve static assets
 	app.Static("/assets", "../frontend/dist/assets")
-
 	// SPA fallback
 	app.NoRoute(func(c *gin.Context) {
 		c.File("../frontend/dist/index.html")
 	})
 
 	apiGroup := app.Group("/api/v1")
+
+	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
+	postgresRepository.Migrate()
+	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
+	emailRepository := emailRepo.NewEmailRepository(emailConfig)
+	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
+	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
+	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
+	influxdbRepository := influxdbRepo.NewInfluxdbRepository(influxdbConfig)
+	err := influxdbRepository.IsConnected(&gin.Context{})
+	if err != nil {
+		panic(err)
+	}
 
 	userUsecase := userUC.NewUserUsecase(
 		postgresRepository,
@@ -139,26 +138,27 @@ func main() {
 		zkRepository,
 		phoneRepository,
 	)
-	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
-	userHandler.RegisterAPIs()
-
 	clientUsecase := clientUC.NewClientUsecase(
 		postgresRepository,
 		tokenRepository,
-		statsRepository,
+		influxdbRepository,
 	)
+	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
+
+	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
+	userHandler.RegisterAPIs()
 	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
 	clientHandler.RegisterAPIs()
-
-	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
 	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
 	oauthHandler.RegisterAPIs()
+
+	workerUsecase := workerUC.NewWorkerUsecase(postgresRepository, influxdbRepository)
 
 	go func() {
 		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
 
 		for currTime := range ticker.C {
-			err := clientUsecase.UpdateUsageStatistics(clientConfig.BillingRatePerByte, currTime)
+			err := workerUsecase.UpdateUsageStatistics(clientConfig.BillingRatePerByte, currTime)
 			if err != nil {
 				log.Println(err)
 			}
