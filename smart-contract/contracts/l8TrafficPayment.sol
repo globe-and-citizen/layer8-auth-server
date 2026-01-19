@@ -6,7 +6,7 @@ contract L8TrafficPayment {
     address public immutable owner;
     address payable public receiver;
 
-    event TrafficPaid(string, address, uint);
+    event TrafficPaid(string clientID, address payer, uint amount);
 
     constructor(address payable _receiver) {
         owner = msg.sender;

@@ -61,3 +61,10 @@ type OAuthConfig struct {
 type ExternalConfig struct {
 	// todo add authenticate forward proxy config
 }
+
+type EthereumConfig struct {
+	WebsocketRPCURL     string `env:"ETH_WS_RPC_URL"`
+	PaymentContractAddr string `env:"ETH_PAYMENT_CONTRACT_ADDRESS"`
+	PaymentContractABI  string `env:"ETH_PAYMENT_CONTRACT_ABI"`
+	// other contracts addr and abi
+}

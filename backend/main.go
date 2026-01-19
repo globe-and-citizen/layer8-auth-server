@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	_ "encoding/hex"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/config"
@@ -10,6 +11,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/codeGenRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/emailRepo"
+	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/ethRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/influxdbRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/phoneRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/postgresRepo"
@@ -20,11 +22,13 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/userUC"
 	"globe-and-citizen/layer8/auth-server/backend/internal/usecases/workerUC"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/code"
+	"globe-and-citizen/layer8/auth-server/backend/pkg/eth"
 	apiLog "globe-and-citizen/layer8/auth-server/backend/pkg/log"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/zk"
 	"log"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -42,6 +46,7 @@ var phoneConfig config.PhoneConfig
 var userConfig config.UserConfig
 var clientConfig config.ClientConfig
 var influxdbConfig config.InfluxDB2Config
+var ethConfig config.EthereumConfig
 
 func readConfig() {
 	postgresConfig = config.PostgresConfig{
@@ -91,6 +96,12 @@ func readConfig() {
 		BillingRatePerByte:  1,
 	}
 
+	ethConfig = config.EthereumConfig{
+		WebsocketRPCURL:     "wss://eth-sepolia.g.alchemy.com/v2/3nAO4RbKoWXgNDwEFWTH5",
+		PaymentContractAddr: "0xB3c1aD831A2655D46f0f1Fc0907c543b9bc184E1",
+		PaymentContractABI:  "./internal/repositories/ethRepo/abi/L8TrafficPayment.json",
+	}
+
 	// TODO: read from env variables or config files
 }
 
@@ -115,8 +126,6 @@ func main() {
 		c.File("../frontend/dist/index.html")
 	})
 
-	apiGroup := app.Group("/api/v1")
-
 	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
 	postgresRepository.Migrate()
 	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
@@ -129,6 +138,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	client, err := eth.ConnectToEthereum(ethConfig.WebsocketRPCURL)
+	if err != nil {
+		log.Fatalf("Connect to %s failed: %w\n", ethConfig.WebsocketRPCURL, err)
+	}
+	defer eth.CloseEthereumConnection(client)
+	ethRepository := ethRepo.NewEthereumRepository(client, ethConfig)
 
 	userUsecase := userUC.NewUserUsecase(
 		postgresRepository,
@@ -145,6 +161,23 @@ func main() {
 	)
 	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	workerUsecase := workerUC.NewWorkerUsecase(ctx, postgresRepository, influxdbRepository, ethRepository)
+
+	go func() {
+		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
+
+		for currTime := range ticker.C {
+			err = workerUsecase.UpdateUsageStatistics(clientConfig.BillingRatePerByte, currTime)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}()
+	go workerUsecase.ListenToEthereumEvents()
+
+	apiGroup := app.Group("/api/v1")
 	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
 	userHandler.RegisterAPIs()
 	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
@@ -152,25 +185,11 @@ func main() {
 	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
 	oauthHandler.RegisterAPIs()
 
-	workerUsecase := workerUC.NewWorkerUsecase(postgresRepository, influxdbRepository)
-
-	go func() {
-		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
-
-		for currTime := range ticker.C {
-			err := workerUsecase.UpdateUsageStatistics(clientConfig.BillingRatePerByte, currTime)
-			if err != nil {
-				log.Println(err)
-			}
-		}
-	}()
-
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
 	log := apiLog.Get()
 	log.Info().Msg("Server start at: http://" + addr)
 	err = app.Run(addr)
-
 	if err != nil {
 		panic(err)
 	}
