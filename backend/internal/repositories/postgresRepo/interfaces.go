@@ -22,7 +22,8 @@ type IUserRepositories interface {
 
 type IClientRepositories interface {
 	IClientRepository
-	IClientTrafficStatisticsRepository
+	IClientBalanceRepository
+	IClientPaymentReceiptRepository
 }
 
 type IUserRepository interface {
@@ -46,11 +47,14 @@ type IClientRepository interface {
 	GetClientByID(id string) (gormModels.Client, error)
 }
 
-type IClientTrafficStatisticsRepository interface {
-	GetClientTrafficStatistics(clientId string) (*gormModels.ClientTrafficStatistics, error)
-	AddClientTrafficUsage(clientId string, consumedBytes int, ratePerByte float64, now time.Time) error
-	PayClientTrafficUsage(clientId string, amountPaid float64) error
-	GetAllClientStatistics() ([]gormModels.ClientTrafficStatistics, error)
+type IClientBalanceRepository interface {
+	GetClientBalance(clientId string) (*gormModels.ClientBalance, error)
+	UpdateClientBalance(clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdated time.Time) error
+	GetAllClientBalances() ([]gormModels.ClientBalance, error)
+}
+
+type IClientPaymentReceiptRepository interface {
+	AddClientPaymentReceipt(clientId string, amount string, timestamp time.Time, txHash string) error
 }
 
 type IUserMetadataRepository interface {

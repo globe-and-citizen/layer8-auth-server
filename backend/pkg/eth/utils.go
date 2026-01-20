@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
@@ -45,4 +46,12 @@ func LoadLastBlock() uint64 {
 
 func saveLastBlock(block uint64) {
 	_ = os.WriteFile(blockFile, []byte(big.NewInt(int64(block)).String()), 0644)
+}
+
+type EventHandlerFunc[T any] func(eventData EventData[T]) error
+
+type EventData[T any] struct {
+	Data        T
+	TxTimestamp time.Time
+	TxID        string
 }

@@ -31,7 +31,7 @@ func Backfill[T any](
 	}
 
 	for _, vLog := range logs {
-		err = sub.handleEvent(vLog)
+		err = sub.handleEvent(ctx, client, vLog)
 		if err != nil {
 			log.Error().Msgf("Backfill handle event error: %v", err)
 		}

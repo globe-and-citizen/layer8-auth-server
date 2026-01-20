@@ -27,6 +27,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/zk"
 	"log"
+	"math/big"
 	"os"
 	"os/signal"
 	"time"
@@ -36,6 +37,7 @@ import (
 	"github.com/consensys/gnark/constraint"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	zlog "github.com/rs/zerolog/log"
 )
 
 var postgresConfig config.PostgresConfig
@@ -92,14 +94,14 @@ func readConfig() {
 
 	clientConfig = config.ClientConfig{
 		ScramIterationCount: 4096,
-		StatsUpdateInterval: time.Minute * 2,
-		BillingRatePerByte:  1,
+		StatsUpdateInterval: time.Second * 30,
+		BillingRatePerByte:  big.NewInt(10000000),
 	}
 
 	ethConfig = config.EthereumConfig{
 		WebsocketRPCURL:     "wss://eth-sepolia.g.alchemy.com/v2/3nAO4RbKoWXgNDwEFWTH5",
 		PaymentContractAddr: "0xB3c1aD831A2655D46f0f1Fc0907c543b9bc184E1",
-		PaymentContractABI:  "./internal/repositories/ethRepo/abi/L8TrafficPayment.json",
+		PaymentContractABI:  "../smart-contract/artifacts/contracts/l8TrafficPayment.sol/L8TrafficPayment.json",
 	}
 
 	// TODO: read from env variables or config files
@@ -169,9 +171,10 @@ func main() {
 		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
 
 		for currTime := range ticker.C {
-			err = workerUsecase.UpdateUsageStatistics(clientConfig.BillingRatePerByte, currTime)
+			zlog.Info().Msgf("Started usage balance updater with interval: %s", clientConfig.StatsUpdateInterval)
+			err = workerUsecase.UpdateUsageBalance(clientConfig.BillingRatePerByte, currTime)
 			if err != nil {
-				log.Println(err)
+				zlog.Error().Err(err).Msg("Error while updating usage balance")
 			}
 		}
 	}()

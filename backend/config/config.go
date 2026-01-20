@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"math/big"
+	"time"
+)
 
 type PostgresConfig struct {
 	Host     string `env:"DB_HOST" env-default:"localhost"`
@@ -40,7 +43,7 @@ type PhoneConfig struct {
 type ClientConfig struct {
 	ScramIterationCount int           `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
 	StatsUpdateInterval time.Duration `env:"STATS_UPDATE_INTERVAL" default:"15m"`
-	BillingRatePerByte  float64       `env:"BILLING_RATE_PER_BYTE" default:"1"`
+	BillingRatePerByte  *big.Int      `env:"BILLING_RATE_PER_BYTE" default:"1"`
 }
 
 type InfluxDB2Config struct {

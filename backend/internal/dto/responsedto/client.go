@@ -34,8 +34,8 @@ type ClientUsageStatistic struct {
 	LastThirtyDaysStatistic models.Statistics           `json:"last_thirty_days_statistic"`
 }
 
-type ClientGetUnpaidAmount struct {
-	UnpaidAmount float64 `json:"unpaid_amount"`
+type ClientGetBalance struct {
+	BalanceEth string `json:"balance_eth"`
 }
 
 type ClientGetNTorCertificate struct {

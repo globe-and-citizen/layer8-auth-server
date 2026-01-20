@@ -1,5 +1,5 @@
 <template>
-  <div v-if="Number(unpaidAmountETH) > 0">
+  <div>
     <div class="flex items-center gap-4">
 
         <span class="text-sm text-gray-700">
@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import {onMounted, ref, watch} from "vue";
-import {formatEther, parseEther} from "viem";
+import {parseEther} from "viem";
 import {ClientUnpaidAmountPath, getAPI} from "@/api/paths.ts";
 import PayWithCryptoModal from "@/views/client/profile/PayWithCryptoModal.vue";
 
@@ -85,8 +85,7 @@ async function getOwingBalance() {
   }
 
   const unpaidAmountBody = await unpaidAmountResponse.json()
-  unpaidAmount.value = BigInt(unpaidAmountBody.data.unpaid_amount)
-  unpaidAmountETH.value = formatEther(unpaidAmount.value)
+  unpaidAmountETH.value = unpaidAmountBody.data.balance_eth
 }
 
 /* =========================
@@ -98,11 +97,6 @@ const cancelModel = async () => {
 
 const payWithCrypto = async () => {
   try {
-    if (parseEther(paymentAmount.value) < unpaidAmount.value) {
-      alert(`Too small payment amount, at least ${unpaidAmountETH.value} ETH must be paid`)
-      return
-    }
-
     await payTraffic(props.userID, paymentAmount.value)
   } catch (error) {
     alert('Payment failed to initiate: ' + error)

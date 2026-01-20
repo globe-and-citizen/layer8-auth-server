@@ -117,14 +117,19 @@ func (uc *ClientUsecase) GetProfile(username string) (responsedto.ClientProfile,
 	return clientModel, nil
 }
 
-func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientGetUnpaidAmount, error) {
-	stats, err := uc.postgres.GetClientTrafficStatistics(clientID)
+func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientGetBalance, error) {
+	stats, err := uc.postgres.GetClientBalance(clientID)
 	if err != nil {
-		return responsedto.ClientGetUnpaidAmount{}, err
+		return responsedto.ClientGetBalance{}, err
 	}
 
-	return responsedto.ClientGetUnpaidAmount{
-		UnpaidAmount: stats.UnpaidAmount,
+	balanceWei, err := utils.DBWeiToBigInt(stats.BalanceWei)
+	if err != nil {
+		return responsedto.ClientGetBalance{}, err
+	}
+
+	return responsedto.ClientGetBalance{
+		BalanceEth: utils.WeiToEthString(balanceWei, 18),
 	}, nil
 }
 

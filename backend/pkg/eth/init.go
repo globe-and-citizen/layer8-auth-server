@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"math/big"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -31,7 +32,7 @@ type EventListener[T any] struct {
 	ContractAddress common.Address
 	EventName       string
 	EventID         common.Hash
-	handler         func(T)
+	handler         EventHandlerFunc[T]
 }
 
 func NewEventListener[T any](
@@ -52,7 +53,7 @@ func NewEventListener[T any](
 	}
 }
 
-func (e *EventListener[T]) SetHandler(handler func(T)) {
+func (e *EventListener[T]) SetHandler(handler EventHandlerFunc[T]) {
 	e.handler = handler
 }
 
@@ -88,11 +89,12 @@ func (e *EventListener[T]) Start(ctx context.Context, client *ethclient.Client) 
 				time.Sleep(3 * time.Second)
 				goto RESUBSCRIBE
 			case vLog := <-logs:
-				err = e.handleEvent(vLog)
+				err = e.handleEvent(ctx, client, vLog)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error handling ethereum event %s", e.EventName)
+					// todo what to do on handler error?
 				}
-				saveLastBlock(vLog.BlockNumber) // todo rethink the logic here
+				saveLastBlock(vLog.BlockNumber)
 			}
 		}
 	RESUBSCRIBE:
@@ -100,14 +102,26 @@ func (e *EventListener[T]) Start(ctx context.Context, client *ethclient.Client) 
 
 }
 
-func (e *EventListener[T]) handleEvent(vLog types.Log) error {
-	var eventData T
+func (e *EventListener[T]) handleEvent(ctx context.Context, client *ethclient.Client, vLog types.Log) error {
+	var eventData EventData[T]
 
-	err := e.ContractABI.UnpackIntoInterface(&eventData, e.EventName, vLog.Data)
+	err := e.ContractABI.UnpackIntoInterface(&eventData.Data, e.EventName, vLog.Data)
 	if err != nil {
 		return err
 	}
 
-	e.handler(eventData)
+	eventData.TxID = vLog.TxHash.Hex()
+	// Fetch block header to get the block timestamp (seconds since epoch)
+	header, err := client.HeaderByNumber(ctx, new(big.Int).SetUint64(vLog.BlockNumber))
+	if err != nil {
+		return err
+	}
+	eventData.TxTimestamp = time.Unix(int64(header.Time), 0)
+
+	err = e.handler(eventData)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

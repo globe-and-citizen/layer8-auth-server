@@ -5,11 +5,12 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/ethRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/influxdbRepo"
 	"globe-and-citizen/layer8/auth-server/backend/internal/repositories/postgresRepo"
+	"math/big"
 	"time"
 )
 
 type IWorkerUsecase interface {
-	UpdateUsageStatistics(ratePerByte float64, now time.Time) error
+	UpdateUsageBalance(ratePerByte *big.Int, now time.Time) error
 	ListenToEthereumEvents()
 }
 

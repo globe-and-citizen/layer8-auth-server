@@ -11,7 +11,7 @@ import (
 )
 
 type IEthereumRepository interface {
-	SetAllHandlers(payHandler func(eventData models.TrafficPaidEvent) /*, add other handlers */)
+	SetAllHandlers(payHandler eth.EventHandlerFunc[models.TrafficPaidEvent] /*, add other handlers */)
 	BackfillAll(ctx context.Context)
 	ListenToAllEvents(ctx context.Context)
 }
@@ -41,7 +41,7 @@ func (r *EthereumRepository) BackfillAll(ctx context.Context) {
 	eth.Backfill[models.TrafficPaidEvent](ctx, r.client, r.paymentListener, start)
 }
 
-func (r *EthereumRepository) SetAllHandlers(payHandler func(eventData models.TrafficPaidEvent)) {
+func (r *EthereumRepository) SetAllHandlers(payHandler eth.EventHandlerFunc[models.TrafficPaidEvent]) {
 	r.paymentListener.SetHandler(payHandler)
 }
 

@@ -3,6 +3,7 @@ package postgresRepo
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/backend/internal/models/gormModels"
+	"time"
 )
 
 func (r *PostgresRepository) UpdateClient(newClient gormModels.Client) error {
@@ -30,11 +31,14 @@ func (r *PostgresRepository) UpdateClient(newClient gormModels.Client) error {
 		return fmt.Errorf("no client found with username: %s", newClient.Username)
 	}
 
-	stats := gormModels.ClientTrafficStatistics{
-		ClientId: newClient.ID,
+	balance := gormModels.ClientBalance{
+		ClientID:           newClient.ID,
+		BalanceWei:         "0",
+		Status:             gormModels.AccountZeroed,
+		LastUsageUpdatedAt: time.Now(),
 	}
 
-	err := tx.Create(&stats).Error
+	err := tx.Create(&balance).Error
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("could not create client stats entry: %e", err)
