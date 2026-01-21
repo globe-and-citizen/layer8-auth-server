@@ -74,14 +74,14 @@ func GenerateAuthorizationCode(
 	clientRedirectURI string,
 	scopes []string,
 	userID uint,
-	expiryInMin int64,
+	expiry time.Duration,
 ) (string, error) {
 	claims := AuthorizationCodeClaims{
 		ClientID:    clientID,
 		UserID:      userID,
 		RedirectURI: clientRedirectURI,
 		Scopes:      strings.Join(scopes, ","), // fixme: should the separator be a space?
-		ExpiresAt:   time.Now().Add(time.Minute * time.Duration(expiryInMin)).Unix(),
+		ExpiresAt:   time.Now().Add(expiry).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

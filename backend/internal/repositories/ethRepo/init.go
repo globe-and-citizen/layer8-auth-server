@@ -17,13 +17,13 @@ type IEthereumRepository interface {
 }
 
 type EthereumRepository struct {
-	config          config.EthereumConfig
+	config          config.Web3Config
 	client          *ethclient.Client
 	paymentListener eth.EventListener[models.TrafficPaidEvent]
 	// add other events listener here
 }
 
-func NewEthereumRepository(client *ethclient.Client, conf config.EthereumConfig) IEthereumRepository {
+func NewEthereumRepository(client *ethclient.Client, conf config.Web3Config) IEthereumRepository {
 	paymentContractABI := eth.MustLoadABI(conf.PaymentContractABI)
 	paymentContractAddr := common.HexToAddress(conf.PaymentContractAddr)
 

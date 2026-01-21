@@ -31,6 +31,9 @@ func (h OAuthHandler) AuthorizeDecision(c *gin.Context) {
 	}
 
 	req, err := utils.DecodeJSONFromRequest[requestdto.OAuthAuthorizeDecision](c)
+	if err != nil {
+		return
+	}
 
 	//var req requestdto.OAuthAuthorizeDecision
 	//req.ClientID = c.Query("client_id")
@@ -55,7 +58,7 @@ func (h OAuthHandler) AuthorizeDecision(c *gin.Context) {
 	//	req.Share.Bio = true
 	//}
 
-	response, oauthErr := h.uc.AuthorizeDecision(req, userID, h.config.AuthzCodeExpiryMin)
+	response, oauthErr := h.uc.AuthorizeDecision(req, userID, h.config.AuthzCodeExpiry)
 	if oauthErr != nil {
 		//if !req.ReturnResult {
 		//	utils.HandleError(c, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)

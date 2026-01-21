@@ -10,6 +10,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/pkg/oauth"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func (uc *OAuthUsecase) AuthorizeContext(req requestdto.OAuthAuthorizeContext) (*responsedto.OAuthAuthorizeContext, *appError.OAuthError) {
@@ -27,7 +28,7 @@ func (uc *OAuthUsecase) AuthorizeContext(req requestdto.OAuthAuthorizeContext) (
 func (uc *OAuthUsecase) AuthorizeDecision(
 	req requestdto.OAuthAuthorizeDecision,
 	userID uint,
-	authzCodeExpiry int64,
+	authzCodeExpiry time.Duration,
 ) (*responsedto.OAuthAuthorizeDecision, *appError.OAuthError) {
 	client, _, scopes, oauthErr := uc.validateAuthorizeParams(req.OAuthAuthorizeContext)
 	if oauthErr != nil {
@@ -49,7 +50,8 @@ func (uc *OAuthUsecase) AuthorizeDecision(
 		scopes = append(scopes, consts.OAuthScopeReadUserIsEmailVerified)
 	}
 
-	code, err := oauth.GenerateAuthorizationCode(req.ClientID, client.Secret, client.RedirectURI, consts.OAuthScopesToStringSlice(scopes), userID, authzCodeExpiry)
+	code, err := oauth.GenerateAuthorizationCode(req.ClientID, client.Secret,
+		client.RedirectURI, consts.OAuthScopesToStringSlice(scopes), userID, authzCodeExpiry)
 	if err != nil {
 		return nil, &appError.OAuthError{
 			Code:        consts.OAuthErrorServerError,

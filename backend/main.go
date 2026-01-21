@@ -27,7 +27,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/backend/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/backend/pkg/zk"
 	"log"
-	"math/big"
 	"os"
 	"os/signal"
 	"time"
@@ -38,77 +37,24 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	zlog "github.com/rs/zerolog/log"
+
+	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 )
 
-var postgresConfig config.PostgresConfig
-var serverConfig config.ServerConfig
-var emailConfig config.EmailConfig
-var zkConfig config.ZkConfig
-var phoneConfig config.PhoneConfig
-var userConfig config.UserConfig
-var clientConfig config.ClientConfig
-var influxdbConfig config.InfluxDB2Config
-var ethConfig config.EthereumConfig
+func readConfig() config.AppConfig {
+	_ = godotenv.Load()
 
-func readConfig() {
-	postgresConfig = config.PostgresConfig{
-		Host:     "localhost",
-		Port:     5432,
-		User:     "layer8",
-		Password: "layer81234",
-		DBName:   "layer8db",
+	cfg := config.AppConfig{}
+	if err := env.Parse(&cfg); err != nil {
+		panic(err)
 	}
 
-	serverConfig = config.ServerConfig{
-		Host:      "localhost",
-		Port:      5001,
-		JWTSecret: "5b0b18dc37004b97946367ca5d82673918a6c6e7a817bf84236abe1c0907b9bf",
-	}
-
-	influxdbConfig = config.InfluxDB2Config{
-		Url:         "http://localhost:8086",
-		TelegrafURL: "http://host.docker.internal:8086",
-		Username:    "admin",
-		Password:    "somethingthatyoudontknow",
-		Org:         "layer8",
-		Bucket:      "layer8",
-		Token:       "DEFAULT_TOKEN_FOR_TESTING",
-	}
-
-	emailConfig = config.EmailConfig{
-		VerificationCodeExpiry: time.Minute * 10,
-	}
-
-	zkConfig = config.ZkConfig{
-		GenerateNewZkSnarksKeys: true,
-	}
-
-	phoneConfig = config.PhoneConfig{
-		TelegramApiKey:         os.Getenv("TELEGRAM_API_KEY"),
-		VerificationCodeExpiry: time.Minute * 10,
-	}
-
-	userConfig = config.UserConfig{
-		ScramIterationCount: 4096,
-	}
-
-	clientConfig = config.ClientConfig{
-		ScramIterationCount: 4096,
-		StatsUpdateInterval: time.Second * 30,
-		BillingRatePerByte:  big.NewInt(10000000),
-	}
-
-	ethConfig = config.EthereumConfig{
-		WebsocketRPCURL:     "wss://eth-sepolia.g.alchemy.com/v2/3nAO4RbKoWXgNDwEFWTH5",
-		PaymentContractAddr: "0xB3c1aD831A2655D46f0f1Fc0907c543b9bc184E1",
-		PaymentContractABI:  "../smart-contract/artifacts/contracts/l8TrafficPayment.sol/L8TrafficPayment.json",
-	}
-
-	// TODO: read from env variables or config files
+	return cfg
 }
 
 func main() {
-	readConfig()
+	appConfig := readConfig()
 
 	app := gin.Default()
 	app.Use(apiLog.AccessLog)
@@ -122,31 +68,35 @@ func main() {
 	}))
 
 	// Serve static assets
-	app.Static("/assets", "../frontend/dist/assets")
-	// SPA fallback
+	app.Static("/assets", appConfig.StaticAssetsPath)
+	// Serve SPA index.html for all other routes (to support client-side routing)
 	app.NoRoute(func(c *gin.Context) {
-		c.File("../frontend/dist/index.html")
+		c.File(appConfig.SPAIndexPath)
 	})
 
-	postgresRepository := postgresRepo.NewPostgresRepository(postgresConfig)
+	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.PostgresConfig)
 	postgresRepository.Migrate()
-	tokenRepository := tokenRepo.NewTokenRepository([]byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret), []byte(serverConfig.JWTSecret))
-	emailRepository := emailRepo.NewEmailRepository(emailConfig)
+	tokenRepository := tokenRepo.NewTokenRepository(
+		[]byte(appConfig.UserConfig.JWTSecret),
+		[]byte(appConfig.ClientConfig.JWTSecret),
+		[]byte(appConfig.OAuthConfig.JWTSecret),
+	)
+	emailRepository := emailRepo.NewEmailRepository(appConfig.EmailConfig)
 	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
-	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, zkConfig))
-	phoneRepository := phoneRepo.NewPhoneRepository(phoneConfig)
-	influxdbRepository := influxdbRepo.NewInfluxdbRepository(influxdbConfig)
+	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZkConfig))
+	phoneRepository := phoneRepo.NewPhoneRepository(appConfig.PhoneConfig)
+	influxdbRepository := influxdbRepo.NewInfluxdbRepository(appConfig.InfluxDB2Config)
 	err := influxdbRepository.IsConnected(&gin.Context{})
 	if err != nil {
 		panic(err)
 	}
 
-	client, err := eth.ConnectToEthereum(ethConfig.WebsocketRPCURL)
+	client, err := eth.ConnectToEthereum(appConfig.Web3Config.WebsocketRPCURL)
 	if err != nil {
-		log.Fatalf("Connect to %s failed: %w\n", ethConfig.WebsocketRPCURL, err)
+		log.Fatalf("Connect to %s failed: %w\n", appConfig.Web3Config.WebsocketRPCURL, err)
 	}
 	defer eth.CloseEthereumConnection(client)
-	ethRepository := ethRepo.NewEthereumRepository(client, ethConfig)
+	ethRepository := ethRepo.NewEthereumRepository(client, appConfig.Web3Config)
 
 	userUsecase := userUC.NewUserUsecase(
 		postgresRepository,
@@ -168,11 +118,11 @@ func main() {
 	workerUsecase := workerUC.NewWorkerUsecase(ctx, postgresRepository, influxdbRepository, ethRepository)
 
 	go func() {
-		ticker := time.NewTicker(clientConfig.StatsUpdateInterval)
+		ticker := time.NewTicker(appConfig.UpdateUsageInterval)
 
 		for currTime := range ticker.C {
-			zlog.Info().Msgf("Started usage balance updater with interval: %s", clientConfig.StatsUpdateInterval)
-			err = workerUsecase.UpdateUsageBalance(clientConfig.BillingRatePerByte, currTime)
+			zlog.Info().Msgf("Started usage balance updater with interval: %s", appConfig.UpdateUsageInterval)
+			err = workerUsecase.UpdateUsageBalance(appConfig.BillingRatePerByte, currTime)
 			if err != nil {
 				zlog.Error().Err(err).Msg("Error while updating usage balance")
 			}
@@ -181,7 +131,7 @@ func main() {
 	go workerUsecase.ListenToEthereumEvents()
 
 	apiGroup := app.Group("/api/v1")
-	userHandler := userH.NewUserHandler(apiGroup, userUsecase, userConfig)
+	userHandler := userH.NewUserHandler(apiGroup, userUsecase, appConfig.UserConfig)
 	userHandler.RegisterAPIs()
 	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
 	clientHandler.RegisterAPIs()
@@ -189,7 +139,7 @@ func main() {
 	oauthHandler.RegisterAPIs()
 
 	gin.SetMode(gin.ReleaseMode)
-	addr := fmt.Sprintf("%s:%d", serverConfig.Host, serverConfig.Port)
+	addr := fmt.Sprintf("%s:%d", appConfig.Host, appConfig.Port)
 	log := apiLog.Get()
 	log.Info().Msg("Server start at: http://" + addr)
 	err = app.Run(addr)
