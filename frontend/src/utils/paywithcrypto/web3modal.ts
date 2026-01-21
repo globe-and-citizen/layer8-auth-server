@@ -1,13 +1,13 @@
 import { createAppKit } from '@reown/appkit/vue'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { sepolia } from '@reown/appkit/networks'
+import { sepolia, polygon } from '@reown/appkit/networks'
 // import { injected } from '@wagmi/vue/connectors'
 
 // 1. Get projectId at https://cloud.reown.com
 export const projectId = import.meta.env.VITE_WALLET_PROJECT_ID as `0x${string}`
 
 // 2. Create Wagmi Adapter
-export const networks = [sepolia]
+export const networks = [polygon, sepolia]
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
@@ -18,9 +18,9 @@ export const wagmiAdapter = new WagmiAdapter({
 // 3. Create modal
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [sepolia],
+  networks: [sepolia, polygon],
   projectId,
-  defaultNetwork: sepolia, // Ensures the app starts on Sepolia
+  defaultNetwork: polygon, // Ensures the app starts on Sepolia
   metadata: {
     name: 'Layer8 Traffic Usage Payment',
     description: 'Reverse Proxy Implementing the Layer8 protocol',
