@@ -1,10 +1,11 @@
-import { createAppKit } from '@reown/appkit/vue'
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { sepolia, polygon } from '@reown/appkit/networks'
+import {createAppKit} from '@reown/appkit/vue'
+import {WagmiAdapter} from '@reown/appkit-adapter-wagmi'
+import {polygon, sepolia} from '@reown/appkit/networks'
 // import { injected } from '@wagmi/vue/connectors'
+import { config } from "@/config";
 
 // 1. Get projectId at https://cloud.reown.com
-export const projectId = import.meta.env.VITE_WALLET_PROJECT_ID as `0x${string}`
+export const projectId = config.WALLET_PROJECT_ID as `0x${string}`
 
 // 2. Create Wagmi Adapter
 export const networks = [polygon, sepolia]
@@ -33,4 +34,4 @@ createAppKit({
   enableReconnect: true
 })
 
-export const config = wagmiAdapter.wagmiConfig
+export const web3Config = wagmiAdapter.wagmiConfig

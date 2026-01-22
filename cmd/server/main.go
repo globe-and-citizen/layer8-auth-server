@@ -37,24 +37,10 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	zlog "github.com/rs/zerolog/log"
-
-	"github.com/caarlos0/env/v11"
-	"github.com/joho/godotenv"
 )
 
-func readConfig() config.AppConfig {
-	_ = godotenv.Load()
-
-	cfg := config.AppConfig{}
-	if err := env.Parse(&cfg); err != nil {
-		panic(err)
-	}
-
-	return cfg
-}
-
 func main() {
-	appConfig := readConfig()
+	appConfig := config.LoadConfig()
 
 	app := gin.Default()
 	app.Use(log2.AccessLog)
@@ -67,6 +53,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	app.GET("/config.js", serveFrontendConfig(appConfig.SPAConfig))
 	// Serve static assets
 	app.Static("/assets", appConfig.StaticAssetsPath)
 	// Serve SPA index.html for all other routes (to support client-side routing)
@@ -145,6 +132,18 @@ func main() {
 	err = app.Run(addr)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func serveFrontendConfig(cfg config.SPAConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Content-Type", "application/javascript")
+		c.String(200, `
+window.__APP_CONFIG__ = {
+  CONTRACT_ADDRESS: %q,
+  WALLET_PROJECT_ID: %q
+};
+`, cfg.ContractAddress, cfg.WalletProjectID)
 	}
 }
 
