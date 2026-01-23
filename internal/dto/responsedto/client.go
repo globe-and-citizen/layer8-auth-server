@@ -35,7 +35,7 @@ type ClientUsageStatistic struct {
 }
 
 type ClientGetBalance struct {
-	BalanceEth string `json:"balance_eth"`
+	Balance string `json:"balance"`
 }
 
 type ClientGetNTorCertificate struct {

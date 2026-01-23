@@ -14,7 +14,9 @@ type CodeGeneratorRepository struct {
 }
 
 func NewCodeGenerateRepository(generator code.ICodeGenerator) ICodeGeneratorRepository {
-	return &CodeGeneratorRepository{}
+	return &CodeGeneratorRepository{
+		generator: generator,
+	}
 }
 
 func (cgr *CodeGeneratorRepository) GenerateEmailVerificationCode(salt string, userEmail string) (string, error) {

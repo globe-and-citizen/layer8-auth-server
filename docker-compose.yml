@@ -5,22 +5,21 @@ services:
     image: dtpthao/auth-server:latest
     container_name: auth-server
     env_file:
-      - ./auth-server/.env
+      - .env.docker
     ports:
       - "5001:5001"
-    hostname: auth
-    domainname: layer8proxy.net
-    command: ["./main"]
+#    command: ["./server"]
     depends_on:
       auth-postgres:
         condition: service_healthy
       influxdb2:
         condition: service_healthy
-      auth-telegraf:
-        condition: service_healthy
     restart: on-failure
     stdin_open: true
     tty: true
+    networks:
+      layer8-network:
+        ipv4_address: 10.10.10.103
 
   influxdb2:
     container_name: influxdb2
@@ -29,7 +28,7 @@ services:
     ports:
       - "8086:8086"
     volumes:
-      - ./influxdb2-data:/var/lib/influxdb2
+      - ./tmp/influxdb2-data:/var/lib/influxdb2
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -43,25 +42,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
-  auth-telegraf:
-    image: telegraf:alpine
-    container_name: auth-telegraf
-    restart: always
-    volumes:
-      - ./auth-server/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-    ports:
-      - "4317:4317"
-    environment:
-      - INFLUXDB_URL_TELEGRAF=http://host.docker.internal:8086
-      - INFLUXDB_TOKEN=DEFAULT_TOKEN_FOR_TESTING
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    healthcheck:
-      test: [ "CMD-SHELL", "nc -z localhost 4317" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    networks:
+      layer8-network:
+        ipv4_address: 10.10.10.104
 
   auth-postgres:
     container_name: postgres
@@ -76,25 +59,19 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U layer8development" ]
+      test: [ "CMD-SHELL", "pg_isready -U layer8" ]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      layer8-network:
+        ipv4_address: 10.10.10.105
 
-  auth-setup:
-    image: dtpthao/auth-server:latest
-    container_name: auth-setup
-    environment:
-      - DB_SETUP_MIGRATION_PATH=./migrations
-    env_file:
-      - ./auth-server/.env
-    command: [ "./setup", "docker" ]
-    depends_on:
-      auth-postgres:
-        condition: service_healthy
-      influxdb2:
-        condition: service_healthy
-      auth-telegraf:
-        condition: service_healthy
-    restart: "no"
+networks:
+  layer8-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.10.0/24
+
 

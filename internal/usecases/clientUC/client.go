@@ -129,7 +129,7 @@ func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientGet
 	}
 
 	return responsedto.ClientGetBalance{
-		BalanceEth: utils2.WeiToEthString(balanceWei, 18),
+		Balance: utils2.WeiToEthString(balanceWei, 18),
 	}, nil
 }
 

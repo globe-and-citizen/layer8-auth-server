@@ -19,9 +19,9 @@ const (
 func (AccountStatus) GetStatus(balance *big.Int) AccountStatus {
 	switch balance.Cmp(big.NewInt(0)) {
 	case -1:
-		return AccountOwing
-	case 1:
 		return AccountOverpaid
+	case 1:
+		return AccountOwing
 	default:
 		return AccountZeroed
 	}

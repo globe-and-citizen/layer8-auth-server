@@ -1,3 +1,5 @@
+import {config} from "@/config.ts";
+
 const UserRegisterPrecheckPath = '/user-register-precheck';
 const UserRegisterPath = '/user-register';
 const UserLoginPrecheckPath = '/user-login-precheck';
@@ -23,8 +25,7 @@ const OAuthGetAuthorizeContextPath = "/oauth/authorize";
 const OAuthPostAuthorizeDecisionPath = "/oauth/authorize";
 
 const getAPI = (api: string) => {
-  const base_url = import.meta.env.VITE_BACKEND_BASE_URL || ""
-  return base_url + `/api/v1${api}`;
+  return config.BASE_API_URL + `/api/v1${api}`;
 }
 
 export {

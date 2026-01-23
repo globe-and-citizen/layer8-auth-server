@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <div v-if="isLoggedIn">
     <div class="flex items-center gap-4">
 
         <span class="text-sm text-gray-700">
           Balance:
           <span class="font-semibold text-gray-900">
-            {{ unpaidAmountETH }} ETH
+            {{ unpaidAmount }} POL
           </span>
         </span>
 
@@ -25,7 +25,7 @@
 
   <PayWithCryptoModal
     :active="modalWindowActive"
-    :unpaidAmountETH="unpaidAmountETH"
+    :unpaidAmountETH="unpaidAmount"
     v-model:paymentAmount="paymentAmount"
     @cancel="cancelModel"
     @pay="payWithCrypto"
@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import {onMounted, ref, watch} from "vue";
-import {parseEther} from "viem";
 import {ClientUnpaidAmountPath, getAPI} from "@/api/paths.ts";
 import PayWithCryptoModal from "@/views/client/profile/PayWithCryptoModal.vue";
 
@@ -50,14 +49,12 @@ const props = defineProps<{
    ========================= */
 const token = ref<string | null>(localStorage.getItem('clientToken'))
 const modalWindowActive = ref(false)
-const unpaidAmount = ref<bigint>(0n)
 const paymentAmount = ref('')
-const unpaidAmountETH = ref('')
+const unpaidAmount = ref('')
+const isLoggedIn = ref(!!token.value)
 
 const {
-  connection,
   payTraffic,
-  isPending,
   isSuccess,
   writeError,
   hash
@@ -85,7 +82,7 @@ async function getOwingBalance() {
   }
 
   const unpaidAmountBody = await unpaidAmountResponse.json()
-  unpaidAmountETH.value = unpaidAmountBody.data.balance_eth
+  unpaidAmount.value = unpaidAmountBody.data.balance
 }
 
 /* =========================

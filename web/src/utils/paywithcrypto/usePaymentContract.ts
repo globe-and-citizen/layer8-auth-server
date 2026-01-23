@@ -1,6 +1,6 @@
 import { useWriteContract, useConnection } from '@wagmi/vue'
 import { parseEther } from 'viem'
-import artifact from "./L8TrafficPayment.json"
+import artifact from "../../../../smart-contract/abi/L8TrafficPayment.json"
 import { config } from "@/config";
 
 const CONTRACT_ADDRESS = config.CONTRACT_ADDRESS as `0x${string}`

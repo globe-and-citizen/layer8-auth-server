@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"github.com/caarlos0/env/v11"
@@ -26,6 +25,7 @@ type AppConfig struct {
 type SPAConfig struct {
 	StaticAssetsPath string `env:"STATIC_ASSETS_PATH" env-default:"./web/dist/assets"`
 	SPAIndexPath     string `env:"SPA_INDEX_PATH" required:"true" env-default:"./web/dist/index.html"`
+	BaseAPIURL       string `env:"BASE_API_URL" env-default:""`
 	ContractAddress  string `env:"CONTRACT_ADDRESS" required:"true"`
 	WalletProjectID  string `env:"WALLET_PROJECT_ID" required:"true"`
 }
@@ -46,6 +46,5 @@ func LoadConfig() AppConfig {
 		panic(err)
 	}
 
-	fmt.Printf("%+v\n", cfg)
 	return cfg
 }

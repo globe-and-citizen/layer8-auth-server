@@ -53,6 +53,12 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	app.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status": "ok",
+		})
+	})
+
 	app.GET("/config.js", serveFrontendConfig(appConfig.SPAConfig))
 	// Serve static assets
 	app.Static("/assets", appConfig.StaticAssetsPath)
@@ -140,10 +146,11 @@ func serveFrontendConfig(cfg config.SPAConfig) gin.HandlerFunc {
 		c.Header("Content-Type", "application/javascript")
 		c.String(200, `
 window.__APP_CONFIG__ = {
+  BASE_API_URL: %q,
   CONTRACT_ADDRESS: %q,
   WALLET_PROJECT_ID: %q
 };
-`, cfg.ContractAddress, cfg.WalletProjectID)
+`, cfg.BaseAPIURL, cfg.ContractAddress, cfg.WalletProjectID)
 	}
 }
 
