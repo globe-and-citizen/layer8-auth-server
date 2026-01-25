@@ -1,9 +1,9 @@
-name: auth-server
+name: layer8-server
 
 services:
-  auth-server:
+  server:
     image: dtpthao/auth-server:latest
-    container_name: auth-server
+    container_name: server
     env_file:
       - .env.docker
     ports:
@@ -18,8 +18,8 @@ services:
     stdin_open: true
     tty: true
     networks:
-      layer8-network:
-        ipv4_address: 10.10.10.103
+      l8-server-network:
+        ipv4_address: 10.10.11.100
 
   influxdb2:
     container_name: influxdb2
@@ -33,8 +33,8 @@ services:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
       - DOCKER_INFLUXDB_INIT_PASSWORD=somethingthatyoudontknow
-      - DOCKER_INFLUXDB_INIT_ORG=layer8
-      - DOCKER_INFLUXDB_INIT_BUCKET=layer8
+      - DOCKER_INFLUXDB_INIT_ORG=layer8org
+      - DOCKER_INFLUXDB_INIT_BUCKET=layer8bucket
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=DEFAULT_TOKEN_FOR_TESTING
       - DOCKER_INFLUXDB_INIT_RETENTION=30d
     healthcheck:
@@ -43,8 +43,8 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      layer8-network:
-        ipv4_address: 10.10.10.104
+      l8-server-network:
+        ipv4_address: 10.10.11.101
 
   auth-postgres:
     container_name: postgres
@@ -64,14 +64,14 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      layer8-network:
-        ipv4_address: 10.10.10.105
+      l8-server-network:
+        ipv4_address: 10.10.11.102
 
 networks:
-  layer8-network:
+  l8-server-network:
     driver: bridge
     ipam:
       config:
-        - subnet: 10.10.10.0/24
+        - subnet: 10.10.11.0/24
 
 

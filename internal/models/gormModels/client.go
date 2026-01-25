@@ -13,7 +13,7 @@ type Client struct {
 	ScramStoredKey      string `gorm:"column:stored_key" json:"stored_key"`
 	NTorX509Certificate []byte `gorm:"column:x509_certificate_bytes" json:"x509_certificate_bytes"`
 
-	TrafficStatistics ClientBalance `gorm:"foreignKey:ClientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Balance ClientBalance `gorm:"foreignKey:ClientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (Client) TableName() string {

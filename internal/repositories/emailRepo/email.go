@@ -3,13 +3,13 @@ package emailRepo
 import (
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/models"
-	gormModels2 "globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
 
 type IEmailRepository interface {
-	SendVerificationEmail(user *gormModels2.User, userEmail string, verificationCode string) error
-	VerifyCode(verificationData *gormModels2.EmailVerificationData, code string) error
+	SendVerificationEmail(user *gormModels.User, userEmail string, verificationCode string) error
+	VerifyCode(verificationData *gormModels.EmailVerificationData, code string) error
 	GetVerificationCodeExpiry() time.Duration // todo this sounds silly?
 }
 
@@ -28,7 +28,7 @@ func NewEmailRepository(config config.EmailConfig) *EmailRepository {
 	}
 }
 
-func (r *EmailRepository) SendVerificationEmail(user *gormModels2.User, userEmail string, verificationCode string) error {
+func (r *EmailRepository) SendVerificationEmail(user *gormModels.User, userEmail string, verificationCode string) error {
 	return r.sender.Send(
 		&models.Email{
 			From:    r.verifier.adminEmailAddress,
@@ -42,7 +42,7 @@ func (r *EmailRepository) SendVerificationEmail(user *gormModels2.User, userEmai
 	)
 }
 
-func (r *EmailRepository) VerifyCode(verificationData *gormModels2.EmailVerificationData, code string) error {
+func (r *EmailRepository) VerifyCode(verificationData *gormModels.EmailVerificationData, code string) error {
 	return r.verifier.VerifyCode(verificationData, code)
 }
 

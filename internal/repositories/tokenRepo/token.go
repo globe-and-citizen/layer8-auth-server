@@ -2,18 +2,18 @@ package tokenRepo
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/models"
-	gormModels2 "globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
 )
 
 type ITokenRepository interface {
-	GenerateUserJWTToken(user gormModels2.User) (string, error)
+	GenerateUserJWTToken(user gormModels.User) (string, error)
 	VerifyUserJWTToken(tokenString string) (models.UserClaims, error)
-	GenerateClientJWTToken(client gormModels2.Client) (string, error)
+	GenerateClientJWTToken(client gormModels.Client) (string, error)
 	VerifyClientJWTToken(tokenString string) (models.ClientClaims, error)
-	GenerateOAuthJWTToken(user gormModels2.User) (string, error)
+	GenerateOAuthJWTToken(user gormModels.User) (string, error)
 	VerifyOAuthJWTToken(tokenString string) (models.OAuthAuthenticationClaims, error)
-	GenerateOAuthAccessToken(client gormModels2.Client, authClaims oauth.AuthorizationCodeClaims) (string, error)
+	GenerateOAuthAccessToken(client gormModels.Client, authClaims oauth.AuthorizationCodeClaims) (string, error)
 	ParseOAuthAccessToken(tokenString string) (*models.ClientAccessTokenClaims, error)
 	VerifyOAuthAccessToken(tokenString string, clientSecret []byte) error
 }

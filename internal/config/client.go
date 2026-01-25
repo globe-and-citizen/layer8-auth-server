@@ -8,7 +8,7 @@ import (
 type ClientConfig struct {
 	JWTSecret           string        `env:"CLIENT_JWT_SECRET"`
 	UpdateUsageInterval time.Duration `env:"UPDATE_USAGE_INTERVAL" default:"15m"`
-	BillingRatePerByte  *big.Int      `env:"BILLING_RATE_PER_BYTE" default:"1"`
+	BillingRatePerByte  big.Int       `env:"BILLING_RATE_PER_BYTE" default:"1"`
 	InfluxDB2Config
 	Web3Config
 	ScramConfig // todo remove

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/models"
-	gormModels2 "globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (t TokenRepository) GenerateOAuthJWTToken(user gormModels2.User) (string, error) {
+func (t TokenRepository) GenerateOAuthJWTToken(user gormModels.User) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		Subject:   user.Username, // The value was originally user.ID; it I changed it to Username to avoid type conversion overhead
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
@@ -42,7 +42,7 @@ func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (models.OAuthAu
 	return *claims, nil
 }
 
-func (t TokenRepository) GenerateOAuthAccessToken(client gormModels2.Client, authClaims oauth.AuthorizationCodeClaims) (string, error) {
+func (t TokenRepository) GenerateOAuthAccessToken(client gormModels.Client, authClaims oauth.AuthorizationCodeClaims) (string, error) {
 	claims := models.ClientAccessTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Globe and Citizen",

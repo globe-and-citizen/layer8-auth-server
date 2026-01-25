@@ -10,7 +10,7 @@ import (
 )
 
 type IWorkerUsecase interface {
-	UpdateUsageBalance(ratePerByte *big.Int, now time.Time) error
+	UpdateUsageBalance(ratePerByte big.Int, now time.Time) error
 	ListenToEthereumEvents()
 }
 
