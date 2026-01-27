@@ -18,19 +18,19 @@
           <div class="mb-3">
             <label class="text-sm text-[#414141] mb-1 block">Username</label>
             <input
-                class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
-                v-model="registerUsername"
-                placeholder="Username"
+              class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
+              v-model="registerUsername"
+              placeholder="Username"
             />
           </div>
 
           <div class="mb-3">
             <label class="text-sm text-[#414141] mb-1 block">Password</label>
             <input
-                class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
-                type="password"
-                v-model="registerPassword"
-                placeholder="Password"
+              class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
+              type="password"
+              v-model="registerPassword"
+              placeholder="Password"
             />
           </div>
 
@@ -39,23 +39,23 @@
             >Confirm password</label
             >
             <input
-                class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
-                type="password"
-                v-model="confirmedPassword"
-                placeholder="Confirm Password"
+              class="w-full rounded-md border border-[#EADFD8] py-2.5 px-3"
+              type="password"
+              v-model="confirmedPassword"
+              placeholder="Confirm Password"
             />
           </div>
 
           <button
-              class="w-full bg-[#4F80E1] rounded-lg text-white py-4 mb-4"
-              @click="registerUser"
+            class="w-full bg-[#4F80E1] rounded-lg text-white py-4 mb-4"
+            @click="registerUser"
           >
             Register
           </button>
 
           <a
-              href="/user-login-page"
-              class="text-sm text-[#414141] block text-center"
+            href="/user-login-page"
+            class="text-sm text-[#414141] block text-center"
           >
             Already have an account?
             <span class="font-bold">Login</span>
@@ -82,20 +82,31 @@
           </div>
 
           <div
-              class="toast-msg text-white rounded-md transition-opacity"
-              :class="mnemonicCopied ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+            class="toast-msg text-white rounded-md transition-opacity"
+            :class="mnemonicCopied ? 'opacity-100' : 'opacity-0 pointer-events-none'"
           >
             Copied!
           </div>
 
           <div class="mnemonic_holder">
             <input
-                class="input-mnemonic"
-                readonly
-                :value="currMnemonic"
+              class="input-mnemonic"
+              readonly
+              :value="currMnemonic"
             />
             <button @click="copyToClipboard">
-              📋
+              <svg
+                fill="#000000"
+                width="25px"
+                height="25px"
+                viewBox="0 0 16 16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14 12V2H4V0h12v12h-2zM0 4h12v12H0V4zm2 2v8h8V6H2z"
+                  fill-rule="evenodd"
+                />
+              </svg>
             </button>
           </div>
 
@@ -106,8 +117,8 @@
 
         <div class="modal__footer">
           <button
-              class="bg-[#4F80E1] rounded-lg text-white py-4 w-full"
-              @click="backToLogin"
+            class="bg-[#4F80E1] rounded-lg text-white py-4 w-full"
+            @click="backToLogin"
           >
             Got it!
           </button>
@@ -122,8 +133,8 @@
       <div class="bg-white flex justify-between items-center my-8">
         <div>
           <img
-              src="@/assets/images/L8Logo.png"
-              class="mb-6 h-[35px] md:h-[70px]"
+            src="@/assets/images/L8Logo.png"
+            class="mb-6 h-[35px] md:h-[70px]"
           />
           <p class="font-bold text-sm">©Layer8security 2023.</p>
         </div>
@@ -141,8 +152,8 @@
 
     <!-- TOAST -->
     <div
-        class="fixed top-3 right-3 bg-red-500 text-white p-2 rounded-md transition-opacity z-50"
-        :class="showToast ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+      class="fixed top-3 right-3 bg-red-500 text-white p-2 rounded-md transition-opacity z-50"
+      :class="showToast ? 'opacity-100' : 'opacity-0 pointer-events-none'"
     >
       {{ toastMessage }}
     </div>
@@ -190,9 +201,9 @@ const showToastMessage = (message: string) => {
 const registerUser = async () => {
   try {
     if (
-        registerUsername.value === "" ||
-        registerPassword.value === "" ||
-        confirmedPassword.value === ""
+      registerUsername.value === "" ||
+      registerPassword.value === "" ||
+      confirmedPassword.value === ""
     ) {
       showToastMessage("Please enter all details!")
       return
@@ -227,9 +238,9 @@ const registerUser = async () => {
 
     // @ts-ignore – provided by scram-bundled.js
     const {data} = scram.keysHMAC(
-        registerPassword.value,
-        precheckBody.data.salt,
-        precheckBody.data.iteration_count
+      registerPassword.value,
+      precheckBody.data.salt,
+      precheckBody.data.iteration_count
     )
 
     const registerResp = await fetch(getAPI(UserRegisterPath), {

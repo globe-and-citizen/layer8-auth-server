@@ -13,20 +13,26 @@ declare global {
 
 const runtime = window.__APP_CONFIG__;
 
+const isValid = (v?: string) =>
+  typeof v === 'string' &&
+  v.length > 0 &&
+  !v.startsWith('__');
+
 export const config: RuntimeConfig = {
-  BASE_API_URL:
-    runtime?.BASE_API_URL ?? import.meta.env.VITE_BASE_API_URL,
+  BASE_API_URL: isValid(runtime?.BASE_API_URL)
+    ? runtime!.BASE_API_URL!
+    : import.meta.env.VITE_BASE_API_URL ?? '',
 
-  CONTRACT_ADDRESS:
-    runtime?.CONTRACT_ADDRESS ??
-    import.meta.env.VITE_CONTRACT_ADDRESS,
+  CONTRACT_ADDRESS: isValid(runtime?.CONTRACT_ADDRESS)
+    ? runtime!.CONTRACT_ADDRESS!
+    : import.meta.env.VITE_CONTRACT_ADDRESS,
 
-  WALLET_PROJECT_ID:
-    runtime?.WALLET_PROJECT_ID ??
-    import.meta.env.VITE_WALLET_PROJECT_ID,
+  WALLET_PROJECT_ID: isValid(runtime?.WALLET_PROJECT_ID)
+    ? runtime!.WALLET_PROJECT_ID!
+    : import.meta.env.VITE_WALLET_PROJECT_ID,
 };
 
-// Optional safety check
+// Hard fail if still missing
 Object.entries(config).forEach(([k, v]) => {
   if (!v && k !== 'BASE_API_URL') {
     throw new Error(`Missing config value: ${k}`);

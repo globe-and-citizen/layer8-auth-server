@@ -50,10 +50,10 @@
   /* ===== Header ===== */
   .modal__header {
     text-align: center;
-    font-size: 100px;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 20px;
+    font-weight: 300;
+    font-size: 22px;
+    color: rgba(0, 0, 0, 0.45);
+    margin-bottom: 1rem;
   }
 
   /* ===== Body ===== */
@@ -81,6 +81,26 @@
     padding: 6px 10px;
     border-radius: 8px;
     display: inline-block;
+  }
+
+  .warning-msg {
+    color: rgba(4, 189, 29, 0.76);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .mnemonic_holder {
+    margin-bottom: 15px;
+  }
+
+  .input-mnemonic {
+    width: 80%;
+    text-align: center;
+    margin-right: 10px;
+    background-color: rgba(100, 149, 237, 0.3);
+    border-radius: 40px;
+
+    font-family: Georgia, serif;
   }
 
   /* ===== Footer ===== */

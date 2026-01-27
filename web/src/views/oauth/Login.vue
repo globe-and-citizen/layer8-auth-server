@@ -50,13 +50,11 @@ import {getAPI, OAuthUserLoginPath, OAuthUserPrecheckLoginPath} from "@/api/path
 import scram from "@/utils/scram.ts";
 
 const route = useRoute()
-const router = useRouter()
 
 const username = ref("")
 const password = ref("")
 const error = ref("")
 const cNonce = ref("")
-const token = ref("")
 
 // equivalent of {{ .Next }}
 const next = (route.query.next as string) || `/oauth/authorize${window.location.search}`

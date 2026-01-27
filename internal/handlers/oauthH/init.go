@@ -22,8 +22,8 @@ func NewOAuthHandler(router *gin.RouterGroup, config config.OAuthConfig, oauthuc
 }
 
 func (h OAuthHandler) RegisterAPIs() {
-	h.router.POST("/oauth-login", h.UserLogin)
 	h.router.POST("/oauth-login-precheck", h.PrecheckUserLogin)
+	h.router.POST("/oauth-login", h.UserLogin)
 
 	oauthGroup := h.router.Group("/oauth")
 	oauthGroup.GET("/authorize", h.AuthenticateOAuth, h.AuthorizeContext)

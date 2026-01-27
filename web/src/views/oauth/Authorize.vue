@@ -108,62 +108,63 @@ const logout = () => {
 }
 
 onMounted(async () => {
-  const res = await fetch(getAPI(OAuthGetAuthorizeContextPath) + `${params}`,
-    {
-      method: 'GET',
-      headers: {'Content-Type': 'application/json'},
-      credentials: 'include'
+  try {
+    const res = await fetch(getAPI(OAuthGetAuthorizeContextPath) + `${params}`,
+      {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include'
+      }
+    )
+    if (!res.ok) {
+      await router.push('/oauth-login' + params)
+      return
     }
-  )
-  if (!res.ok) {
-    await router.push('/oauth-login' + params)
-    return
+
+    const data = await res.json()
+    console.log(data)
+    clientName.value = data.client_name
+    scopes.value = data.scopes
+  } catch (e) {
+    console.log(e)
   }
-
-  const data = await res.json()
-  console.log(data)
-  clientName.value = data.client_name
-  scopes.value = data.scopes
-
-  // clientName.value = "Layer8"
-  // scopes.value = [
-  //   {
-  //     name: 'read:user',
-  //     description: 'read anonymized information about your account'
-  //   }
-  // ]
 })
 
 const submit = async (e) => {
   e.preventDefault()
 
-  const res = await fetch(getAPI(OAuthPostAuthorizeDecisionPath) + `${params}`,
-    {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      credentials: 'include',
-      redirect: "follow",
-      body: JSON.stringify({
-        client_id: clientId,
-        scopes: scopeParam,
-        share: {
-          display_name: shareDisplayName.value,
-          is_email_verified: shareIsEmailVerified.value,
-          color: shareColor.value,
-          bio: shareBio.value,
-        },
-        return_result: !!window.opener,
-      }),
-    })
+  try {
+    const res = await fetch(getAPI(OAuthPostAuthorizeDecisionPath) + `${params}`,
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        redirect: "follow",
+        body: JSON.stringify({
+          client_id: clientId,
+          scopes: scopeParam,
+          share: {
+            display_name: shareDisplayName.value,
+            is_email_verified: shareIsEmailVerified.value,
+            color: shareColor.value,
+            bio: shareBio.value,
+          },
+          return_result: !!window.opener,
+        }),
+      })
 
-  const data = await res.json()
+    const data = await res.json()
 
-  if (window.opener) {
-    window.opener.postMessage(data, '*')
-    window.close()
-  } else {
-    window.location.href = data.redirect_uri
+    if (window.opener) {
+      window.opener.postMessage(data, '*')
+      window.close()
+    } else {
+      window.location.href = data.redirect_uri
+    }
+  } catch (e) {
+    console.log(e)
   }
+
 }
 </script>
 

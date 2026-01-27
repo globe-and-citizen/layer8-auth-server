@@ -10,7 +10,7 @@ import "@/utils/paywithcrypto/web3modal.ts"
 
 import { WagmiPlugin } from '@wagmi/vue'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
-import { web3Config } from '@/utils/paywithcrypto/web3modal.ts' // Path to your file
+import { web3Config } from '@/utils/paywithcrypto/web3modal.ts'
 
 const app = createApp(App)
 // 1. Create a Query Client (Required for Wagmi hooks)
