@@ -10,7 +10,7 @@ services:
       - "5001:5001"
 #    command: ["./server"]
     depends_on:
-      auth-postgres:
+      postgres:
         condition: service_healthy
       influxdb2:
         condition: service_healthy
@@ -46,13 +46,13 @@ services:
       l8-server-network:
         ipv4_address: 10.10.11.101
 
-  auth-postgres:
+  postgres:
     container_name: postgres
     image: postgres:13
     restart: always
     environment:
       - POSTGRES_USER=layer8
-      - POSTGRES_PASSWORD=layer81234
+      - POSTGRES_PASSWORD=cRACtIeRChYsiNFinuMp
       - POSTGRES_DB=layer8db
     volumes:
       - ./tmp/pg-data:/var/lib/postgresql/data

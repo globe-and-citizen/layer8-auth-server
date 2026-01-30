@@ -2,7 +2,7 @@ package clientH
 
 import (
 	"fmt"
-	consts2 "globe-and-citizen/layer8/auth-server/internal/consts"
+	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
@@ -23,8 +23,8 @@ func (h ClientHandler) AuthenticateClient(c *gin.Context) {
 	}
 
 	// save claims in context for further handlers
-	c.Set(consts2.MiddlewareKeyClientUsername, username)
-	c.Set(consts2.MiddlewareKeyClientClientID, clientID)
+	c.Set(consts.MiddlewareKeyClientUsername, username)
+	c.Set(consts.MiddlewareKeyClientClientID, clientID)
 	c.Next()
 }
 
@@ -39,20 +39,20 @@ func (h ClientHandler) AuthenticateForwardProxy(c *gin.Context) {
 }
 
 func (h ClientHandler) getAuthenticatedUsername(c *gin.Context) (string, error) {
-	username := c.GetString(consts2.MiddlewareKeyClientUsername)
+	username := c.GetString(consts.MiddlewareKeyClientUsername)
 	if username == "" {
 		utils.HandleError(c, http.StatusInternalServerError, "Failed to get authenticated client username", nil)
-		return "", consts2.ErrUserUnauthorized
+		return "", consts.ErrUserUnauthorized
 	}
 
 	return username, nil
 }
 
 func (h ClientHandler) getAuthenticatedClientID(c *gin.Context) (string, error) {
-	clientID := c.GetString(consts2.MiddlewareKeyClientClientID)
+	clientID := c.GetString(consts.MiddlewareKeyClientClientID)
 	if clientID == "" {
 		utils.HandleError(c, http.StatusInternalServerError, "Failed to get authenticated client username", nil)
-		return "", consts2.ErrUserUnauthorized
+		return "", consts.ErrUserUnauthorized
 	}
 
 	return clientID, nil

@@ -7,7 +7,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/scram"
-	utils2 "globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
 func (uc *ClientUsecase) CheckBackendURI(req requestdto.ClientCheckBackendURI) (bool, error) {
@@ -42,9 +42,9 @@ func (uc *ClientUsecase) PrecheckRegister(
 }
 
 func (uc *ClientUsecase) Register(req requestdto.ClientRegister) error {
-	clientUUID := utils2.GenerateUUID()
-	clientSecret := utils2.GenerateSecret(consts.SecretSize)
-	backendURI, err := utils2.GetURLHostPort(req.BackendURI)
+	clientUUID := utils.GenerateUUID()
+	clientSecret := utils.GenerateSecret(consts.SecretSize)
+	backendURI, err := utils.GetURLHostPort(req.BackendURI)
 	if err != nil {
 		return err
 	}
@@ -123,13 +123,13 @@ func (uc *ClientUsecase) GetUnpaidAmount(clientID string) (responsedto.ClientGet
 		return responsedto.ClientGetBalance{}, err
 	}
 
-	balanceWei, err := utils2.DBWeiToBigInt(stats.BalanceWei)
+	balanceWei, err := utils.DBWeiToBigInt(stats.BalanceWei)
 	if err != nil {
 		return responsedto.ClientGetBalance{}, err
 	}
 
 	return responsedto.ClientGetBalance{
-		Balance: utils2.WeiToEthString(balanceWei, 18),
+		Balance: utils.WeiToEthString(balanceWei, 18),
 	}, nil
 }
 

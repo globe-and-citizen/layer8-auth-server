@@ -4,14 +4,14 @@ import (
 	"context"
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/models"
-	eth2 "globe-and-citizen/layer8/auth-server/pkg/eth"
+	"globe-and-citizen/layer8/auth-server/pkg/eth"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type IEthereumRepository interface {
-	SetAllHandlers(payHandler eth2.EventHandlerFunc[models.TrafficPaidEvent] /*, add other handlers */)
+	SetAllHandlers(payHandler eth.EventHandlerFunc[models.TrafficPaidEvent] /*, add other handlers */)
 	BackfillAll(ctx context.Context)
 	ListenToAllEvents(ctx context.Context)
 }
@@ -19,15 +19,15 @@ type IEthereumRepository interface {
 type EthereumRepository struct {
 	config          config.Web3Config
 	client          *ethclient.Client
-	paymentListener eth2.EventListener[models.TrafficPaidEvent]
+	paymentListener eth.EventListener[models.TrafficPaidEvent]
 	// add other events listener here
 }
 
 func NewEthereumRepository(client *ethclient.Client, conf config.Web3Config) IEthereumRepository {
-	paymentContractABI := eth2.MustLoadABI(conf.PaymentContractABI)
+	paymentContractABI := eth.MustLoadABI(conf.PaymentContractABI)
 	paymentContractAddr := common.HexToAddress(conf.PaymentContractAddr)
 
-	paymentListener := eth2.NewEventListener[models.TrafficPaidEvent](&paymentContractABI, paymentContractAddr, "TrafficPaid")
+	paymentListener := eth.NewEventListener[models.TrafficPaidEvent](&paymentContractABI, paymentContractAddr, "TrafficPaid")
 
 	return &EthereumRepository{
 		config:          conf,
@@ -37,11 +37,11 @@ func NewEthereumRepository(client *ethclient.Client, conf config.Web3Config) IEt
 }
 
 func (r *EthereumRepository) BackfillAll(ctx context.Context) {
-	start := eth2.LoadLastBlock()
-	eth2.Backfill[models.TrafficPaidEvent](ctx, r.client, r.paymentListener, start)
+	start := eth.LoadLastBlock()
+	eth.Backfill[models.TrafficPaidEvent](ctx, r.client, r.paymentListener, start)
 }
 
-func (r *EthereumRepository) SetAllHandlers(payHandler eth2.EventHandlerFunc[models.TrafficPaidEvent]) {
+func (r *EthereumRepository) SetAllHandlers(payHandler eth.EventHandlerFunc[models.TrafficPaidEvent]) {
 	r.paymentListener.SetHandler(payHandler)
 }
 

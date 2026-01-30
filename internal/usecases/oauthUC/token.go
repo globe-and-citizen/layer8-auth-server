@@ -2,7 +2,7 @@ package oauthUC
 
 import (
 	"fmt"
-	consts2 "globe-and-citizen/layer8/auth-server/internal/consts"
+	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	appError "globe-and-citizen/layer8/auth-server/internal/errors"
@@ -14,7 +14,7 @@ func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*respon
 	client, err := uc.postgres.GetClientByID(req.ClientID)
 	if err != nil {
 		return nil, &appError.OAuthError{
-			Code:        consts2.OAuthErrorInvalidClient,
+			Code:        consts.OAuthErrorInvalidClient,
 			Description: "incorrect client id or secret",
 			StatusCode:  http.StatusUnauthorized,
 			Err:         err,
@@ -23,7 +23,7 @@ func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*respon
 
 	if client.Secret != req.ClientSecret {
 		return nil, &appError.OAuthError{
-			Code:        consts2.OAuthErrorInvalidClient,
+			Code:        consts.OAuthErrorInvalidClient,
 			Description: "incorrect client id or secret",
 			StatusCode:  http.StatusUnauthorized,
 			Err:         err,
@@ -32,7 +32,7 @@ func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*respon
 
 	if client.RedirectURI != req.RedirectURI {
 		return nil, &appError.OAuthError{
-			Code:        consts2.OAuthErrorInvalidRedirectURI,
+			Code:        consts.OAuthErrorInvalidRedirectURI,
 			Description: "redirect uri mismatch",
 			StatusCode:  http.StatusBadRequest,
 			Err:         fmt.Errorf("redirect uri mismatch"),
@@ -42,7 +42,7 @@ func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*respon
 	claims, err := oauth.VerifyAuthorizationCode(req.ClientSecret, req.AuthorizationCode)
 	if err != nil {
 		return nil, &appError.OAuthError{
-			Code:        consts2.OAuthErrorInvalidAuthzCode,
+			Code:        consts.OAuthErrorInvalidAuthzCode,
 			Description: "failed to verify authorization code",
 			StatusCode:  http.StatusBadRequest,
 			Err:         err,
@@ -52,7 +52,7 @@ func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*respon
 	accessToken, err := uc.token.GenerateOAuthAccessToken(client, *claims)
 	if err != nil {
 		return nil, &appError.OAuthError{
-			Code:        consts2.OAuthErrorServerError,
+			Code:        consts.OAuthErrorServerError,
 			Description: "failed to generate access token",
 			StatusCode:  http.StatusInternalServerError,
 			Err:         err,
@@ -60,8 +60,8 @@ func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*respon
 	}
 
 	return &responsedto.OAuthAccessToken{
-		AccessToken:     accessToken,
-		TokenType:       consts2.TokenTypeBearer,
-		ExpireInMinutes: consts2.AccessTokenValidityMinutes,
+		AccessToken:      accessToken,
+		TokenType:        consts.TokenTypeBearer,
+		ExpiresInMinutes: consts.AccessTokenValidityMinutes,
 	}, nil
 }

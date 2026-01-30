@@ -24,9 +24,9 @@ type OAuthAuthorizeDecision struct {
 }
 
 type OAuthAccessToken struct {
-	AccessToken     string `json:"access_token"`
-	TokenType       string `json:"token_type"`
-	ExpireInMinutes int    `json:"expire_in_minutes"`
+	AccessToken      string `json:"access_token"`
+	TokenType        string `json:"token_type"`
+	ExpiresInMinutes int    `json:"expires_in_minutes"`
 }
 
 type OAuthZkMetadata struct {

@@ -5,13 +5,13 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
-	scram2 "globe-and-citizen/layer8/auth-server/pkg/scram"
+	"globe-and-citizen/layer8/auth-server/pkg/scram"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 )
 
 func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {
-	registerMsg := scram2.CreateServerRegisterFirstMessage(iterCount)
+	registerMsg := scram.CreateServerRegisterFirstMessage(iterCount)
 
 	user := gormModels.User{
 		Username:            req.Username,
@@ -48,7 +48,7 @@ func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (response
 	}
 
 	loginPrecheckResp := responsedto.UserLoginPrecheck{
-		ServerLoginFirstMessage: scram2.CreateServerLoginFirstMessage(user.ScramSalt, user.ScramIterationCount, req.ClientLoginFirstMessage),
+		ServerLoginFirstMessage: scram.CreateServerLoginFirstMessage(user.ScramSalt, user.ScramIterationCount, req.ClientLoginFirstMessage),
 	}
 
 	return loginPrecheckResp, nil
@@ -65,7 +65,7 @@ func (uc *UserUsecase) Login(req requestdto.UserLogin) (responsedto.UserLogin, e
 		return responsedto.UserLogin{}, fmt.Errorf("error generating token: %v", err)
 	}
 
-	serverFinalMsg, err := scram2.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce, user.ScramSalt,
+	serverFinalMsg, err := scram.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce, user.ScramSalt,
 		user.ScramIterationCount, user.ScramStoredKey, user.ScramServerKey)
 	if err != nil {
 		return responsedto.UserLogin{}, fmt.Errorf("error creating server final message: %v", err)
@@ -100,7 +100,7 @@ func (uc *UserUsecase) PrecheckResetPassword(req requestdto.UserResetPasswordPre
 	}
 
 	return responsedto.UserResetPasswordPrecheck{
-		ServerRegisterFirstMessage: scram2.ServerRegisterFirstMessage{
+		ServerRegisterFirstMessage: scram.ServerRegisterFirstMessage{
 			Salt:           user.ScramSalt,
 			IterationCount: user.ScramIterationCount,
 		}}, nil
