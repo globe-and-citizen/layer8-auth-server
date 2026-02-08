@@ -19,7 +19,8 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.VerifyEmail(userID, request.Email)
+	ctx := c.Request.Context()
+	err = h.uc.VerifyEmail(ctx, userID, request.Email)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to verify email", err)
 		return
@@ -39,13 +40,14 @@ func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.CheckEmailVerificationCode(userID, request.Code)
+	ctx := c.Request.Context()
+	err = h.uc.CheckEmailVerificationCode(ctx, userID, request.Code)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to verify code", err)
 		return
 	}
 
-	errMsg, err := h.uc.SaveProofOfEmailVerification(userID, request)
+	errMsg, err := h.uc.SaveProofOfEmailVerification(ctx, userID, request)
 	if err != nil {
 		utils.HandleError(c, http.StatusInternalServerError, errMsg, err)
 	}

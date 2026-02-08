@@ -13,9 +13,9 @@ import (
 
 type IInfluxdbRepository interface {
 	IsConnected(ctx context.Context) error
-	GetTotalRequestsInLastXDaysByClient(days int, clientID string) (models.Statistics, error)
-	GetTotalByDateRangeByClient(start time.Time, end time.Time, clientID string) (float64, error)
-	GetTotalUsageStatisticsByDateRangeForEachClient(start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error)
+	GetTotalRequestsInLastXDaysByClient(ctx context.Context, days int, clientID string) (models.Statistics, error)
+	GetTotalByDateRangeByClient(ctx context.Context, start time.Time, end time.Time, clientID string) (float64, error)
+	GetTotalUsageStatisticsByDateRangeForEachClient(ctx context.Context, start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error)
 }
 
 func NewInfluxdbRepository(conf config.InfluxDB2Config) IInfluxdbRepository {
@@ -59,7 +59,7 @@ func (r *InfluxdbRepository) IsConnected(ctx context.Context) error {
 	return nil
 }
 
-func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(days int, clientID string) (models.Statistics, error) {
+func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(ctx context.Context, days int, clientID string) (models.Statistics, error) {
 	result := make([]models.UsageStatisticPerDate, 0)
 
 	queryAPI := r.client.QueryAPI(r.config.Org)
@@ -73,7 +73,7 @@ func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(days int, clien
 	|> aggregateWindow(every: 1d, fn: sum, createEmpty: true)
 	|> yield(name: "sum")`, r.config.Bucket, days, clientID)
 
-	rawDataFromInflux, err := queryAPI.Query(context.Background(), query)
+	rawDataFromInflux, err := queryAPI.Query(ctx, query)
 	if err != nil {
 		return models.Statistics{}, err
 	}
@@ -112,7 +112,7 @@ func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(days int, clien
 	}, nil
 }
 
-func (r *InfluxdbRepository) GetTotalByDateRangeByClient(start time.Time, end time.Time, clientID string) (float64, error) {
+func (r *InfluxdbRepository) GetTotalByDateRangeByClient(ctx context.Context, start time.Time, end time.Time, clientID string) (float64, error) {
 	queryAPI := r.client.QueryAPI(r.config.Org)
 
 	query := fmt.Sprintf(`
@@ -124,7 +124,7 @@ func (r *InfluxdbRepository) GetTotalByDateRangeByClient(start time.Time, end ti
 	|> group(columns: ["client_id"])
 	|> sum()`, r.config.Bucket, start.Format(time.RFC3339), end.Format(time.RFC3339), clientID)
 
-	rawDataFromInflux, err := queryAPI.Query(context.Background(), query)
+	rawDataFromInflux, err := queryAPI.Query(ctx, query)
 	if err != nil {
 		return 0, err
 	}
@@ -143,7 +143,7 @@ func (r *InfluxdbRepository) GetTotalByDateRangeByClient(start time.Time, end ti
 	return decimalValueTotal, err
 }
 
-func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error) {
+func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(ctx context.Context, start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error) {
 	queryAPI := r.client.QueryAPI(r.config.Org)
 
 	query := fmt.Sprintf(`
@@ -154,7 +154,7 @@ func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(sta
 	|> group(columns: ["client_id"])
 	|> sum()`, r.config.Bucket, start.Format(time.RFC3339), end.Format(time.RFC3339))
 
-	queryResult, err := queryAPI.Query(context.Background(), query)
+	queryResult, err := queryAPI.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}

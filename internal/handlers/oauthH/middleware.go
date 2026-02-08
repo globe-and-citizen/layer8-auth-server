@@ -16,7 +16,7 @@ func (h OAuthHandler) AuthenticateOAuth(c *gin.Context) {
 		return
 	}
 
-	userID, username, err := h.uc.VerifyOAuthJWTToken(token)
+	userID, username, err := h.uc.VerifyOAuthJWTToken(c.Request.Context(), token)
 	if err != nil {
 		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
@@ -35,7 +35,7 @@ func (h OAuthHandler) AuthenticateClient(c *gin.Context) {
 		return
 	}
 
-	userID, scopes, err := h.uc.VerifyAccessToken(token)
+	userID, scopes, err := h.uc.VerifyAccessToken(c.Request.Context(), token)
 	if err != nil {
 		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return

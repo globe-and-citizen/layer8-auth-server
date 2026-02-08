@@ -1,14 +1,15 @@
 package postgresRepo
 
 import (
+	"context"
 	"database/sql"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 )
 
 func (r *PostgresRepository) SaveProofOfEmailVerification(
-	userId uint, verificationCode string, emailProof []byte, zkKeyPairId uint,
+	ctx context.Context, userId uint, verificationCode string, emailProof []byte, zkKeyPairId uint,
 ) error {
-	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Model(&gormModels.User{}).
 		Where("id = ?", userId).
@@ -44,8 +45,8 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	return nil
 }
 
-func (r *PostgresRepository) SaveEmailVerificationData(data gormModels.EmailVerificationData) error {
-	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
+func (r *PostgresRepository) SaveEmailVerificationData(ctx context.Context, data gormModels.EmailVerificationData) error {
+	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Where(gormModels.EmailVerificationData{UserId: data.UserId}).
 		Assign(data).
@@ -61,9 +62,9 @@ func (r *PostgresRepository) SaveEmailVerificationData(data gormModels.EmailVeri
 	return nil
 }
 
-func (r *PostgresRepository) GetEmailVerificationData(userId uint) (gormModels.EmailVerificationData, error) {
+func (r *PostgresRepository) GetEmailVerificationData(ctx context.Context, userId uint) (gormModels.EmailVerificationData, error) {
 	var data gormModels.EmailVerificationData
-	e := r.db.Where("user_id = ?", userId).First(&data).Error
+	e := r.db.WithContext(ctx).Where("user_id = ?", userId).First(&data).Error
 	if e != nil {
 		return gormModels.EmailVerificationData{}, e
 	}
@@ -71,8 +72,8 @@ func (r *PostgresRepository) GetEmailVerificationData(userId uint) (gormModels.E
 	return data, nil
 }
 
-func (r *PostgresRepository) SavePhoneNumberVerificationData(data gormModels.PhoneNumberVerificationData) error {
-	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
+func (r *PostgresRepository) SavePhoneNumberVerificationData(ctx context.Context, data gormModels.PhoneNumberVerificationData) error {
+	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Where(gormModels.PhoneNumberVerificationData{UserId: data.UserId}).
 		Assign(data).
@@ -87,9 +88,12 @@ func (r *PostgresRepository) SavePhoneNumberVerificationData(data gormModels.Pho
 	return nil
 }
 
-func (r *PostgresRepository) GetPhoneNumberVerificationData(userID uint) (gormModels.PhoneNumberVerificationData, error) {
+func (r *PostgresRepository) GetPhoneNumberVerificationData(
+	ctx context.Context,
+	userID uint,
+) (gormModels.PhoneNumberVerificationData, error) {
 	var data gormModels.PhoneNumberVerificationData
-	err := r.db.Where("user_id = ?", userID).First(&data).Error
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&data).Error
 	if err != nil {
 		return gormModels.PhoneNumberVerificationData{}, err
 	}
@@ -98,12 +102,13 @@ func (r *PostgresRepository) GetPhoneNumberVerificationData(userID uint) (gormMo
 }
 
 func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
+	ctx context.Context,
 	userID uint,
 	phoneNumberVerificationCode string,
 	phoneNumberZkProof []byte,
 	phoneNumberZkPairID uint,
 ) error {
-	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Model(&gormModels.User{}).
 		Where("id = ?", userID).
@@ -139,8 +144,8 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 	return nil
 }
 
-func (r *PostgresRepository) SaveTelegramSessionIDHash(userID uint, sessionID []byte) error {
-	return r.db.Model(&gormModels.User{}).
+func (r *PostgresRepository) SaveTelegramSessionIDHash(ctx context.Context, userID uint, sessionID []byte) error {
+	return r.db.WithContext(ctx).Model(&gormModels.User{}).
 		Where("id = ?", userID).
 		Update("telegram_session_id_hash", sessionID).
 		Error

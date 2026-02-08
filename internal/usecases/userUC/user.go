@@ -1,6 +1,7 @@
 package userUC
 
 import (
+	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
@@ -10,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {
+func (uc *UserUsecase) PrecheckRegister(ctx context.Context, req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error) {
 	registerMsg := scram.CreateServerRegisterFirstMessage(iterCount)
 
 	user := gormModels.User{
@@ -20,7 +21,7 @@ func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, ite
 		PublicKey:           []byte{},
 	}
 
-	err := uc.postgres.PrecheckUserRegister(user)
+	err := uc.postgres.PrecheckUserRegister(ctx, user)
 	if err != nil {
 		return responsedto.UserRegisterPrecheck{}, err
 	}
@@ -30,7 +31,7 @@ func (uc *UserUsecase) PrecheckRegister(req requestdto.UserRegisterPrecheck, ite
 	}, nil
 }
 
-func (uc *UserUsecase) Register(req requestdto.UserRegister) error {
+func (uc *UserUsecase) Register(ctx context.Context, req requestdto.UserRegister) error {
 	newUser := gormModels.User{
 		Username:       req.Username,
 		PublicKey:      req.PublicKey,
@@ -38,11 +39,11 @@ func (uc *UserUsecase) Register(req requestdto.UserRegister) error {
 		ScramServerKey: req.ServerKey,
 	}
 
-	return uc.postgres.UpdateUser(newUser)
+	return uc.postgres.UpdateUser(ctx, newUser)
 }
 
-func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
-	user, err := uc.postgres.GetUserByUsername(req.Username)
+func (uc *UserUsecase) PrecheckLogin(ctx context.Context, req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error) {
+	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return responsedto.UserLoginPrecheck{}, err
 	}
@@ -54,8 +55,8 @@ func (uc *UserUsecase) PrecheckLogin(req requestdto.UserLoginPrecheck) (response
 	return loginPrecheckResp, nil
 }
 
-func (uc *UserUsecase) Login(req requestdto.UserLogin) (responsedto.UserLogin, error) {
-	user, err := uc.postgres.GetUserByUsername(req.Username)
+func (uc *UserUsecase) Login(ctx context.Context, req requestdto.UserLogin) (responsedto.UserLogin, error) {
+	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return responsedto.UserLogin{}, err
 	}
@@ -77,8 +78,8 @@ func (uc *UserUsecase) Login(req requestdto.UserLogin) (responsedto.UserLogin, e
 	}, nil
 }
 
-func (uc *UserUsecase) GetProfile(userID uint) (responsedto.UserProfile, error) {
-	user, metadata, err := uc.postgres.GetUserProfile(userID)
+func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (responsedto.UserProfile, error) {
+	user, metadata, err := uc.postgres.GetUserProfile(ctx, userID)
 	if err != nil {
 		return responsedto.UserProfile{}, err
 	}
@@ -93,8 +94,8 @@ func (uc *UserUsecase) GetProfile(userID uint) (responsedto.UserProfile, error) 
 	}, nil
 }
 
-func (uc *UserUsecase) PrecheckResetPassword(req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error) {
-	user, err := uc.postgres.GetUserByUsername(req.Username)
+func (uc *UserUsecase) PrecheckResetPassword(ctx context.Context, req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error) {
+	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return responsedto.UserResetPasswordPrecheck{}, err
 	}
@@ -106,8 +107,8 @@ func (uc *UserUsecase) PrecheckResetPassword(req requestdto.UserResetPasswordPre
 		}}, nil
 }
 
-func (uc *UserUsecase) ResetPassword(req requestdto.UserResetPassword) (int, string, error) {
-	user, err := uc.postgres.GetUserByUsername(req.Username)
+func (uc *UserUsecase) ResetPassword(ctx context.Context, req requestdto.UserResetPassword) (int, string, error) {
+	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return http.StatusNotFound, "User does not exist!", err
 	}
@@ -117,7 +118,7 @@ func (uc *UserUsecase) ResetPassword(req requestdto.UserResetPassword) (int, str
 		return http.StatusBadRequest, "Signature is invalid!", err
 	}
 
-	err = uc.postgres.UpdateUserPassword(user.Username, req.StoredKey, req.ServerKey)
+	err = uc.postgres.UpdateUserPassword(ctx, user.Username, req.StoredKey, req.ServerKey)
 	if err != nil {
 		return http.StatusInternalServerError, "Internal error: failed to update user", err
 	}

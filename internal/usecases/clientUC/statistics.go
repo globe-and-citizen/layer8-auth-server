@@ -1,13 +1,14 @@
 package clientUC
 
 import (
+	"context"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"net/http"
 	"time"
 )
 
-func (uc *ClientUsecase) GetUsageStatistics(clientID string) (responsedto.ClientUsageStatistic, int, string, error) {
+func (uc *ClientUsecase) GetUsageStatistics(ctx context.Context, clientID string) (responsedto.ClientUsageStatistic, int, string, error) {
 	now := time.Now()
 	firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	firstDayOfNextMonth := time.Date(firstDayOfMonth.Year(), firstDayOfMonth.Month()+1, 1, 0, 0, 0, 0, time.UTC)
@@ -15,12 +16,12 @@ func (uc *ClientUsecase) GetUsageStatistics(clientID string) (responsedto.Client
 	totalDaysInMonth := lastDayOfCurrentMonth.Day()
 	totalDaysBeforeNextMonth := totalDaysInMonth - now.Day()
 
-	thirtyDaysStatistic, err := uc.influxdb.GetTotalRequestsInLastXDaysByClient(30, clientID)
+	thirtyDaysStatistic, err := uc.influxdb.GetTotalRequestsInLastXDaysByClient(ctx, 30, clientID)
 	if err != nil {
 		return responsedto.ClientUsageStatistic{}, http.StatusBadRequest, "Failed to get last thrthy days usage statistic", err
 	}
 
-	monthToDateTotal, err := uc.influxdb.GetTotalByDateRangeByClient(firstDayOfMonth, firstDayOfNextMonth, clientID)
+	monthToDateTotal, err := uc.influxdb.GetTotalByDateRangeByClient(ctx, firstDayOfMonth, firstDayOfNextMonth, clientID)
 	if err != nil {
 		return responsedto.ClientUsageStatistic{}, http.StatusBadRequest, "Failed to get month to date usage statistic", err
 	}

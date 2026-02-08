@@ -1,6 +1,7 @@
 package userUC
 
 import (
+	"context"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/codeGenRepo"
@@ -12,21 +13,21 @@ import (
 )
 
 type IUserUsecase interface { // todo usecase methods should return custom error type that contains http status codes, message and error
-	PrecheckRegister(req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error)
-	Register(req requestdto.UserRegister) error
-	PrecheckLogin(req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error)
-	Login(req requestdto.UserLogin) (responsedto.UserLogin, error)
-	GetProfile(userID uint) (responsedto.UserProfile, error)
-	UpdateUserMetadata(userID uint, req requestdto.UserMetadataUpdate) error
-	VerifyEmail(userID uint, userEmail string) error
-	CheckEmailVerificationCode(userId uint, code string) error
-	SaveProofOfEmailVerification(userID uint, req requestdto.UserCheckEmailVerificationCode) (msg string, err error)
-	VerifyPhoneNumber(userID uint) (errMsg string, err error)
-	CheckPhoneNumberVerificationCode(userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) (httpStatus int, msg string, err error)
-	GenerateAndSaveTelegramSessionIDHash(userID uint) (sessionID []byte, msg string, err error)
-	PrecheckResetPassword(req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error)
-	ResetPassword(request requestdto.UserResetPassword) (httpStatus int, msg string, err error)
-	VerifyUserJWTToken(tokenString string) (userID uint, userUsername string, err error)
+	PrecheckRegister(ctx context.Context, req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error)
+	Register(ctx context.Context, req requestdto.UserRegister) error
+	PrecheckLogin(ctx context.Context, req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error)
+	Login(ctx context.Context, req requestdto.UserLogin) (responsedto.UserLogin, error)
+	GetProfile(ctx context.Context, userID uint) (responsedto.UserProfile, error)
+	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error
+	VerifyEmail(ctx context.Context, userID uint, userEmail string) error
+	CheckEmailVerificationCode(ctx context.Context, userId uint, code string) error
+	SaveProofOfEmailVerification(ctx context.Context, userID uint, req requestdto.UserCheckEmailVerificationCode) (msg string, err error)
+	VerifyPhoneNumber(ctx context.Context, userID uint) (errMsg string, err error)
+	CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) (httpStatus int, msg string, err error)
+	GenerateAndSaveTelegramSessionIDHash(ctx context.Context, userID uint) (sessionID []byte, msg string, err error)
+	PrecheckResetPassword(ctx context.Context, req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error)
+	ResetPassword(ctx context.Context, request requestdto.UserResetPassword) (httpStatus int, msg string, err error)
+	VerifyUserJWTToken(ctx context.Context, tokenString string) (userID uint, userUsername string, err error)
 }
 
 type UserUsecase struct {

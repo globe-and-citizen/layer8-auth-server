@@ -9,7 +9,7 @@ import (
 )
 
 func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByteWei big.Int, currTime time.Time) error {
-	allBalances, err := uc.postgres.GetAllClientBalances()
+	allBalances, err := uc.postgres.GetAllClientBalances(uc.ctx)
 	if err != nil {
 		return err
 	}
@@ -17,7 +17,7 @@ func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByteWei big.Int, currTime tim
 	for _, balance := range allBalances {
 		timestamp := currTime.UTC()
 		consumedBytesFloat, err := uc.influxdb.GetTotalByDateRangeByClient(
-			balance.LastUsageUpdatedAt, timestamp, balance.ClientID,
+			uc.ctx, balance.LastUsageUpdatedAt, timestamp, balance.ClientID,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to get traffic updates for client %s: %e", balance.ClientID, err)
@@ -38,6 +38,7 @@ func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByteWei big.Int, currTime tim
 
 		var status gormModels.AccountStatus
 		err = uc.postgres.UpdateClientBalance(
+			uc.ctx,
 			balance.ClientID,
 			utils.BigIntToDBWei(curBalance),
 			status.GetStatus(curBalance),

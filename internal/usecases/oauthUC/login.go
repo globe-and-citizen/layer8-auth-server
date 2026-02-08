@@ -1,14 +1,15 @@
 package oauthUC
 
 import (
+	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/pkg/scram"
 )
 
-func (uc *OAuthUsecase) PrecheckUserLogin(req requestdto.OAuthUserLoginPrecheck) (responsedto.OAuthUserLoginPrecheck, error) {
-	user, err := uc.postgres.GetUserByUsername(req.Username)
+func (uc *OAuthUsecase) PrecheckUserLogin(ctx context.Context, req requestdto.OAuthUserLoginPrecheck) (responsedto.OAuthUserLoginPrecheck, error) {
+	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return responsedto.OAuthUserLoginPrecheck{}, err
 	}
@@ -22,8 +23,8 @@ func (uc *OAuthUsecase) PrecheckUserLogin(req requestdto.OAuthUserLoginPrecheck)
 	return loginPrecheckResp, nil
 }
 
-func (uc *OAuthUsecase) UserLogin(req requestdto.OAuthUserLogin) (responsedto.OAuthUserLogin, error) {
-	user, err := uc.postgres.GetUserByUsername(req.Username)
+func (uc *OAuthUsecase) UserLogin(ctx context.Context, req requestdto.OAuthUserLogin) (responsedto.OAuthUserLogin, error) {
+	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		return responsedto.OAuthUserLogin{}, err
 	}

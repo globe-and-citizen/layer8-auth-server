@@ -24,7 +24,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/code"
 	"globe-and-citizen/layer8/auth-server/pkg/eth"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
-	log2 "globe-and-citizen/layer8/auth-server/pkg/log"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	zk2 "globe-and-citizen/layer8/auth-server/pkg/zk"
 	"os"
@@ -40,7 +40,7 @@ import (
 
 func main() {
 	appConfig := config.LoadConfig()
-	logger := log2.NewLogger(appConfig.Config)
+	logger := log.NewLogger(appConfig.Config)
 
 	app := gin.Default()
 	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.AccessLog(logger))

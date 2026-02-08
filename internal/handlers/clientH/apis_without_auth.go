@@ -14,7 +14,7 @@ func (h ClientHandler) PrecheckRegister(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckRegister(request, h.config.ScramIterationCount)
+	response, err := h.uc.PrecheckRegister(c.Request.Context(), request, h.config.ScramIterationCount)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to register user", err)
 		return
@@ -29,7 +29,7 @@ func (h ClientHandler) Register(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.Register(request)
+	err = h.uc.Register(c.Request.Context(), request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to register client", err)
 		return
@@ -44,7 +44,7 @@ func (h ClientHandler) PrecheckLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckLogin(request)
+	response, err := h.uc.PrecheckLogin(c.Request.Context(), request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to perform precheck, service error", err)
 		return
@@ -59,7 +59,7 @@ func (h ClientHandler) Login(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.Login(request)
+	response, err := h.uc.Login(c.Request.Context(), request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to perform login", err)
 		return
@@ -74,7 +74,7 @@ func (h ClientHandler) CheckBackendURI(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.CheckBackendURI(request)
+	response, err := h.uc.CheckBackendURI(c.Request.Context(), request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to check backend url", err)
 		return

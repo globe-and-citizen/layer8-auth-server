@@ -1,6 +1,7 @@
 package oauthUC
 
 import (
+	"context"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
@@ -9,7 +10,7 @@ import (
 	"strings"
 )
 
-func (uc *OAuthUsecase) GetZkUserMetadata(req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *appError.OAuthError) {
+func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *appError.OAuthError) {
 	if req.Scopes == "" {
 		return nil, &appError.OAuthError{
 			Code:        consts.OAuthErrorAccessDenied,
@@ -19,7 +20,7 @@ func (uc *OAuthUsecase) GetZkUserMetadata(req requestdto.OAuthZkMetadata) (*resp
 		}
 	}
 
-	userMetadata, err := uc.postgres.GetMetadataByUserID(req.UserID)
+	userMetadata, err := uc.postgres.GetMetadataByUserID(ctx, req.UserID)
 	if err != nil {
 		return nil, &appError.OAuthError{
 			Code:        consts.OAuthErrorServerError,

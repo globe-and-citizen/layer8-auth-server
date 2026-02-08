@@ -19,7 +19,7 @@ func (h UserHandler) UpdateMetadata(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.UpdateUserMetadata(userID, request)
+	err = h.uc.UpdateUserMetadata(c.Request.Context(), userID, request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to update user's metadata", err)
 		return

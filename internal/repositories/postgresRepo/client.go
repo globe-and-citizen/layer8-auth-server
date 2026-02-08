@@ -1,13 +1,14 @@
 package postgresRepo
 
 import (
+	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
 
-func (r *PostgresRepository) UpdateClient(newClient gormModels.Client) error {
-	tx := r.db.Begin()
+func (r *PostgresRepository) UpdateClient(ctx context.Context, newClient gormModels.Client) error {
+	tx := r.db.WithContext(ctx).WithContext(ctx).Begin()
 
 	result := tx.Model(&gormModels.Client{}).
 		Where("username = ?", newClient.Username).
@@ -48,64 +49,64 @@ func (r *PostgresRepository) UpdateClient(newClient gormModels.Client) error {
 	return nil
 }
 
-func (r *PostgresRepository) GetClientByName(name string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByName(ctx context.Context, name string) (gormModels.Client, error) {
 	var client gormModels.Client
-	if err := r.db.Where("name = ?", name).First(&client).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("name = ?", name).First(&client).Error; err != nil {
 		return gormModels.Client{}, err
 	}
 	return client, nil
 }
 
-func (r *PostgresRepository) GetClientByBackendURI(backendURI string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByBackendURI(ctx context.Context, backendURI string) (gormModels.Client, error) {
 	var client gormModels.Client
-	if err := r.db.Where("backend_uri = ?", backendURI).First(&client).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("backend_uri = ?", backendURI).First(&client).Error; err != nil {
 		return gormModels.Client{}, err
 	}
 	return client, nil
 }
 
-func (r *PostgresRepository) IsBackendURIExists(backendURL string) (bool, error) {
+func (r *PostgresRepository) IsBackendURIExists(ctx context.Context, backendURL string) (bool, error) {
 	var count int64
-	if err := r.db.Model(&gormModels.Client{}).Where("backend_uri = ?", backendURL).Count(&count).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&gormModels.Client{}).Where("backend_uri = ?", backendURL).Count(&count).Error; err != nil {
 		return false, err
 	}
 	return count > 0, nil
 }
 
-func (r *PostgresRepository) GetClientByUsername(username string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByUsername(ctx context.Context, username string) (gormModels.Client, error) {
 	var client gormModels.Client
-	if err := r.db.Where("username = ?", username).First(&client).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("username = ?", username).First(&client).Error; err != nil {
 		return gormModels.Client{}, err
 	}
 	return client, nil
 }
 
-func (r *PostgresRepository) GetClientProfile(username string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientProfile(ctx context.Context, username string) (gormModels.Client, error) {
 	var client gormModels.Client
-	if err := r.db.Where("username = ?", username).First(&client).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("username = ?", username).First(&client).Error; err != nil {
 		return gormModels.Client{}, err
 	}
 	return client, nil
 }
 
-func (r *PostgresRepository) PrecheckClientRegister(client gormModels.Client) error {
-	if err := r.db.Create(&client).Error; err != nil {
+func (r *PostgresRepository) PrecheckClientRegister(ctx context.Context, client gormModels.Client) error {
+	if err := r.db.WithContext(ctx).Create(&client).Error; err != nil {
 		return fmt.Errorf("failed to create a new client: %v", err)
 	}
 
 	return nil
 }
 
-func (r *PostgresRepository) SaveX509Certificate(clientID string, certificate string) error {
-	return r.db.Model(&gormModels.Client{}).
+func (r *PostgresRepository) SaveX509Certificate(ctx context.Context, clientID string, certificate string) error {
+	return r.db.WithContext(ctx).Model(&gormModels.Client{}).
 		Where("id = ?", clientID).
 		Update("x509_certificate_bytes", certificate).
 		Error
 }
 
-func (r *PostgresRepository) GetClientByID(id string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByID(ctx context.Context, id string) (gormModels.Client, error) {
 	var client gormModels.Client
-	err := r.db.Where("id = ?", id).First(&client).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&client).Error
 	if err != nil {
 		return gormModels.Client{}, err
 	}

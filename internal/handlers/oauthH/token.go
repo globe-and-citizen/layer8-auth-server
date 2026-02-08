@@ -13,7 +13,7 @@ func (h OAuthHandler) GetAccessToken(c *gin.Context) {
 		return
 	}
 
-	response, oauthErr := h.uc.GetAccessToken(req)
+	response, oauthErr := h.uc.GetAccessToken(c.Request.Context(), req)
 	if oauthErr != nil {
 		utils.HandleError(c, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
 		return

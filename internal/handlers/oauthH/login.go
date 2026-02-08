@@ -15,7 +15,7 @@ func (h OAuthHandler) PrecheckUserLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckUserLogin(request)
+	response, err := h.uc.PrecheckUserLogin(c.Request.Context(), request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to perform precheck, service error", err)
 		return
@@ -30,7 +30,7 @@ func (h OAuthHandler) UserLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.UserLogin(request)
+	response, err := h.uc.UserLogin(c.Request.Context(), request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to perform login", err)
 		return

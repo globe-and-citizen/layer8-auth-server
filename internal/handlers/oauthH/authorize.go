@@ -15,7 +15,7 @@ func (h OAuthHandler) AuthorizeContext(c *gin.Context) {
 	req.Scopes = c.DefaultQuery("scope", string(consts.OAuthScopeReadUser))
 	req.RedirectURI = c.Query("redirect_uri")
 
-	response, err := h.uc.AuthorizeContext(req)
+	response, err := h.uc.AuthorizeContext(c.Request.Context(), req)
 	if err != nil {
 		utils.HandleError(c, err.StatusCode, err.Description, err.Err)
 		return
@@ -58,7 +58,7 @@ func (h OAuthHandler) AuthorizeDecision(c *gin.Context) {
 	//	req.Share.Bio = true
 	//}
 
-	response, oauthErr := h.uc.AuthorizeDecision(req, userID, h.config.AuthzCodeExpiry)
+	response, oauthErr := h.uc.AuthorizeDecision(c.Request.Context(), req, userID, h.config.AuthzCodeExpiry)
 	if oauthErr != nil {
 		//if !req.ReturnResult {
 		//	utils.HandleError(c, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)

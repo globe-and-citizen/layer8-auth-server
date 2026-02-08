@@ -21,7 +21,7 @@ func (uc *WorkerUsecase) ListenToEthereumEvents() {
 func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.TrafficPaidEvent]) error {
 	uc.logger.Infof("Handling traffic paid event: %+v", event)
 
-	balance, err := uc.postgres.GetClientBalance(event.Data.ClientID)
+	balance, err := uc.postgres.GetClientBalance(uc.ctx, event.Data.ClientID)
 	if err != nil {
 		uc.logger.Error("failed to get client balance", err)
 		return err
@@ -36,6 +36,7 @@ func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.Traff
 
 	var status gormModels.AccountStatus
 	err = uc.postgres.UpdateClientBalance(
+		uc.ctx,
 		event.Data.ClientID,
 		utils.BigIntToDBWei(curBalance),
 		status.GetStatus(curBalance),
@@ -46,7 +47,7 @@ func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.Traff
 	}
 
 	amount := utils.BigIntToDBWei(event.Data.Amount)
-	err = uc.postgres.AddClientPaymentReceipt(event.Data.ClientID, amount, event.TxTimestamp, event.TxID)
+	err = uc.postgres.AddClientPaymentReceipt(uc.ctx, event.Data.ClientID, amount, event.TxTimestamp, event.TxID)
 	if err != nil {
 		return err
 	}

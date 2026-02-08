@@ -23,7 +23,7 @@ func (h OAuthHandler) GetZkUserMetadata(c *gin.Context) {
 		Scopes: scopes,
 	}
 
-	zkMetadata, oauthErr := h.uc.GetZkUserMetadata(req)
+	zkMetadata, oauthErr := h.uc.GetZkUserMetadata(c.Request.Context(), req)
 	if oauthErr != nil {
 		utils.HandleError(c, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
 		return

@@ -16,7 +16,7 @@ func (h ClientHandler) AuthenticateClient(c *gin.Context) {
 		return
 	}
 
-	clientID, username, err := h.uc.VerifyClientJWTToken(token)
+	clientID, username, err := h.uc.VerifyClientJWTToken(c.Request.Context(), token)
 	if err != nil {
 		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return

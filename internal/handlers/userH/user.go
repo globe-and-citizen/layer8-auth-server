@@ -14,7 +14,8 @@ func (h UserHandler) PrecheckRegister(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckRegister(request, h.config.ScramIterationCount)
+	ctx := c.Request.Context()
+	response, err := h.uc.PrecheckRegister(ctx, request, h.config.ScramIterationCount)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to register user", err)
 		return
@@ -29,7 +30,8 @@ func (h UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.Register(request)
+	ctx := c.Request.Context()
+	err = h.uc.Register(ctx, request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to register user", err)
 		return
@@ -44,7 +46,8 @@ func (h UserHandler) PrecheckLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckLogin(request)
+	ctx := c.Request.Context()
+	response, err := h.uc.PrecheckLogin(ctx, request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to perform precheck, service error", err)
 		return
@@ -59,7 +62,8 @@ func (h UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.Login(request)
+	ctx := c.Request.Context()
+	response, err := h.uc.Login(ctx, request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to perform login", err)
 		return
@@ -74,7 +78,8 @@ func (h UserHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	profileResp, err := h.uc.GetProfile(userID)
+	ctx := c.Request.Context()
+	profileResp, err := h.uc.GetProfile(ctx, userID)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "Failed to get user profile", err)
 		return
@@ -89,7 +94,8 @@ func (h UserHandler) PrecheckResetPassword(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckResetPassword(request)
+	ctx := c.Request.Context()
+	response, err := h.uc.PrecheckResetPassword(ctx, request)
 	if err != nil {
 		utils.HandleError(c, http.StatusBadRequest, "User does not exist!", err)
 		return
@@ -104,7 +110,8 @@ func (h UserHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	status, msg, err := h.uc.ResetPassword(request)
+	ctx := c.Request.Context()
+	status, msg, err := h.uc.ResetPassword(ctx, request)
 	if err != nil {
 		utils.HandleError(c, status, msg, err)
 		return

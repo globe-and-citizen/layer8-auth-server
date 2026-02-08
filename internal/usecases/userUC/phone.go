@@ -1,6 +1,7 @@
 package userUC
 
 import (
+	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
@@ -9,8 +10,8 @@ import (
 	"time"
 )
 
-func (uc *UserUsecase) VerifyPhoneNumber(userID uint) (string, error) {
-	user, err := uc.postgres.GetUserByID(userID)
+func (uc *UserUsecase) VerifyPhoneNumber(ctx context.Context, userID uint) (string, error) {
+	user, err := uc.postgres.GetUserByID(ctx, userID)
 	if err != nil {
 		return "failed to get user", err
 	}
@@ -43,7 +44,7 @@ func (uc *UserUsecase) VerifyPhoneNumber(userID uint) (string, error) {
 		ZkPairID:         zkPairID,
 	}
 
-	err = uc.postgres.SavePhoneNumberVerificationData(verificationData)
+	err = uc.postgres.SavePhoneNumberVerificationData(ctx, verificationData)
 	if err != nil {
 		return "failed to save proof of the phone number verification into the db", err
 	}
@@ -51,8 +52,8 @@ func (uc *UserUsecase) VerifyPhoneNumber(userID uint) (string, error) {
 	return "Phone number successfully verified", nil
 }
 
-func (uc *UserUsecase) CheckPhoneNumberVerificationCode(userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) (int, string, error) {
-	verificationData, err := uc.postgres.GetPhoneNumberVerificationData(userID)
+func (uc *UserUsecase) CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) (int, string, error) {
+	verificationData, err := uc.postgres.GetPhoneNumberVerificationData(ctx, userID)
 	if err != nil {
 		// fixme check error types and return corresponding status codes
 		return http.StatusBadRequest, "user's verification data not found", err
@@ -67,6 +68,7 @@ func (uc *UserUsecase) CheckPhoneNumberVerificationCode(userID uint, req request
 	}
 
 	err = uc.postgres.SaveProofOfPhoneNumberVerification(
+		ctx,
 		verificationData.UserId,
 		verificationData.VerificationCode,
 		verificationData.ZkProof,
@@ -79,7 +81,7 @@ func (uc *UserUsecase) CheckPhoneNumberVerificationCode(userID uint, req request
 	return http.StatusOK, "phone number verification code successfully verified", nil
 }
 
-func (uc *UserUsecase) GenerateAndSaveTelegramSessionIDHash(userID uint) ([]byte, string, error) {
+func (uc *UserUsecase) GenerateAndSaveTelegramSessionIDHash(ctx context.Context, userID uint) ([]byte, string, error) {
 	sessionID, err := utils.GenerateTelegramSessionID()
 	if err != nil {
 		return []byte{}, "failed to generate telegram session id", err
@@ -87,7 +89,7 @@ func (uc *UserUsecase) GenerateAndSaveTelegramSessionIDHash(userID uint) ([]byte
 
 	sessionIDHash := utils.ComputeTelegramSessionIDHash(sessionID)
 
-	err = uc.postgres.SaveTelegramSessionIDHash(userID, sessionIDHash[:])
+	err = uc.postgres.SaveTelegramSessionIDHash(ctx, userID, sessionIDHash[:])
 	if err != nil {
 		return []byte{}, "failed to save telegram session id hash", err
 	}

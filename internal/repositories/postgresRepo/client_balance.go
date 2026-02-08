@@ -1,16 +1,17 @@
 package postgresRepo
 
 import (
+	"context"
 	"database/sql"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
 
-func (r *PostgresRepository) GetClientBalance(clientId string) (*gormModels.ClientBalance, error) {
+func (r *PostgresRepository) GetClientBalance(ctx context.Context, clientId string) (*gormModels.ClientBalance, error) {
 	// TODO: is isolation level higher then the default needed?
 	var clientStatistics gormModels.ClientBalance
 
-	err := r.db.Model(&gormModels.ClientBalance{}).
+	err := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
 		Where("client_id = ?", clientId).
 		First(&clientStatistics).
 		Error
@@ -22,10 +23,10 @@ func (r *PostgresRepository) GetClientBalance(clientId string) (*gormModels.Clie
 	return &clientStatistics, nil
 }
 
-func (r *PostgresRepository) UpdateClientBalance(clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdatedAt time.Time) error {
-	tx := r.db.Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+func (r *PostgresRepository) UpdateClientBalance(ctx context.Context, clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdatedAt time.Time) error {
+	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 
-	err := r.db.Model(&gormModels.ClientBalance{}).
+	err := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
 		Where("client_id = ?", clientId).
 		Updates(map[string]interface{}{
 			"balance_wei":           newBalance,
@@ -42,11 +43,11 @@ func (r *PostgresRepository) UpdateClientBalance(clientId string, newBalance str
 	return nil
 }
 
-func (r *PostgresRepository) GetAllClientBalances() ([]gormModels.ClientBalance, error) {
+func (r *PostgresRepository) GetAllClientBalances(ctx context.Context) ([]gormModels.ClientBalance, error) {
 	// TODO: is isolation level higher then the default needed?
 	var allClientStatistics []gormModels.ClientBalance
 
-	err := r.db.Find(&allClientStatistics).Error
+	err := r.db.WithContext(ctx).Find(&allClientStatistics).Error
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (r *PostgresRepository) GetAllClientBalances() ([]gormModels.ClientBalance,
 	return allClientStatistics, nil
 }
 
-func (r *PostgresRepository) AddClientPaymentReceipt(clientId string, amount string, timestamp time.Time, txHash string) error {
+func (r *PostgresRepository) AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, timestamp time.Time, txHash string) error {
 	paymentReceipt := gormModels.ClientPaymentReceipt{
 		ClientID:      clientId,
 		PaidAmountWei: amount,
@@ -62,7 +63,7 @@ func (r *PostgresRepository) AddClientPaymentReceipt(clientId string, amount str
 		TxID:          txHash,
 	}
 
-	e := r.db.Create(&paymentReceipt).Error
+	e := r.db.WithContext(ctx).Create(&paymentReceipt).Error
 	if e != nil {
 		return e
 	}

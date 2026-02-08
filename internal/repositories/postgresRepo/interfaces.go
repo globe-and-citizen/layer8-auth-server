@@ -1,6 +1,7 @@
 package postgresRepo
 
 import (
+	"context"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
@@ -27,45 +28,46 @@ type IClientRepositories interface {
 }
 
 type IUserRepository interface {
-	UpdateUser(newUser gormModels.User) error
-	GetUserByID(userId uint) (gormModels.User, error)
-	GetUserByUsername(username string) (gormModels.User, error)
-	GetUserProfile(userID uint) (gormModels.User, gormModels.UserMetadata, error)
-	PrecheckUserRegister(user gormModels.User) error
-	UpdateUserPassword(username string, storedKey string, serverKey string) error
+	UpdateUser(ctx context.Context, newUser gormModels.User) error
+	GetUserByID(ctx context.Context, userId uint) (gormModels.User, error)
+	GetUserByUsername(ctx context.Context, username string) (gormModels.User, error)
+	GetUserProfile(ctx context.Context, userID uint) (gormModels.User, gormModels.UserMetadata, error)
+	PrecheckUserRegister(ctx context.Context, user gormModels.User) error
+	UpdateUserPassword(ctx context.Context, username string, storedKey string, serverKey string) error
 }
 
 type IClientRepository interface {
-	UpdateClient(newClient gormModels.Client) error
-	GetClientByName(name string) (gormModels.Client, error)
-	GetClientByBackendURI(backendURI string) (gormModels.Client, error)
-	IsBackendURIExists(backendURL string) (bool, error)
-	GetClientByUsername(username string) (gormModels.Client, error)
-	GetClientProfile(username string) (gormModels.Client, error)
-	PrecheckClientRegister(req gormModels.Client) error
-	SaveX509Certificate(clientID string, certificate string) error
-	GetClientByID(id string) (gormModels.Client, error)
+	UpdateClient(ctx context.Context, newClient gormModels.Client) error
+	GetClientByName(ctx context.Context, name string) (gormModels.Client, error)
+	GetClientByBackendURI(ctx context.Context, backendURI string) (gormModels.Client, error)
+	IsBackendURIExists(ctx context.Context, backendURL string) (bool, error)
+	GetClientByUsername(ctx context.Context, username string) (gormModels.Client, error)
+	GetClientProfile(ctx context.Context, username string) (gormModels.Client, error)
+	PrecheckClientRegister(ctx context.Context, req gormModels.Client) error
+	SaveX509Certificate(ctx context.Context, clientID string, certificate string) error
+	GetClientByID(ctx context.Context, id string) (gormModels.Client, error)
 }
 
 type IClientBalanceRepository interface {
-	GetClientBalance(clientId string) (*gormModels.ClientBalance, error)
-	UpdateClientBalance(clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdated time.Time) error
-	GetAllClientBalances() ([]gormModels.ClientBalance, error)
+	GetClientBalance(ctx context.Context, clientId string) (*gormModels.ClientBalance, error)
+	UpdateClientBalance(ctx context.Context, clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdated time.Time) error
+	GetAllClientBalances(ctx context.Context) ([]gormModels.ClientBalance, error)
 }
 
 type IClientPaymentReceiptRepository interface {
-	AddClientPaymentReceipt(clientId string, amount string, timestamp time.Time, txHash string) error
+	AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, timestamp time.Time, txHash string) error
 }
 
 type IUserMetadataRepository interface {
-	GetMetadataByUserID(userID uint) (gormModels.UserMetadata, error)
-	UpdateUserMetadata(userID uint, req requestdto.UserMetadataUpdate) error
+	GetMetadataByUserID(ctx context.Context, userID uint) (gormModels.UserMetadata, error)
+	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error
 }
 
 type IPhoneNumberVerificationRepository interface {
-	SavePhoneNumberVerificationData(data gormModels.PhoneNumberVerificationData) error
-	GetPhoneNumberVerificationData(userID uint) (gormModels.PhoneNumberVerificationData, error)
+	SavePhoneNumberVerificationData(ctx context.Context, data gormModels.PhoneNumberVerificationData) error
+	GetPhoneNumberVerificationData(ctx context.Context, userID uint) (gormModels.PhoneNumberVerificationData, error)
 	SaveProofOfPhoneNumberVerification(
+		ctx context.Context,
 		userID uint,
 		phoneNumberVerificationCode string,
 		phoneNumberZkProof []byte,
@@ -74,12 +76,12 @@ type IPhoneNumberVerificationRepository interface {
 }
 
 type IEmailVerificationRepository interface {
-	SaveEmailVerificationData(data gormModels.EmailVerificationData) error
-	GetEmailVerificationData(userId uint) (gormModels.EmailVerificationData, error)
+	SaveEmailVerificationData(ctx context.Context, data gormModels.EmailVerificationData) error
+	GetEmailVerificationData(ctx context.Context, userId uint) (gormModels.EmailVerificationData, error)
 	SaveProofOfEmailVerification(
-		userId uint, verificationCode string, emailProof []byte, zkKeyPairId uint,
+		ctx context.Context, userId uint, verificationCode string, emailProof []byte, zkKeyPairId uint,
 	) error
-	SaveTelegramSessionIDHash(userID uint, sessionID []byte) error
+	SaveTelegramSessionIDHash(ctx context.Context, userID uint, sessionID []byte) error
 }
 
 type IZKSnarksKeyRepository interface {

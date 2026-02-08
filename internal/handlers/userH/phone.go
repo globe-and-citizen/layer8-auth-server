@@ -16,7 +16,7 @@ func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
 		return
 	}
 
-	message, err := h.uc.VerifyPhoneNumber(userID)
+	message, err := h.uc.VerifyPhoneNumber(c.Request.Context(), userID)
 	if err != nil {
 		utils.HandleError(c, http.StatusInternalServerError, message, err)
 		return
@@ -36,7 +36,7 @@ func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
 		return
 	}
 
-	status, message, err := h.uc.CheckPhoneNumberVerificationCode(userID, request)
+	status, message, err := h.uc.CheckPhoneNumberVerificationCode(c.Request.Context(), userID, request)
 	if err != nil {
 		utils.HandleError(c, status, message, err)
 		return
@@ -51,7 +51,7 @@ func (h UserHandler) GenerateTelegramSessionID(c *gin.Context) {
 		return
 	}
 
-	sessionID, errMsg, err := h.uc.GenerateAndSaveTelegramSessionIDHash(userID)
+	sessionID, errMsg, err := h.uc.GenerateAndSaveTelegramSessionIDHash(c.Request.Context(), userID)
 	if err != nil {
 		utils.HandleError(c, http.StatusInternalServerError, errMsg, err)
 		return

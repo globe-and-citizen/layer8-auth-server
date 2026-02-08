@@ -15,7 +15,7 @@ func (h ClientHandler) GetNTorCertificate(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.GetNTorCertificate(requestdto.ClientGetNTorCertificate{
+	response, err := h.uc.GetNTorCertificate(c.Request.Context(), requestdto.ClientGetNTorCertificate{
 		BackendURI: backendDomain,
 	})
 	if err != nil {

@@ -1,6 +1,7 @@
 package oauthUC
 
 import (
+	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
@@ -10,8 +11,8 @@ import (
 	"net/http"
 )
 
-func (uc *OAuthUsecase) GetAccessToken(req requestdto.OAuthAccessToken) (*responsedto.OAuthAccessToken, *appError.OAuthError) {
-	client, err := uc.postgres.GetClientByID(req.ClientID)
+func (uc *OAuthUsecase) GetAccessToken(ctx context.Context, req requestdto.OAuthAccessToken) (*responsedto.OAuthAccessToken, *appError.OAuthError) {
+	client, err := uc.postgres.GetClientByID(ctx, req.ClientID)
 	if err != nil {
 		return nil, &appError.OAuthError{
 			Code:        consts.OAuthErrorInvalidClient,

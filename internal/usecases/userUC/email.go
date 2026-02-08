@@ -1,13 +1,14 @@
 package userUC
 
 import (
+	"context"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
 
-func (uc *UserUsecase) VerifyEmail(userID uint, userEmail string) error {
-	user, err := uc.postgres.GetUserByID(userID)
+func (uc *UserUsecase) VerifyEmail(ctx context.Context, userID uint, userEmail string) error {
+	user, err := uc.postgres.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -23,6 +24,7 @@ func (uc *UserUsecase) VerifyEmail(userID uint, userEmail string) error {
 	}
 
 	err = uc.postgres.SaveEmailVerificationData(
+		ctx,
 		gormModels.EmailVerificationData{
 			UserId:           user.ID,
 			VerificationCode: verificationCode,
@@ -33,8 +35,8 @@ func (uc *UserUsecase) VerifyEmail(userID uint, userEmail string) error {
 	return err
 }
 
-func (uc *UserUsecase) CheckEmailVerificationCode(userId uint, code string) error {
-	verificationData, e := uc.postgres.GetEmailVerificationData(userId)
+func (uc *UserUsecase) CheckEmailVerificationCode(ctx context.Context, userId uint, code string) error {
+	verificationData, e := uc.postgres.GetEmailVerificationData(ctx, userId)
 	if e != nil {
 		return e
 	}
@@ -44,8 +46,8 @@ func (uc *UserUsecase) CheckEmailVerificationCode(userId uint, code string) erro
 	return e
 }
 
-func (uc *UserUsecase) SaveProofOfEmailVerification(userID uint, req requestdto.UserCheckEmailVerificationCode) (string, error) {
-	user, err := uc.postgres.GetUserByID(userID)
+func (uc *UserUsecase) SaveProofOfEmailVerification(ctx context.Context, userID uint, req requestdto.UserCheckEmailVerificationCode) (string, error) {
+	user, err := uc.postgres.GetUserByID(ctx, userID)
 	if err != nil {
 		return "Failed to get user", err
 	}
@@ -55,7 +57,7 @@ func (uc *UserUsecase) SaveProofOfEmailVerification(userID uint, req requestdto.
 		return "Failed to generate zk proof of email verification", err
 	}
 
-	err = uc.postgres.SaveProofOfEmailVerification(userID, req.Code, zkProof, zkKeyPairId)
+	err = uc.postgres.SaveProofOfEmailVerification(ctx, userID, req.Code, zkProof, zkKeyPairId)
 	if err != nil {
 		return "Failed to save proof of the email verification procedure", err
 	}

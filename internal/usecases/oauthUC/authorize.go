@@ -1,6 +1,7 @@
 package oauthUC
 
 import (
+	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
@@ -13,8 +14,8 @@ import (
 	"time"
 )
 
-func (uc *OAuthUsecase) AuthorizeContext(req requestdto.OAuthAuthorizeContext) (*responsedto.OAuthAuthorizeContext, *appError.OAuthError) {
-	client, _, scopes, err := uc.validateAuthorizeParams(req)
+func (uc *OAuthUsecase) AuthorizeContext(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*responsedto.OAuthAuthorizeContext, *appError.OAuthError) {
+	client, _, scopes, err := uc.validateAuthorizeParams(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -26,11 +27,12 @@ func (uc *OAuthUsecase) AuthorizeContext(req requestdto.OAuthAuthorizeContext) (
 }
 
 func (uc *OAuthUsecase) AuthorizeDecision(
+	ctx context.Context,
 	req requestdto.OAuthAuthorizeDecision,
 	userID uint,
 	authzCodeExpiry time.Duration,
 ) (*responsedto.OAuthAuthorizeDecision, *appError.OAuthError) {
-	client, _, scopes, oauthErr := uc.validateAuthorizeParams(req.OAuthAuthorizeContext)
+	client, _, scopes, oauthErr := uc.validateAuthorizeParams(ctx, req.OAuthAuthorizeContext)
 	if oauthErr != nil {
 		return nil, oauthErr
 	}
@@ -77,8 +79,8 @@ func (uc *OAuthUsecase) AuthorizeDecision(
 	}, nil
 }
 
-func (uc *OAuthUsecase) validateAuthorizeParams(req requestdto.OAuthAuthorizeContext) (*gormModels.Client, string, []consts.OAuthScope, *appError.OAuthError) {
-	client, err := uc.postgres.GetClientByID(req.ClientID) // todo remember to filter errors appropriately
+func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, string, []consts.OAuthScope, *appError.OAuthError) {
+	client, err := uc.postgres.GetClientByID(ctx, req.ClientID) // todo remember to filter errors appropriately
 	if err != nil {
 		return nil, "", nil, &appError.OAuthError{
 			Code:       consts.OAuthErrorInvalidClient,

@@ -1,15 +1,18 @@
 package oauthUC
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
-func (uc *OAuthUsecase) VerifyOAuthJWTToken(tokenString string) (uint, string, error) {
+func (uc *OAuthUsecase) VerifyOAuthJWTToken(ctx context.Context, tokenString string) (uint, string, error) {
 	claims, err := uc.token.VerifyOAuthJWTToken(tokenString)
 	if err != nil {
 		return 0, "", err
 	}
 
 	// verify user by username
-	user, err := uc.postgres.GetUserByUsername(claims.Subject)
+	user, err := uc.postgres.GetUserByUsername(ctx, claims.Subject)
 	if err != nil {
 		return 0, "", fmt.Errorf("user not found: %e", err)
 	}
@@ -19,14 +22,14 @@ func (uc *OAuthUsecase) VerifyOAuthJWTToken(tokenString string) (uint, string, e
 	return user.ID, user.Username, nil
 }
 
-func (uc *OAuthUsecase) VerifyAccessToken(tokenString string) (uint, string, error) {
+func (uc *OAuthUsecase) VerifyAccessToken(ctx context.Context, tokenString string) (uint, string, error) {
 	claims, err := uc.token.ParseOAuthAccessToken(tokenString)
 	if err != nil {
 		return 0, "", err
 	}
 
 	// validate clientID
-	client, err := uc.postgres.GetClientByID(claims.Subject)
+	client, err := uc.postgres.GetClientByID(ctx, claims.Subject)
 	if err != nil {
 		return 0, "", fmt.Errorf("client not found: %e", err)
 	}

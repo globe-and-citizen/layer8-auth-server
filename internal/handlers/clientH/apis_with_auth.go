@@ -14,7 +14,7 @@ func (h ClientHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	profileResp, err := h.uc.GetProfile(username)
+	profileResp, err := h.uc.GetProfile(c.Request.Context(), username)
 	if err != nil {
 		utils.HandleError(c, http.StatusInternalServerError, "Failed to get user profile, user not found", err)
 		return
@@ -29,7 +29,7 @@ func (h ClientHandler) GetUsageStatistics(c *gin.Context) {
 		return
 	}
 
-	response, status, msg, err := h.uc.GetUsageStatistics(clientID)
+	response, status, msg, err := h.uc.GetUsageStatistics(c.Request.Context(), clientID)
 	if err != nil {
 		utils.HandleError(c, status, msg, err)
 		return
@@ -44,7 +44,7 @@ func (h ClientHandler) GetUnpaidAmount(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.GetUnpaidAmount(clientID)
+	response, err := h.uc.GetUnpaidAmount(c.Request.Context(), clientID)
 	if err != nil {
 		utils.HandleError(c, http.StatusInternalServerError, "Failed to get unpaid amount", err)
 		return
@@ -64,7 +64,7 @@ func (h ClientHandler) UploadNTorCertificate(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.SaveNTorCertificate(clientID, req)
+	err = h.uc.SaveNTorCertificate(c.Request.Context(), clientID, req)
 	if err != nil {
 		utils.HandleError(c, http.StatusInternalServerError, "failed to save the SP x.509 certificate", err)
 		return
