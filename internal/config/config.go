@@ -1,6 +1,7 @@
 package config
 
 import (
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"github.com/caarlos0/env/v11"
@@ -12,6 +13,8 @@ type AppConfig struct {
 	Host   string `env:"HOST"`
 	Port   int    `env:"PORT"`
 	SPAConfig
+
+	log.Config
 
 	utils.PostgresConfig
 	ScramConfig

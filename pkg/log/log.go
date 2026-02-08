@@ -1,69 +1,49 @@
 package log
 
 import (
-	"io"
-	"os"
-	"runtime/debug"
-	"strconv"
-	"sync"
-	"time"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/pkgerrors"
-	"gopkg.in/natefinch/lumberjack.v2"
+	"context"
 )
 
-var once sync.Once
+type ILogger interface {
+	Debug(msg string, fields ...Field)
+	Debugf(format string, args ...interface{})
+	Info(msg string, fields ...Field)
+	Infof(format string, args ...interface{})
+	Warn(msg string, fields ...Field)
+	Warnf(format string, args ...interface{})
+	Error(msg string, err error, fields ...Field)
+	Errorf(err error, format string, args ...interface{})
 
-var log zerolog.Logger
+	With(fields ...Field) ILogger
+	WithContext(ctx context.Context) ILogger
+}
 
-func Get() zerolog.Logger {
-	once.Do(func() {
-		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-		zerolog.TimeFieldFormat = time.RFC3339Nano
+type Field struct {
+	Key   string
+	Value any
+}
 
-		logLevel, err := strconv.Atoi(os.Getenv("LOG_LEVEL"))
-		if err != nil {
-			logLevel = int(zerolog.InfoLevel) // default to INFO
-		}
+func F(key string, value any) Field {
+	return Field{Key: key, Value: value}
+}
 
-		var output io.Writer = zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			TimeFormat: time.RFC3339,
-		}
+type Format string
+type Output string
 
-		if os.Getenv("APP_ENV") != "development" {
-			fileLogger := &lumberjack.Logger{
-				Filename:   "wikipedia-demo.log",
-				MaxSize:    5, //
-				MaxBackups: 10,
-				MaxAge:     14,
-				Compress:   true,
-			}
+const (
+	FormatJSON Format = "json"
+	FormatText Format = "text"
 
-			output = zerolog.MultiLevelWriter(os.Stderr, fileLogger)
-		}
+	OutputStdout Output = "stdout"
+	OutputFile   Output = "file"
+)
 
-		var gitRevision string
+type Config struct {
+	Level   string `env:"LOG_LEVEL" envDefault:"info"`
+	Service string `env:"LOG_SERVICE" envDefault:"layer8-server"`
 
-		buildInfo, ok := debug.ReadBuildInfo()
-		if ok {
-			for _, v := range buildInfo.Settings {
-				if v.Key == "vcs.revision" {
-					gitRevision = v.Value
-					break
-				}
-			}
-		}
+	Format Format `env:"LOG_FORMAT" envDefault:"text"`
+	Output Output `env:"LOG_OUTPUT" envDefault:"stdout"`
 
-		log = zerolog.New(output).
-			Level(zerolog.Level(logLevel)).
-			With().
-			Timestamp().
-			Str("git_revision", gitRevision).
-			Str("go_version", buildInfo.GoVersion).
-			Logger()
-	})
-
-	return log
+	FilePath string `env:"LOG_FILE_PATH"` // used only if OutputFile
 }

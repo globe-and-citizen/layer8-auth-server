@@ -5,8 +5,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/eth"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
-
-	"github.com/rs/zerolog/log"
 )
 
 func (uc *WorkerUsecase) ListenToEthereumEvents() {
@@ -21,17 +19,17 @@ func (uc *WorkerUsecase) ListenToEthereumEvents() {
 }
 
 func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.TrafficPaidEvent]) error {
-	log.Debug().Msgf("Handling traffic paid event: %+v", event)
+	uc.logger.Infof("Handling traffic paid event: %+v", event)
 
 	balance, err := uc.postgres.GetClientBalance(event.Data.ClientID)
 	if err != nil {
-		log.Error().Msgf("failed to get client balance: %w", err)
+		uc.logger.Error("failed to get client balance", err)
 		return err
 	}
 
 	curBalance, err := utils.DBWeiToBigInt(balance.BalanceWei)
 	if err != nil {
-		log.Error().Msgf("failed to convert unpaid amount: %w", err)
+		uc.logger.Error("failed to convert unpaid amount", err)
 		return err
 	}
 	curBalance = curBalance.Sub(curBalance, event.Data.Amount)

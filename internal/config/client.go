@@ -28,8 +28,8 @@ type ExternalConfig struct {
 }
 
 type Web3Config struct {
-	WebsocketRPCURL     string `env:"WEB3_WS_RPC_URL"`
-	PaymentContractAddr string `env:"WEB3_PAYMENT_CONTRACT_ADDRESS"`
-	PaymentContractABI  string `env:"WEB3_PAYMENT_CONTRACT_ABI"`
+	WebsocketRPCURL     string `env:"WEB3_WS_RPC_URL" required:"true"`
+	PaymentContractAddr string `env:"WEB3_PAYMENT_CONTRACT_ADDRESS" required:"true"`
+	PaymentContractABI  string `env:"WEB3_PAYMENT_CONTRACT_ABI" required:"true"`
 	// other contracts addr and abi
 }

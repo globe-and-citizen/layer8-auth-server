@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
-	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"net/http"
 	"strings"
 
@@ -18,9 +17,6 @@ type Response struct {
 }
 
 func HandleError(c *gin.Context, status int, message string, err error) {
-	l := log.Get()
-	l.Err(err).Msg(message)
-
 	c.AbortWithStatusJSON(status, Response{
 		IsSuccess: false,
 		Message:   message,

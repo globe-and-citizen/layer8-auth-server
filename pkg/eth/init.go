@@ -2,10 +2,9 @@ package eth
 
 import (
 	"context"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"math/big"
 	"time"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -57,9 +56,9 @@ func (e *EventListener[T]) SetHandler(handler EventHandlerFunc[T]) {
 	e.handler = handler
 }
 
-func (e *EventListener[T]) Start(ctx context.Context, client *ethclient.Client) {
+func (e *EventListener[T]) Start(ctx context.Context, logger log.ILogger, client *ethclient.Client) {
 	if e.handler == nil {
-		log.Fatal().Msgf("Handler for %s is nil", e.EventName)
+		logger.Errorf(nil, "Handler for %s is nil", e.EventName)
 	}
 
 	query := ethereum.FilterQuery{
@@ -71,27 +70,27 @@ func (e *EventListener[T]) Start(ctx context.Context, client *ethclient.Client) 
 	for {
 		sub, err := client.SubscribeFilterLogs(ctx, query, logs)
 		if err != nil {
-			log.Error().Err(err).Msgf("Error subscribed to %s", e.EventName)
+			logger.Errorf(err, "Error subscribing to %s", e.EventName)
 			time.Sleep(3 * time.Second)
 			continue
 		}
-		log.Info().Msgf("Subscribing to %s", e.EventName)
+		logger.Infof("Subscribed to event %s...", e.EventName)
 
 		for {
 			select {
 			case <-ctx.Done():
 				sub.Unsubscribe()
-				log.Info().Msgf("Unsubscribed from %s", e.EventName)
+				logger.Infof("Unsubscribed from event %s", e.EventName)
 				return
 			case err := <-sub.Err():
-				log.Error().Err(err).Msgf("Subscribed to %s", e.EventName)
+				logger.Errorf(err, "Error subcribing to %s", e.EventName)
 				sub.Unsubscribe()
 				time.Sleep(3 * time.Second)
 				goto RESUBSCRIBE
 			case vLog := <-logs:
 				err = e.handleEvent(ctx, client, vLog)
 				if err != nil {
-					log.Error().Err(err).Msgf("Error handling ethereum event %s", e.EventName)
+					logger.Errorf(err, "Error handling ethereum event %s", e.EventName)
 					// todo what to do on handler error?
 				}
 				saveLastBlock(vLog.BlockNumber)

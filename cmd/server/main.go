@@ -23,10 +23,10 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/usecases/workerUC"
 	"globe-and-citizen/layer8/auth-server/pkg/code"
 	"globe-and-citizen/layer8/auth-server/pkg/eth"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	log2 "globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	zk2 "globe-and-citizen/layer8/auth-server/pkg/zk"
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -36,14 +36,14 @@ import (
 	"github.com/consensys/gnark/constraint"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	zlog "github.com/rs/zerolog/log"
 )
 
 func main() {
 	appConfig := config.LoadConfig()
+	logger := log2.NewLogger(appConfig.Config)
 
 	app := gin.Default()
-	app.Use(log2.AccessLog)
+	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.AccessLog(logger))
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"}, // Vue dev server
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -86,10 +86,10 @@ func main() {
 
 	client, err := eth.ConnectToEthereum(appConfig.Web3Config.WebsocketRPCURL)
 	if err != nil {
-		log.Fatalf("Connect to %s failed: %w\n", appConfig.Web3Config.WebsocketRPCURL, err)
+		panic(fmt.Errorf("failed to connect to %s: %w", appConfig.Web3Config.WebsocketRPCURL, err))
 	}
 	defer eth.CloseEthereumConnection(client)
-	ethRepository := ethRepo.NewEthereumRepository(client, appConfig.Web3Config)
+	ethRepository := ethRepo.NewEthereumRepository(logger, client, appConfig.Web3Config)
 
 	userUsecase := userUC.NewUserUsecase(
 		postgresRepository,
@@ -108,16 +108,16 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	workerUsecase := workerUC.NewWorkerUsecase(ctx, postgresRepository, influxdbRepository, ethRepository)
+	workerUsecase := workerUC.NewWorkerUsecase(logger, ctx, postgresRepository, influxdbRepository, ethRepository)
 
 	go func() {
 		ticker := time.NewTicker(appConfig.UpdateUsageInterval)
 
 		for currTime := range ticker.C {
-			zlog.Info().Msgf("Started usage balance updater with interval: %s", appConfig.UpdateUsageInterval)
+			logger.Info(fmt.Sprintf("Update usage balance with interval: %s", appConfig.UpdateUsageInterval))
 			err = workerUsecase.UpdateUsageBalance(appConfig.BillingRatePerByte, currTime)
 			if err != nil {
-				zlog.Error().Err(err).Msg("Error while updating usage balance")
+				logger.Error("Error while updating usage balance", err)
 			}
 		}
 	}()
@@ -133,8 +133,7 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	addr := fmt.Sprintf("%s:%d", appConfig.Host, appConfig.Port)
-	log := log2.Get()
-	log.Info().Msg("Server start at: http://" + addr)
+	logger.Info("Server start at: http://" + addr)
 	err = app.Run(addr)
 	if err != nil {
 		panic(err)
@@ -155,7 +154,6 @@ window.__APP_CONFIG__ = {
 }
 
 func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig config.ZkConfig) zk2.IProofProcessor {
-	log := log2.Get()
 	var cs constraint.ConstraintSystem
 	var zkKeyPairId uint
 	var provingKey groth16.ProvingKey
@@ -172,12 +170,12 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 			},
 		)
 		if err != nil {
-			log.Fatal().Err(err)
+			panic(err)
 		}
 	} else {
 		zkSnarksKeyPair, err := postgresRepository.GetLatestZkSnarksKeys()
 		if err != nil {
-			log.Fatal().Errs("Error while reading zk-snarks keys from the database", []error{err})
+			panic(fmt.Errorf("get latest zk snarks keys failed: %w", err))
 		}
 
 		cs = zk2.GenerateConstraintSystem()
