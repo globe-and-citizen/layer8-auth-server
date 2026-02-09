@@ -2,7 +2,7 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +14,7 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserEmailVerify](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserEmailVerify](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -22,11 +22,11 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 	ctx := c.Request.Context()
 	err = h.uc.VerifyEmail(ctx, userID, request.Email)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to verify email", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to verify email", err)
 		return
 	}
 
-	utils.ReturnOK(c, "Verification email sent", nil)
+	ginUtils.ReturnOK(c, "Verification email sent", nil)
 }
 
 func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
@@ -35,7 +35,7 @@ func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
 		return
 	}
 
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserCheckEmailVerificationCode](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserCheckEmailVerificationCode](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -43,14 +43,14 @@ func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
 	ctx := c.Request.Context()
 	err = h.uc.CheckEmailVerificationCode(ctx, userID, request.Code)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to verify code", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to verify code", err)
 		return
 	}
 
 	errMsg, err := h.uc.SaveProofOfEmailVerification(ctx, userID, request)
 	if err != nil {
-		utils.HandleError(c, http.StatusInternalServerError, errMsg, err)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, errMsg, err)
 	}
 
-	utils.ReturnOK(c, "Your email was successfully verified!", nil)
+	ginUtils.ReturnOK(c, "Your email was successfully verified!", nil)
 }

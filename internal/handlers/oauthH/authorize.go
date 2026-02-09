@@ -3,7 +3,7 @@ package oauthH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ func (h OAuthHandler) AuthorizeContext(c *gin.Context) {
 
 	response, err := h.uc.AuthorizeContext(c.Request.Context(), req)
 	if err != nil {
-		utils.HandleError(c, err.StatusCode, err.Description, err.Err)
+		ginUtils.HandleError(c, h.logger, err.StatusCode, err.Description, err.Err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (h OAuthHandler) AuthorizeDecision(c *gin.Context) {
 		return
 	}
 
-	req, err := utils.DecodeJSONFromRequest[requestdto.OAuthAuthorizeDecision](c)
+	req, err := ginUtils.DecodeJSONFromRequest[requestdto.OAuthAuthorizeDecision](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -65,7 +65,7 @@ func (h OAuthHandler) AuthorizeDecision(c *gin.Context) {
 		//} else {
 		//	c.Redirect(http.StatusSeeOther, "/oauth/error?opt="+string(oauthErr.Code))
 		//}
-		utils.HandleError(c, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
+		ginUtils.HandleError(c, h.logger, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
 		return
 	}
 

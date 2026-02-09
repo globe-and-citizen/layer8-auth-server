@@ -2,6 +2,7 @@ package clientH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
@@ -11,7 +12,7 @@ import (
 func (h ClientHandler) GetNTorCertificate(c *gin.Context) {
 	backendDomain, err := utils.GetURLHostPort(c.Query("backend_url"))
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "invalid backend url", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "invalid backend url", err)
 		return
 	}
 
@@ -19,7 +20,7 @@ func (h ClientHandler) GetNTorCertificate(c *gin.Context) {
 		BackendURI: backendDomain,
 	})
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to get client ntor certificate", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to get client ntor certificate", err)
 		return
 	}
 

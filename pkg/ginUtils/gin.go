@@ -1,8 +1,9 @@
-package utils
+package ginUtils
 
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,8 @@ type Response struct {
 	Data      interface{} `json:"data"`
 }
 
-func HandleError(c *gin.Context, status int, message string, err error) {
+func HandleError(c *gin.Context, logger log.ILogger, status int, message string, err error) {
+	logger.Error(message, err)
 	c.AbortWithStatusJSON(status, Response{
 		IsSuccess: false,
 		Message:   message,
@@ -40,11 +42,11 @@ func ReturnCreated(c *gin.Context, message string, data interface{}) {
 	})
 }
 
-func DecodeJSONFromRequest[T any](c *gin.Context) (T, error) {
+func DecodeJSONFromRequest[T any](c *gin.Context, logger log.ILogger) (T, error) {
 	var request T
 	err := c.BindJSON(&request)
 	if err != nil {
-		HandleError(c, http.StatusBadRequest, "Invalid request payload", err)
+		HandleError(c, logger, http.StatusBadRequest, "Invalid request payload", err)
 		return request, err
 	}
 

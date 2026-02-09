@@ -3,18 +3,21 @@ package userH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/userUC"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
+	logger log.ILogger
 	uc     userUC.IUserUsecase
 	config config.UserConfig
 	router *gin.RouterGroup
 }
 
-func NewUserHandler(router *gin.RouterGroup, uc userUC.IUserUsecase, config config.UserConfig) UserHandler {
+func NewUserHandler(logger log.ILogger, router *gin.RouterGroup, uc userUC.IUserUsecase, config config.UserConfig) UserHandler {
 	return UserHandler{
+		logger: logger,
 		uc:     uc,
 		config: config,
 		router: router.Group(""),
@@ -22,7 +25,6 @@ func NewUserHandler(router *gin.RouterGroup, uc userUC.IUserUsecase, config conf
 }
 
 func (h UserHandler) RegisterAPIs() {
-
 	unauthenticatedGroup := h.router.Group("")
 	unauthenticatedGroup.POST("/user-register-precheck", h.PrecheckRegister)
 	unauthenticatedGroup.POST("/user-register", h.Register)

@@ -2,7 +2,7 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,16 +14,16 @@ func (h UserHandler) UpdateMetadata(c *gin.Context) {
 		return
 	}
 
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserMetadataUpdate](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserMetadataUpdate](c, h.logger)
 	if err != nil {
 		return
 	}
 
 	err = h.uc.UpdateUserMetadata(c.Request.Context(), userID, request)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to update user's metadata", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to update user's metadata", err)
 		return
 	}
 
-	utils.ReturnOK(c, "User's metadata updated successfully", nil)
+	ginUtils.ReturnOK(c, "User's metadata updated successfully", nil)
 }

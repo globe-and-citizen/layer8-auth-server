@@ -2,14 +2,14 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h UserHandler) PrecheckRegister(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserRegisterPrecheck](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserRegisterPrecheck](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -17,15 +17,15 @@ func (h UserHandler) PrecheckRegister(c *gin.Context) {
 	ctx := c.Request.Context()
 	response, err := h.uc.PrecheckRegister(ctx, request, h.config.ScramIterationCount)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to register user", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to register user", err)
 		return
 	}
 
-	utils.ReturnCreated(c, "User is successfully registered", response)
+	ginUtils.ReturnCreated(c, "User is successfully registered", response)
 }
 
 func (h UserHandler) Register(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserRegister](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserRegister](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -33,15 +33,15 @@ func (h UserHandler) Register(c *gin.Context) {
 	ctx := c.Request.Context()
 	err = h.uc.Register(ctx, request)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to register user", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to register user", err)
 		return
 	}
 
-	utils.ReturnCreated(c, "User registered successfully", nil)
+	ginUtils.ReturnCreated(c, "User registered successfully", nil)
 }
 
 func (h UserHandler) PrecheckLogin(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserLoginPrecheck](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserLoginPrecheck](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -49,15 +49,15 @@ func (h UserHandler) PrecheckLogin(c *gin.Context) {
 	ctx := c.Request.Context()
 	response, err := h.uc.PrecheckLogin(ctx, request)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to perform precheck, service error", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform precheck, service error", err)
 		return
 	}
 
-	utils.ReturnOK(c, "Precheck successful", response)
+	ginUtils.ReturnOK(c, "Precheck successful", response)
 }
 
 func (h UserHandler) Login(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserLogin](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserLogin](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -65,11 +65,11 @@ func (h UserHandler) Login(c *gin.Context) {
 	ctx := c.Request.Context()
 	response, err := h.uc.Login(ctx, request)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to perform login", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform login", err)
 		return
 	}
 
-	utils.ReturnOK(c, "Login successful", response)
+	ginUtils.ReturnOK(c, "Login successful", response)
 }
 
 func (h UserHandler) GetProfile(c *gin.Context) {
@@ -81,15 +81,15 @@ func (h UserHandler) GetProfile(c *gin.Context) {
 	ctx := c.Request.Context()
 	profileResp, err := h.uc.GetProfile(ctx, userID)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "Failed to get user profile", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to get user profile", err)
 		return
 	}
 
-	utils.ReturnOK(c, "Get user profile successful", profileResp)
+	ginUtils.ReturnOK(c, "Get user profile successful", profileResp)
 }
 
 func (h UserHandler) PrecheckResetPassword(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserResetPasswordPrecheck](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserResetPasswordPrecheck](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -97,15 +97,15 @@ func (h UserHandler) PrecheckResetPassword(c *gin.Context) {
 	ctx := c.Request.Context()
 	response, err := h.uc.PrecheckResetPassword(ctx, request)
 	if err != nil {
-		utils.HandleError(c, http.StatusBadRequest, "User does not exist!", err)
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "User does not exist!", err)
 		return
 	}
 
-	utils.ReturnOK(c, "User does exist!", response)
+	ginUtils.ReturnOK(c, "User does exist!", response)
 }
 
 func (h UserHandler) ResetPassword(c *gin.Context) {
-	request, err := utils.DecodeJSONFromRequest[requestdto.UserResetPassword](c)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserResetPassword](c, h.logger)
 	if err != nil {
 		return
 	}
@@ -113,9 +113,9 @@ func (h UserHandler) ResetPassword(c *gin.Context) {
 	ctx := c.Request.Context()
 	status, msg, err := h.uc.ResetPassword(ctx, request)
 	if err != nil {
-		utils.HandleError(c, status, msg, err)
+		ginUtils.HandleError(c, h.logger, status, msg, err)
 		return
 	}
 
-	utils.ReturnCreated(c, "Your password was updated successfully!", nil)
+	ginUtils.ReturnCreated(c, "Your password was updated successfully!", nil)
 }

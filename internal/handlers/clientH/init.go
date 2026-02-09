@@ -3,22 +3,26 @@ package clientH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/clientUC"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ClientHandler struct {
+	logger log.ILogger
 	config config.ClientConfig
 	uc     clientUC.IClientUsecase
 	router *gin.RouterGroup
 }
 
 func NewClientHandler(
+	logger log.ILogger,
 	router *gin.RouterGroup,
 	config config.ClientConfig,
 	uc clientUC.IClientUsecase,
 ) ClientHandler {
 	return ClientHandler{
+		logger: logger,
 		config: config,
 		uc:     uc,
 		router: router,

@@ -2,6 +2,7 @@ package ginUtils
 
 import (
 	"context"
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"strings"
 	"time"
@@ -27,6 +28,33 @@ func RequestID(c *gin.Context) {
 	c.Next()
 }
 
+func AccessLogJSON(p gin.LogFormatterParams) string {
+	return fmt.Sprintf(`{"time":"%s", "status":%d, "latency":"%s", "ip":"%s", "method":"%s", "path":"%s", "body_size":"%d", "request_id":"%s"}%s`,
+		p.TimeStamp.Format(time.RFC3339),
+		p.StatusCode,
+		p.Latency,
+		p.ClientIP,
+		p.Method,
+		p.Path,
+		p.BodySize,
+		p.Keys[RequestIDKey],
+		"\n",
+	)
+}
+
+func AccessLogText(p gin.LogFormatterParams) string {
+	return fmt.Sprintf("[%s] %d | %13v | %15s | body_size=%13d | req_id=%s | %-7s %s\n",
+		p.TimeStamp.Format(time.RFC3339),
+		p.StatusCode,
+		p.Latency,
+		p.ClientIP,
+		p.BodySize,
+		p.Keys[RequestIDKey],
+		p.Method,
+		p.Path,
+	)
+}
+
 func AccessLog(l log.ILogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -40,8 +68,11 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 		}
 
 		latency := time.Since(start)
-		status := c.Writer.Status()
+		if latency > time.Minute {
+			latency = latency.Truncate(time.Second)
+		}
 
+		status := c.Writer.Status()
 		if raw != "" {
 			path = path + "?" + raw
 		}
@@ -50,7 +81,7 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 			log.F("status", status),
 			log.F("method", c.Request.Method),
 			log.F("path", path),
-			log.F("latency_ms", latency.Milliseconds()),
+			log.F("latency", fmt.Sprintf("%v", latency)),
 			log.F("ip", c.ClientIP()),
 			log.F("user_agent", c.Request.UserAgent()),
 			log.F("request_id", c.GetString(RequestIDKey)),
@@ -61,7 +92,7 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 			fields = append(fields, log.F("content_type", ct))
 		}
 
-		if at := getAuthorizationType(c); at != "" {
+		if at := getAuthorizationType(c.GetHeader("Authorization")); at != "" {
 			fields = append(fields, log.F("auth_type", at))
 		}
 

@@ -3,22 +3,22 @@ package clientH
 import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h ClientHandler) AuthenticateClient(c *gin.Context) {
-	token, err := utils.GetBearerToken(c)
+	token, err := ginUtils.GetBearerToken(c)
 	if err != nil {
-		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: missing token", err)
 		return
 	}
 
 	clientID, username, err := h.uc.VerifyClientJWTToken(c.Request.Context(), token)
 	if err != nil {
-		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (h ClientHandler) AuthenticateClient(c *gin.Context) {
 func (h ClientHandler) AuthenticateForwardProxy(c *gin.Context) {
 	_, _, ok := c.Request.BasicAuth()
 	if !ok {
-		utils.HandleError(c, http.StatusUnauthorized, "authentication failed", fmt.Errorf("authentication failed"))
+		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "authentication failed", fmt.Errorf("authentication failed"))
 	}
 
 	//todo update later
@@ -41,7 +41,7 @@ func (h ClientHandler) AuthenticateForwardProxy(c *gin.Context) {
 func (h ClientHandler) getAuthenticatedUsername(c *gin.Context) (string, error) {
 	username := c.GetString(consts.MiddlewareKeyClientUsername)
 	if username == "" {
-		utils.HandleError(c, http.StatusInternalServerError, "Failed to get authenticated client username", nil)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get authenticated client username", nil)
 		return "", consts.ErrUserUnauthorized
 	}
 
@@ -51,7 +51,7 @@ func (h ClientHandler) getAuthenticatedUsername(c *gin.Context) (string, error) 
 func (h ClientHandler) getAuthenticatedClientID(c *gin.Context) (string, error) {
 	clientID := c.GetString(consts.MiddlewareKeyClientClientID)
 	if clientID == "" {
-		utils.HandleError(c, http.StatusInternalServerError, "Failed to get authenticated client username", nil)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get authenticated client username", nil)
 		return "", consts.ErrUserUnauthorized
 	}
 

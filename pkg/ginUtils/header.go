@@ -7,20 +7,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func getAuthorizationType(c *gin.Context) string {
-	auth := c.GetHeader("Authorization")
-	if auth == "" {
+func getAuthorizationType(authHeader string) string {
+	if authHeader == "" {
 		return ""
 	}
 
 	// Split at first space: "<type> <credentials>"
-	i := strings.IndexByte(auth, ' ')
+	i := strings.IndexByte(authHeader, ' ')
 	if i == -1 {
 		// Malformed but still indicates scheme
-		return strings.ToLower(auth)
+		return strings.ToLower(authHeader)
 	}
 
-	return strings.ToLower(auth[:i])
+	return strings.ToLower(authHeader[:i])
 }
 
 func getRequestID(c *gin.Context) string {

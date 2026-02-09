@@ -2,7 +2,7 @@ package clientH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +16,11 @@ func (h ClientHandler) GetProfile(c *gin.Context) {
 
 	profileResp, err := h.uc.GetProfile(c.Request.Context(), username)
 	if err != nil {
-		utils.HandleError(c, http.StatusInternalServerError, "Failed to get user profile, user not found", err)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get user profile, user not found", err)
 		return
 	}
 
-	utils.ReturnOK(c, "Get client profile successfully", profileResp)
+	ginUtils.ReturnOK(c, "Get client profile successfully", profileResp)
 }
 
 func (h ClientHandler) GetUsageStatistics(c *gin.Context) {
@@ -31,11 +31,11 @@ func (h ClientHandler) GetUsageStatistics(c *gin.Context) {
 
 	response, status, msg, err := h.uc.GetUsageStatistics(c.Request.Context(), clientID)
 	if err != nil {
-		utils.HandleError(c, status, msg, err)
+		ginUtils.HandleError(c, h.logger, status, msg, err)
 		return
 	}
 
-	utils.ReturnOK(c, "Get client usage statistics successful", response)
+	ginUtils.ReturnOK(c, "Get client usage statistics successful", response)
 }
 
 func (h ClientHandler) GetUnpaidAmount(c *gin.Context) {
@@ -46,11 +46,11 @@ func (h ClientHandler) GetUnpaidAmount(c *gin.Context) {
 
 	response, err := h.uc.GetUnpaidAmount(c.Request.Context(), clientID)
 	if err != nil {
-		utils.HandleError(c, http.StatusInternalServerError, "Failed to get unpaid amount", err)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get unpaid amount", err)
 		return
 	}
 
-	utils.ReturnOK(c, "successfully retrieved client's unpaid amount", response)
+	ginUtils.ReturnOK(c, "successfully retrieved client's unpaid amount", response)
 }
 
 func (h ClientHandler) UploadNTorCertificate(c *gin.Context) {
@@ -59,16 +59,16 @@ func (h ClientHandler) UploadNTorCertificate(c *gin.Context) {
 		return
 	}
 
-	req, err := utils.DecodeJSONFromRequest[requestdto.ClientUploadNTorCertificate](c)
+	req, err := ginUtils.DecodeJSONFromRequest[requestdto.ClientUploadNTorCertificate](c, h.logger)
 	if err != nil {
 		return
 	}
 
 	err = h.uc.SaveNTorCertificate(c.Request.Context(), clientID, req)
 	if err != nil {
-		utils.HandleError(c, http.StatusInternalServerError, "failed to save the SP x.509 certificate", err)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "failed to save the SP x.509 certificate", err)
 		return
 	}
 
-	utils.ReturnCreated(c, "x.509 certificate was saved successfully", nil)
+	ginUtils.ReturnCreated(c, "x.509 certificate was saved successfully", nil)
 }

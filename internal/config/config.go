@@ -14,7 +14,7 @@ type AppConfig struct {
 	Port   int    `env:"PORT"`
 	SPAConfig
 
-	log.Config
+	LogConfig log.Config
 
 	utils.PostgresConfig
 	ScramConfig

@@ -3,18 +3,21 @@ package oauthH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/oauthUC"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 type OAuthHandler struct {
+	logger log.ILogger
 	uc     oauthUC.IOAuthUsecase
 	router *gin.RouterGroup
 	config config.OAuthConfig
 }
 
-func NewOAuthHandler(router *gin.RouterGroup, config config.OAuthConfig, oauthuc oauthUC.IOAuthUsecase) *OAuthHandler {
+func NewOAuthHandler(logger log.ILogger, router *gin.RouterGroup, config config.OAuthConfig, oauthuc oauthUC.IOAuthUsecase) *OAuthHandler {
 	return &OAuthHandler{
+		logger: logger,
 		uc:     oauthuc,
 		router: router,
 		config: config,

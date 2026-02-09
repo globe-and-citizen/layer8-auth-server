@@ -2,22 +2,22 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h UserHandler) AuthenticateUser(c *gin.Context) {
-	token, err := utils.GetBearerToken(c)
+	token, err := ginUtils.GetBearerToken(c)
 	if err != nil {
-		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: missing token", err)
+		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: missing token", err)
 		return
 	}
 
 	userID, username, err := h.uc.VerifyUserJWTToken(c.Request.Context(), token)
 	if err != nil {
-		utils.HandleError(c, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (h UserHandler) getAuthenticatedUserID(c *gin.Context) (uint, error) {
 	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	if userID == 0 {
-		utils.HandleError(c, http.StatusInternalServerError, "Failed to get authenticated user ID from context", nil)
+		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get authenticated user ID from context", nil)
 		return 0, consts.ErrUserUnauthorized
 	}
 

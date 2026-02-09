@@ -26,7 +26,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
-	zk2 "globe-and-citizen/layer8/auth-server/pkg/zk"
+	"globe-and-citizen/layer8/auth-server/pkg/zk"
 	"os"
 	"os/signal"
 	"time"
@@ -40,12 +40,12 @@ import (
 
 func main() {
 	appConfig := config.LoadConfig()
-	logger := log.NewLogger(appConfig.Config)
+	logger := log.NewLogger(appConfig.LogConfig)
 
-	app := gin.Default()
+	app := gin.New()
 	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.AccessLog(logger))
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Vue dev server
+		AllowOrigins:     []string{"*.layer8proxy.net", "localhost:*"}, // Vue dev server
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -124,11 +124,11 @@ func main() {
 	go workerUsecase.ListenToEthereumEvents()
 
 	apiGroup := app.Group("/api/v1")
-	userHandler := userH.NewUserHandler(apiGroup, userUsecase, appConfig.UserConfig)
+	userHandler := userH.NewUserHandler(logger, apiGroup, userUsecase, appConfig.UserConfig)
 	userHandler.RegisterAPIs()
-	clientHandler := clientH.NewClientHandler(apiGroup, config.ClientConfig{}, clientUsecase)
+	clientHandler := clientH.NewClientHandler(logger, apiGroup, config.ClientConfig{}, clientUsecase)
 	clientHandler.RegisterAPIs()
-	oauthHandler := oauthH.NewOAuthHandler(apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
+	oauthHandler := oauthH.NewOAuthHandler(logger, apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
 	oauthHandler.RegisterAPIs()
 
 	gin.SetMode(gin.ReleaseMode)
@@ -153,7 +153,7 @@ window.__APP_CONFIG__ = {
 	}
 }
 
-func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig config.ZkConfig) zk2.IProofProcessor {
+func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig config.ZkConfig) zk.IProofProcessor {
 	var cs constraint.ConstraintSystem
 	var zkKeyPairId uint
 	var provingKey groth16.ProvingKey
@@ -161,7 +161,7 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 	var err error
 
 	if zkConfig.GenerateNewZkSnarksKeys {
-		cs, provingKey, verifyingKey = zk2.RunZkSnarksSetup()
+		cs, provingKey, verifyingKey = zk.RunZkSnarksSetup()
 
 		zkKeyPairId, err = postgresRepository.SaveZkSnarksKeyPair(
 			gormModels.ZkSnarksKeyPair{
@@ -178,7 +178,7 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 			panic(fmt.Errorf("get latest zk snarks keys failed: %w", err))
 		}
 
-		cs = zk2.GenerateConstraintSystem()
+		cs = zk.GenerateConstraintSystem()
 		zkKeyPairId = zkSnarksKeyPair.ID
 
 		// Empty proving key initialised with elliptic curve id
@@ -192,5 +192,5 @@ func zkSetup(postgresRepository postgresRepo.IPostgresRepository, zkConfig confi
 		utils.ReadBytes[groth16.VerifyingKey](verifyingKey, zkSnarksKeyPair.VerifyingKey)
 	}
 
-	return zk2.NewProofProcessor(cs, zkKeyPairId, provingKey, verifyingKey)
+	return zk.NewProofProcessor(cs, zkKeyPairId, provingKey, verifyingKey)
 }
