@@ -78,7 +78,7 @@ func (r *PostgresRepository) GetUserProfile(ctx context.Context, userID uint) (g
 	return user, userMetadata, nil
 }
 
-func (r *PostgresRepository) PrecheckUserRegister(ctx context.Context, user gormModels.User) error {
+func (r *PostgresRepository) CreateUser(ctx context.Context, user gormModels.User) error {
 	if err := r.db.WithContext(ctx).Create(&user).Error; err != nil {
 		return utils.StackError(fmt.Errorf("failed to create a new user: %v", err))
 	}

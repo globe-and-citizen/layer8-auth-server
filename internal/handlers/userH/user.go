@@ -2,6 +2,7 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -47,9 +48,9 @@ func (h UserHandler) PrecheckLogin(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	response, err := h.uc.PrecheckLogin(ctx, request)
+	response, ucerr := h.uc.PrecheckLogin(ctx, request)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform precheck, service error", err)
+		handlers.HandlerUCError(c, h.logger, "Failed to precheck", ucerr)
 		return
 	}
 
@@ -63,9 +64,9 @@ func (h UserHandler) Login(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	response, err := h.uc.Login(ctx, request)
+	response, ucerr := h.uc.Login(ctx, request)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform login", err)
+		handlers.HandlerUCError(c, h.logger, "Failed to login", ucerr)
 		return
 	}
 
@@ -78,10 +79,9 @@ func (h UserHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	profileResp, err := h.uc.GetProfile(ctx, userID)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to get user profile", err)
+	profileResp, ucerr := h.uc.GetProfile(c.Request.Context(), userID)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to get profile", ucerr)
 		return
 	}
 
@@ -94,10 +94,9 @@ func (h UserHandler) PrecheckResetPassword(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	response, err := h.uc.PrecheckResetPassword(ctx, request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "User does not exist!", err)
+	response, ucerr := h.uc.PrecheckResetPassword(c.Request.Context(), request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "User does not exists!", ucerr)
 		return
 	}
 
@@ -110,10 +109,9 @@ func (h UserHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	status, msg, err := h.uc.ResetPassword(ctx, request)
+	ucerr := h.uc.ResetPassword(c.Request.Context(), request)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, status, msg, err)
+		handlers.HandlerUCError(c, h.logger, "Failed to reset password", ucerr)
 		return
 	}
 

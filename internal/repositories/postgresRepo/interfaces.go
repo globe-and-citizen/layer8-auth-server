@@ -32,7 +32,7 @@ type IUserRepository interface {
 	GetUserByID(ctx context.Context, userId uint) (gormModels.User, error)
 	GetUserByUsername(ctx context.Context, username string) (gormModels.User, error)
 	GetUserProfile(ctx context.Context, userID uint) (gormModels.User, gormModels.UserMetadata, error)
-	PrecheckUserRegister(ctx context.Context, user gormModels.User) error
+	CreateUser(ctx context.Context, user gormModels.User) error
 	UpdateUserPassword(ctx context.Context, username string, storedKey string, serverKey string) error
 }
 
@@ -43,7 +43,7 @@ type IClientRepository interface {
 	IsBackendURIExists(ctx context.Context, backendURL string) (bool, error)
 	GetClientByUsername(ctx context.Context, username string) (gormModels.Client, error)
 	GetClientProfile(ctx context.Context, username string) (gormModels.Client, error)
-	PrecheckClientRegister(ctx context.Context, req gormModels.Client) error
+	CreateClient(ctx context.Context, req gormModels.Client) error
 	SaveX509Certificate(ctx context.Context, clientID string, certificate string) error
 	GetClientByID(ctx context.Context, id string) (gormModels.Client, error)
 }

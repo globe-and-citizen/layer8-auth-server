@@ -7,20 +7,21 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/influxdbRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 )
 
 type IClientUsecase interface {
-	CheckBackendURI(ctx context.Context, req requestdto.ClientCheckBackendURI) (bool, error)
-	PrecheckRegister(ctx context.Context, req requestdto.ClientRegisterPrecheck, iterCount int) (responsedto.ClientRegisterPrecheck, error)
-	Register(ctx context.Context, req requestdto.ClientRegister) error
-	PrecheckLogin(ctx context.Context, req requestdto.ClientLoginPrecheck) (responsedto.ClientLoginPrecheck, error)
-	Login(ctx context.Context, req requestdto.ClientLogin) (responsedto.ClientLogin, error)
-	GetProfile(ctx context.Context, username string) (responsedto.ClientProfile, error)
-	GetUsageStatistics(ctx context.Context, clientID string) (responsedto.ClientUsageStatistic, int, string, error)
-	GetUnpaidAmount(ctx context.Context, clientID string) (responsedto.ClientGetBalance, error)
-	SaveNTorCertificate(ctx context.Context, clientID string, req requestdto.ClientUploadNTorCertificate) error
-	VerifyClientJWTToken(ctx context.Context, tokenString string) (clientID string, clientUsername string, err error)
-	GetNTorCertificate(ctx context.Context, req requestdto.ClientGetNTorCertificate) (*responsedto.ClientGetNTorCertificate, error)
+	CheckBackendURI(ctx context.Context, req requestdto.ClientCheckBackendURI) (bool, *ucerror.UCError)
+	PrecheckRegister(ctx context.Context, req requestdto.ClientRegisterPrecheck, iterCount int) (responsedto.ClientRegisterPrecheck, *ucerror.UCError)
+	Register(ctx context.Context, req requestdto.ClientRegister) *ucerror.UCError
+	PrecheckLogin(ctx context.Context, req requestdto.ClientLoginPrecheck) (responsedto.ClientLoginPrecheck, *ucerror.UCError)
+	Login(ctx context.Context, req requestdto.ClientLogin) (responsedto.ClientLogin, *ucerror.UCError)
+	GetProfile(ctx context.Context, username string) (responsedto.ClientProfile, *ucerror.UCError)
+	GetUsageStatistics(ctx context.Context, clientID string) (responsedto.ClientUsageStatistic, *ucerror.UCError)
+	GetUnpaidAmount(ctx context.Context, clientID string) (responsedto.ClientGetBalance, *ucerror.UCError)
+	SaveNTorCertificate(ctx context.Context, clientID string, req requestdto.ClientUploadNTorCertificate) *ucerror.UCError
+	MdwVerifyClientJWTToken(ctx context.Context, tokenString string) (clientID string, clientUsername string, err *ucerror.UCError)
+	GetNTorCertificate(ctx context.Context, req requestdto.ClientGetNTorCertificate) (*responsedto.ClientGetNTorCertificate, *ucerror.UCError)
 }
 
 type ClientUsecase struct {

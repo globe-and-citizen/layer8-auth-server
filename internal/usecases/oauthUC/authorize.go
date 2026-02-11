@@ -2,20 +2,22 @@ package oauthUC
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
-	appError "globe-and-citizen/layer8/auth-server/internal/errors"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
-	"net/http"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-func (uc *OAuthUsecase) AuthorizeContext(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*responsedto.OAuthAuthorizeContext, *appError.OAuthError) {
-	client, _, scopes, err := uc.validateAuthorizeParams(ctx, req)
+func (uc *OAuthUsecase) GetAuthorizeContext(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*responsedto.OAuthAuthorizeContext, *ucerror.UCError) {
+	client, scopes, err := uc.validateAuthorizeParams(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -26,15 +28,15 @@ func (uc *OAuthUsecase) AuthorizeContext(ctx context.Context, req requestdto.OAu
 	}, nil
 }
 
-func (uc *OAuthUsecase) AuthorizeDecision(
+func (uc *OAuthUsecase) PostAuthorizeDecision(
 	ctx context.Context,
 	req requestdto.OAuthAuthorizeDecision,
 	userID uint,
 	authzCodeExpiry time.Duration,
-) (*responsedto.OAuthAuthorizeDecision, *appError.OAuthError) {
-	client, _, scopes, oauthErr := uc.validateAuthorizeParams(ctx, req.OAuthAuthorizeContext)
-	if oauthErr != nil {
-		return nil, oauthErr
+) (*responsedto.OAuthAuthorizeDecision, *ucerror.UCError) {
+	client, scopes, ucErr := uc.validateAuthorizeParams(ctx, req.OAuthAuthorizeContext)
+	if ucErr != nil {
+		return nil, ucErr
 	}
 
 	scopes = append([]consts.OAuthScope{}, scopes...)
@@ -55,22 +57,12 @@ func (uc *OAuthUsecase) AuthorizeDecision(
 	code, err := oauth.GenerateAuthorizationCode(req.ClientID, client.Secret,
 		client.RedirectURI, consts.OAuthScopesToStringSlice(scopes), userID, authzCodeExpiry)
 	if err != nil {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorServerError,
-			StatusCode:  http.StatusInternalServerError,
-			Description: "Failed to generate authorization code",
-			Err:         err,
-		}
+		return nil, ucerror.New(fmt.Errorf("error generating authorization code: %w", err), consts.ErrInternalServer)
 	}
 
 	redirectURL, err := oauth.GenerateAuthURL(req.ClientID, code, client.RedirectURI, consts.OAuthScopesToStringSlice(scopes))
 	if err != nil {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorServerError,
-			StatusCode:  http.StatusInternalServerError,
-			Description: "Failed to generate redirect URL",
-			Err:         err,
-		}
+		return nil, ucerror.New(fmt.Errorf("error generating authURL: %w", err), consts.ErrInternalServer)
 	}
 
 	return &responsedto.OAuthAuthorizeDecision{
@@ -79,33 +71,31 @@ func (uc *OAuthUsecase) AuthorizeDecision(
 	}, nil
 }
 
-func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, string, []consts.OAuthScope, *appError.OAuthError) {
-	client, err := uc.postgres.GetClientByID(ctx, req.ClientID) // todo remember to filter errors appropriately
+func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, []consts.OAuthScope, *ucerror.UCError) {
+	client, err := uc.postgres.GetClientByID(ctx, req.ClientID)
 	if err != nil {
-		return nil, "", nil, &appError.OAuthError{
-			Code:       consts.OAuthErrorInvalidClient,
-			StatusCode: 400,
-			Err:        fmt.Errorf("client with ID:%s not found: %v", req.ClientID, err),
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil,
+				ucerror.New(fmt.Errorf("clientID:%s not found: %w", req.ClientID, err), consts.ErrBadRequest)
 		}
+		return nil, nil,
+			ucerror.New(fmt.Errorf("unable to get client by ID:%s: %w", req.ClientID, err), consts.ErrInternalServer)
 	}
 
 	if req.RedirectURI != "" && req.RedirectURI != client.RedirectURI {
-		return nil, "", nil, &appError.OAuthError{
-			Code:       consts.OAuthErrorInvalidRedirectURI,
-			StatusCode: http.StatusBadRequest,
-			Err:        fmt.Errorf("redirect_uri does not match registered URI"),
-		}
+		return nil, nil,
+			ucerror.New(
+				fmt.Errorf("%s does not match registered URI:%s", req.ClientID, client.RedirectURI),
+				consts.ErrBadRequest,
+			)
 	}
 
 	var scopes []consts.OAuthScope
 	requestedScopes := strings.Split(req.Scopes, ",")
 	for _, scope := range requestedScopes {
 		if !consts.OAuthScope(scope).IsValid() {
-			return nil, "", nil, &appError.OAuthError{
-				Code:       consts.OAuthErrorInvalidScope,
-				StatusCode: http.StatusBadRequest,
-				Err:        fmt.Errorf("invalid scope requested: %s", scope),
-			}
+			return nil, nil,
+				ucerror.New(fmt.Errorf("invalid scope requested: %s", scope), consts.ErrBadRequest)
 		}
 		scopes = append(scopes, consts.OAuthScope(scope))
 	}
@@ -114,7 +104,7 @@ func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req request
 		scopes = append(scopes, consts.OAuthScopeReadUser)
 	}
 
-	return &client, req.RedirectURI, scopes, nil
+	return &client, scopes, nil
 }
 
 func (uc *OAuthUsecase) getAuthorizeScopes(scopes []consts.OAuthScope) []responsedto.OAuthAuthorizeScopes {
@@ -122,7 +112,7 @@ func (uc *OAuthUsecase) getAuthorizeScopes(scopes []consts.OAuthScope) []respons
 	for _, s := range scopes {
 		scopesDesc = append(scopesDesc, responsedto.OAuthAuthorizeScopes{
 			Name:        string(s),
-			Description: consts.ScopeDescriptions[consts.OAuthScope(s)],
+			Description: consts.ScopeDescriptions[s],
 		})
 	}
 	return scopesDesc

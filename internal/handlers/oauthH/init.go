@@ -15,7 +15,12 @@ type OAuthHandler struct {
 	config config.OAuthConfig
 }
 
-func NewOAuthHandler(logger log.ILogger, router *gin.RouterGroup, config config.OAuthConfig, oauthuc oauthUC.IOAuthUsecase) *OAuthHandler {
+func NewOAuthHandler(
+	logger log.ILogger,
+	router *gin.RouterGroup,
+	config config.OAuthConfig,
+	oauthuc oauthUC.IOAuthUsecase,
+) *OAuthHandler {
 	return &OAuthHandler{
 		logger: logger,
 		uc:     oauthuc,

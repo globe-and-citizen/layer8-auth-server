@@ -39,17 +39,3 @@ var ScopeDescriptions = map[OAuthScope]string{
 const (
 	OAuthCookieName = "oauth_token"
 )
-
-type OAuthErrorCode string
-
-const (
-	OAuthErrorInvalidRedirectURI      OAuthErrorCode = "redirect_uri_mismatch"
-	OAuthErrorInvalidClient           OAuthErrorCode = "invalid_client"
-	OAuthErrorUnauthorizedClient      OAuthErrorCode = "unauthorized_client"
-	OAuthErrorAccessDenied            OAuthErrorCode = "access_denied"
-	OAuthErrorUnsupportedResponseType OAuthErrorCode = "unsupported_response_type"
-	OAuthErrorInvalidScope            OAuthErrorCode = "invalid_scope"
-	OAuthErrorServerError             OAuthErrorCode = "server_error"
-	OAuthErrorTemporarilyUnavailable  OAuthErrorCode = "temporarily_unavailable"
-	OAuthErrorInvalidAuthzCode        OAuthErrorCode = "invalid_authz_code"
-)

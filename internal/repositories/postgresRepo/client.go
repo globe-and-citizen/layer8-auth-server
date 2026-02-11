@@ -9,7 +9,7 @@ import (
 )
 
 func (r *PostgresRepository) UpdateClient(ctx context.Context, newClient gormModels.Client) error {
-	tx := r.db.WithContext(ctx).WithContext(ctx).Begin()
+	tx := r.db.WithContext(ctx).Begin()
 
 	result := tx.Model(&gormModels.Client{}).
 		Where("username = ?", newClient.Username).
@@ -43,7 +43,7 @@ func (r *PostgresRepository) UpdateClient(ctx context.Context, newClient gormMod
 	err := tx.Create(&balance).Error
 	if err != nil {
 		tx.Rollback()
-		return utils.StackError(fmt.Errorf("could not create client stats entry: %w", err))
+		return utils.StackError(fmt.Errorf("could not create client balance entry: %w", err))
 	}
 
 	tx.Commit()
@@ -94,7 +94,7 @@ func (r *PostgresRepository) GetClientProfile(ctx context.Context, username stri
 	return client, nil
 }
 
-func (r *PostgresRepository) PrecheckClientRegister(ctx context.Context, client gormModels.Client) error {
+func (r *PostgresRepository) CreateClient(ctx context.Context, client gormModels.Client) error {
 	if err := r.db.WithContext(ctx).Create(&client).Error; err != nil {
 		return utils.StackError(fmt.Errorf("failed to create a new client: %w", err))
 	}

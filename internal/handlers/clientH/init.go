@@ -38,12 +38,12 @@ func (h ClientHandler) RegisterAPIs() {
 	unauthenticatedGroup.POST("/client-login", h.Login)
 
 	authenticatedGroup := h.router.Group("client")
-	authenticatedGroup.Use(h.AuthenticateClient)
+	authenticatedGroup.Use(h.MdwAuthenticateClient)
 	authenticatedGroup.GET("/profile", h.GetProfile)
 	authenticatedGroup.GET("/usage-stats", h.GetUsageStatistics)
 	authenticatedGroup.GET("/unpaid-amount", h.GetUnpaidAmount)
 	authenticatedGroup.POST("/upload-certificate", h.UploadNTorCertificate)
 
 	extGroup := h.router.Group("ext")
-	extGroup.GET("/client-cert", h.AuthenticateForwardProxy, h.GetNTorCertificate)
+	extGroup.GET("/client-cert", h.MdwAuthenticateForwardProxy, h.GetNTorCertificate)
 }

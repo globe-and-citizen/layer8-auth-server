@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,13 +16,13 @@ func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
 		return
 	}
 
-	message, err := h.uc.VerifyPhoneNumber(c.Request.Context(), userID)
+	ucerr := h.uc.VerifyPhoneNumber(c.Request.Context(), userID)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, message, err)
+		handlers.HandlerUCError(c, h.logger, "Verify phone number failed", ucerr)
 		return
 	}
 
-	ginUtils.ReturnOK(c, message, nil)
+	ginUtils.ReturnOK(c, "Phone number has been verified!", nil)
 }
 
 func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
@@ -36,9 +36,9 @@ func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
 		return
 	}
 
-	status, message, err := h.uc.CheckPhoneNumberVerificationCode(c.Request.Context(), userID, request)
+	ucerr := h.uc.CheckPhoneNumberVerificationCode(c.Request.Context(), userID, request)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, status, message, err)
+		handlers.HandlerUCError(c, h.logger, "Check phone number verification code failed", ucerr)
 		return
 	}
 
@@ -51,9 +51,9 @@ func (h UserHandler) GenerateTelegramSessionID(c *gin.Context) {
 		return
 	}
 
-	sessionID, errMsg, err := h.uc.GenerateAndSaveTelegramSessionIDHash(c.Request.Context(), userID)
+	sessionID, ucerr := h.uc.GenerateAndSaveTelegramSessionIDHash(c.Request.Context(), userID)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, errMsg, err)
+		handlers.HandlerUCError(c, h.logger, "Generate telegram session ID failed", ucerr)
 		return
 	}
 

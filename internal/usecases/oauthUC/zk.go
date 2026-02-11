@@ -2,32 +2,22 @@ package oauthUC
 
 import (
 	"context"
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
-	appError "globe-and-citizen/layer8/auth-server/internal/errors"
-	"net/http"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 	"strings"
 )
 
-func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *appError.OAuthError) {
+func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *ucerror.UCError) {
 	if req.Scopes == "" {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorAccessDenied,
-			Description: "no access scopes granted",
-			StatusCode:  http.StatusBadRequest,
-			Err:         nil,
-		}
+		return nil, ucerror.New(fmt.Errorf("scopes is empty"), consts.ErrBadRequest)
 	}
 
 	userMetadata, err := uc.postgres.GetMetadataByUserID(ctx, req.UserID)
-	if err != nil {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorServerError,
-			Description: "failed to get user metadata",
-			StatusCode:  http.StatusInternalServerError,
-			Err:         err,
-		}
+	if err != nil { // must be an internal server error
+		return nil, ucerror.New(fmt.Errorf("failed to get user metadata: %w", err), consts.ErrInternalServer)
 	}
 
 	var zkMetadata responsedto.OAuthZkMetadata

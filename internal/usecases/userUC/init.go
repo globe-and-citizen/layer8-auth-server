@@ -10,24 +10,25 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 )
 
 type IUserUsecase interface { // todo usecase methods should return custom error type that contains http status codes, message and error
-	PrecheckRegister(ctx context.Context, req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, error)
-	Register(ctx context.Context, req requestdto.UserRegister) error
-	PrecheckLogin(ctx context.Context, req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, error)
-	Login(ctx context.Context, req requestdto.UserLogin) (responsedto.UserLogin, error)
-	GetProfile(ctx context.Context, userID uint) (responsedto.UserProfile, error)
-	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error
-	VerifyEmail(ctx context.Context, userID uint, userEmail string) error
-	CheckEmailVerificationCode(ctx context.Context, userId uint, code string) error
-	SaveProofOfEmailVerification(ctx context.Context, userID uint, req requestdto.UserCheckEmailVerificationCode) (msg string, err error)
-	VerifyPhoneNumber(ctx context.Context, userID uint) (errMsg string, err error)
-	CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) (httpStatus int, msg string, err error)
-	GenerateAndSaveTelegramSessionIDHash(ctx context.Context, userID uint) (sessionID []byte, msg string, err error)
-	PrecheckResetPassword(ctx context.Context, req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, error)
-	ResetPassword(ctx context.Context, request requestdto.UserResetPassword) (httpStatus int, msg string, err error)
-	VerifyUserJWTToken(ctx context.Context, tokenString string) (userID uint, userUsername string, err error)
+	PrecheckRegister(ctx context.Context, req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, *ucerror.UCError)
+	Register(ctx context.Context, req requestdto.UserRegister) *ucerror.UCError
+	PrecheckLogin(ctx context.Context, req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, *ucerror.UCError)
+	Login(ctx context.Context, req requestdto.UserLogin) (responsedto.UserLogin, *ucerror.UCError)
+	GetProfile(ctx context.Context, userID uint) (responsedto.UserProfile, *ucerror.UCError)
+	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) *ucerror.UCError
+	VerifyEmail(ctx context.Context, userID uint, userEmail string) *ucerror.UCError
+	CheckEmailVerificationCode(ctx context.Context, userId uint, code string) *ucerror.UCError
+	SaveProofOfEmailVerification(ctx context.Context, userID uint, req requestdto.UserCheckEmailVerificationCode) *ucerror.UCError
+	VerifyPhoneNumber(ctx context.Context, userID uint) *ucerror.UCError
+	CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) *ucerror.UCError
+	GenerateAndSaveTelegramSessionIDHash(ctx context.Context, userID uint) (sessionID []byte, ucError *ucerror.UCError)
+	PrecheckResetPassword(ctx context.Context, req requestdto.UserResetPasswordPrecheck) (responsedto.UserResetPasswordPrecheck, *ucerror.UCError)
+	ResetPassword(ctx context.Context, request requestdto.UserResetPassword) *ucerror.UCError
+	MdwVerifyUserJWTToken(ctx context.Context, tokenString string) (userID uint, userUsername string, err *ucerror.UCError)
 }
 
 type UserUsecase struct {

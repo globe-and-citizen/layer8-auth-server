@@ -1,6 +1,9 @@
 package consts
 
-import "errors"
+import (
+	"errors"
+	"net/http"
+)
 
 var (
 	ErrUnknownRepositoryFactory = errors.New("unknown repository factory")
@@ -12,4 +15,21 @@ var (
 	ErrInvalidPassword          = errors.New("password is invalid")
 	ErrMissingFields            = errors.New("missing fields")
 	ErrUserUnauthorized         = errors.New("unauthorized user") // todo rename?
+	ErrInternalServer           = errors.New("internal server error")
+	ErrBadRequest               = errors.New("bad request")
+	ErrUnauthorized             = errors.New("unauthorized")
+	ErrDuplicateKey             = errors.New("duplicate key")
+	ErrRequestCanceled          = errors.New("request canceled")
+	ErrRequestTimeout           = errors.New("request timeout")
 )
+
+func MapErrorToStatusCode(err error) int {
+	switch {
+	case errors.Is(err, ErrInternalServer), err == nil:
+		return http.StatusInternalServerError
+	case errors.Is(err, ErrUnauthorized):
+		return http.StatusUnauthorized
+	default:
+		return http.StatusBadRequest
+	}
+}

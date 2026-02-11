@@ -2,19 +2,20 @@ package oauthH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h OAuthHandler) GetZkUserMetadata(c *gin.Context) {
-	userID, err := h.getAccessTokenUserID(c)
-	if err != nil {
+	userID, isErr := h.getAccessTokenUserID(c)
+	if isErr {
 		return
 	}
 
-	scopes, err := h.getAccessTokenScopes(c)
-	if err != nil {
+	scopes, isErr := h.getAccessTokenScopes(c)
+	if isErr {
 		return
 	}
 
@@ -23,9 +24,9 @@ func (h OAuthHandler) GetZkUserMetadata(c *gin.Context) {
 		Scopes: scopes,
 	}
 
-	zkMetadata, oauthErr := h.uc.GetZkUserMetadata(c.Request.Context(), req)
-	if oauthErr != nil {
-		ginUtils.HandleError(c, h.logger, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
+	zkMetadata, ucErr := h.uc.GetZkUserMetadata(c.Request.Context(), req)
+	if ucErr != nil {
+		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return
 	}
 

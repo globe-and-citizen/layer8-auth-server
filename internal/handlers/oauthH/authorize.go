@@ -3,6 +3,7 @@ package oauthH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -15,9 +16,9 @@ func (h OAuthHandler) GetAuthorizeContext(c *gin.Context) {
 	req.Scopes = c.DefaultQuery("scope", string(consts.OAuthScopeReadUser))
 	req.RedirectURI = c.Query("redirect_uri")
 
-	response, err := h.uc.AuthorizeContext(c.Request.Context(), req)
+	response, err := h.uc.GetAuthorizeContext(c.Request.Context(), req)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, err.StatusCode, err.Description, err.Err)
+		handlers.HandlerUCError(c, h.logger, "", err)
 		return
 	}
 
@@ -25,8 +26,8 @@ func (h OAuthHandler) GetAuthorizeContext(c *gin.Context) {
 }
 
 func (h OAuthHandler) PostAuthorizeDecision(c *gin.Context) {
-	userID, err := h.getAuthenticatedUserID(c)
-	if err != nil {
+	userID, isErr := h.getAuthenticatedUserID(c)
+	if isErr {
 		return
 	}
 
@@ -58,14 +59,15 @@ func (h OAuthHandler) PostAuthorizeDecision(c *gin.Context) {
 	//	req.Share.Bio = true
 	//}
 
-	response, oauthErr := h.uc.AuthorizeDecision(c.Request.Context(), req, userID, h.config.AuthzCodeExpiry)
-	if oauthErr != nil {
+	response, ucErr := h.uc.PostAuthorizeDecision(c.Request.Context(), req, userID, h.config.AuthzCodeExpiry)
+	if ucErr != nil {
 		//if !req.ReturnResult {
 		//	utils.HandleError(c, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
 		//} else {
 		//	c.Redirect(http.StatusSeeOther, "/oauth/error?opt="+string(oauthErr.Code))
 		//}
-		ginUtils.HandleError(c, h.logger, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
+		//ginUtils.HandleError(c, h.logger, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
+		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return
 	}
 

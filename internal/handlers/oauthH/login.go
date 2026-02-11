@@ -3,6 +3,7 @@ package oauthH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -30,9 +31,9 @@ func (h OAuthHandler) UserLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.UserLogin(c.Request.Context(), request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform login", err)
+	response, ucErr := h.uc.UserLogin(c.Request.Context(), request)
+	if ucErr != nil {
+		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return
 	}
 

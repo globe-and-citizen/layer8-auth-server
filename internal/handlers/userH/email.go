@@ -2,6 +2,7 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -41,15 +42,16 @@ func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.uc.CheckEmailVerificationCode(ctx, userID, request.Code)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to verify code", err)
+	ucerr := h.uc.CheckEmailVerificationCode(ctx, userID, request.Code)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to verify code", ucerr)
 		return
 	}
 
-	errMsg, err := h.uc.SaveProofOfEmailVerification(ctx, userID, request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, errMsg, err)
+	ucerr = h.uc.SaveProofOfEmailVerification(ctx, userID, request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to verify code", ucerr)
+		return
 	}
 
 	ginUtils.ReturnOK(c, "Your email was successfully verified!", nil)

@@ -2,62 +2,45 @@ package oauthUC
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
-	appError "globe-and-citizen/layer8/auth-server/internal/errors"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
-	"net/http"
+
+	"gorm.io/gorm"
 )
 
-func (uc *OAuthUsecase) GetAccessToken(ctx context.Context, req requestdto.OAuthAccessToken) (*responsedto.OAuthAccessToken, *appError.OAuthError) {
+func (uc *OAuthUsecase) GetAccessToken(
+	ctx context.Context,
+	req requestdto.OAuthAccessToken,
+) (*responsedto.OAuthAccessToken, *ucerror.UCError) {
 	client, err := uc.postgres.GetClientByID(ctx, req.ClientID)
 	if err != nil {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorInvalidClient,
-			Description: "incorrect client id or secret",
-			StatusCode:  http.StatusUnauthorized,
-			Err:         err,
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ucerror.New(fmt.Errorf("client with ID:%s not found: %w", req.ClientID, err), consts.ErrBadRequest)
 		}
+		return nil, ucerror.New(fmt.Errorf("failed to get client with ID:%s: %w", req.ClientID, err), consts.ErrInternalServer)
 	}
 
 	if client.Secret != req.ClientSecret {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorInvalidClient,
-			Description: "incorrect client id or secret",
-			StatusCode:  http.StatusUnauthorized,
-			Err:         err,
-		}
+		return nil, ucerror.New(fmt.Errorf("incorrect client secret for client ID:%s", req.ClientID), consts.ErrBadRequest)
 	}
 
 	if client.RedirectURI != req.RedirectURI {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorInvalidRedirectURI,
-			Description: "redirect uri mismatch",
-			StatusCode:  http.StatusBadRequest,
-			Err:         fmt.Errorf("redirect uri mismatch"),
-		}
+		return nil, ucerror.New(fmt.Errorf("redirect uri mismatch"), consts.ErrBadRequest)
 	}
 
 	claims, err := oauth.VerifyAuthorizationCode(req.ClientSecret, req.AuthorizationCode)
 	if err != nil {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorInvalidAuthzCode,
-			Description: "failed to verify authorization code",
-			StatusCode:  http.StatusBadRequest,
-			Err:         err,
-		}
+		return nil, ucerror.New(fmt.Errorf("failed to verify authorization code: %w", err), consts.ErrBadRequest)
 	}
 
 	accessToken, err := uc.token.GenerateOAuthAccessToken(client, *claims)
 	if err != nil {
-		return nil, &appError.OAuthError{
-			Code:        consts.OAuthErrorServerError,
-			Description: "failed to generate access token",
-			StatusCode:  http.StatusInternalServerError,
-			Err:         err,
-		}
+		return nil, ucerror.New(fmt.Errorf("failed to generate access token: %w", err), consts.ErrInternalServer)
 	}
 
 	return &responsedto.OAuthAccessToken{

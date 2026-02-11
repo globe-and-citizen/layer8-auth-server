@@ -2,8 +2,8 @@ package clientH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,13 +14,13 @@ func (h ClientHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	profileResp, err := h.uc.GetProfile(c.Request.Context(), username)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get user profile, user not found", err)
+	profileResp, ucerr := h.uc.GetProfile(c.Request.Context(), username)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to get user profile", ucerr)
 		return
 	}
 
-	ginUtils.ReturnOK(c, "Get client profile successfully", profileResp)
+	ginUtils.ReturnOK(c, "Get client profile successful", profileResp)
 }
 
 func (h ClientHandler) GetUsageStatistics(c *gin.Context) {
@@ -29,9 +29,9 @@ func (h ClientHandler) GetUsageStatistics(c *gin.Context) {
 		return
 	}
 
-	response, status, msg, err := h.uc.GetUsageStatistics(c.Request.Context(), clientID)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, status, msg, err)
+	response, ucerr := h.uc.GetUsageStatistics(c.Request.Context(), clientID)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "", ucerr)
 		return
 	}
 
@@ -44,9 +44,9 @@ func (h ClientHandler) GetUnpaidAmount(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.GetUnpaidAmount(c.Request.Context(), clientID)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get unpaid amount", err)
+	response, ucerr := h.uc.GetUnpaidAmount(c.Request.Context(), clientID)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to get unpaid amount", ucerr)
 		return
 	}
 
@@ -64,9 +64,9 @@ func (h ClientHandler) UploadNTorCertificate(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.SaveNTorCertificate(c.Request.Context(), clientID, req)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "failed to save the SP x.509 certificate", err)
+	ucerr := h.uc.SaveNTorCertificate(c.Request.Context(), clientID, req)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "failed to save the SP x.509 certificate", ucerr)
 		return
 	}
 

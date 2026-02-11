@@ -2,6 +2,7 @@ package userH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -15,9 +16,9 @@ func (h UserHandler) AuthenticateUser(c *gin.Context) {
 		return
 	}
 
-	userID, username, err := h.uc.VerifyUserJWTToken(c.Request.Context(), token)
+	userID, username, ucerr := h.uc.MdwVerifyUserJWTToken(c.Request.Context(), token)
 	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
+		handlers.HandlerUCError(c, h.logger, "invalid token", ucerr)
 		return
 	}
 

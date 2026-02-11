@@ -2,8 +2,8 @@ package clientH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,9 +14,9 @@ func (h ClientHandler) PrecheckRegister(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckRegister(c.Request.Context(), request, h.config.ScramIterationCount)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to register user", err)
+	response, ucerr := h.uc.PrecheckRegister(c.Request.Context(), request, h.config.ScramIterationCount)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to register user", ucerr)
 		return
 	}
 
@@ -29,9 +29,9 @@ func (h ClientHandler) Register(c *gin.Context) {
 		return
 	}
 
-	err = h.uc.Register(c.Request.Context(), request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to register client", err)
+	ucerr := h.uc.Register(c.Request.Context(), request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to register client", ucerr)
 		return
 	}
 
@@ -44,9 +44,9 @@ func (h ClientHandler) PrecheckLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckLogin(c.Request.Context(), request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform precheck, service error", err)
+	response, ucerr := h.uc.PrecheckLogin(c.Request.Context(), request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to perform precheck", ucerr)
 		return
 	}
 
@@ -59,9 +59,9 @@ func (h ClientHandler) Login(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.Login(c.Request.Context(), request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform login", err)
+	response, ucerr := h.uc.Login(c.Request.Context(), request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to perform login", ucerr)
 		return
 	}
 
@@ -74,9 +74,9 @@ func (h ClientHandler) CheckBackendURI(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.CheckBackendURI(c.Request.Context(), request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to check backend url", err)
+	response, ucerr := h.uc.CheckBackendURI(c.Request.Context(), request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to check backend url", ucerr)
 		return
 	}
 

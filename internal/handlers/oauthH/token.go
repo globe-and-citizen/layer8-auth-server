@@ -2,6 +2,7 @@ package oauthH
 
 import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 
 	"github.com/gin-gonic/gin"
@@ -13,9 +14,9 @@ func (h OAuthHandler) GetAccessToken(c *gin.Context) {
 		return
 	}
 
-	response, oauthErr := h.uc.GetAccessToken(c.Request.Context(), req)
-	if oauthErr != nil {
-		ginUtils.HandleError(c, h.logger, oauthErr.StatusCode, oauthErr.Description, oauthErr.Err)
+	response, ucErr := h.uc.GetAccessToken(c.Request.Context(), req)
+	if ucErr != nil {
+		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return
 	}
 

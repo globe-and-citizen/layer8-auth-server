@@ -1,8 +1,8 @@
 package oauthH
 
 import (
-	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
+	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -16,7 +16,7 @@ func (h OAuthHandler) AuthenticateOAuth(c *gin.Context) {
 		return
 	}
 
-	userID, username, err := h.uc.VerifyOAuthJWTToken(c.Request.Context(), token)
+	userID, username, err := h.uc.MdwVerifyUserLoggedInToken(c.Request.Context(), token)
 	if err != nil {
 		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
@@ -35,7 +35,7 @@ func (h OAuthHandler) AuthenticateClient(c *gin.Context) {
 		return
 	}
 
-	userID, scopes, err := h.uc.VerifyAccessToken(c.Request.Context(), token)
+	userID, scopes, err := h.uc.MdwVerifyClientAccessToken(c.Request.Context(), token)
 	if err != nil {
 		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
 		return
@@ -47,34 +47,34 @@ func (h OAuthHandler) AuthenticateClient(c *gin.Context) {
 	c.Next()
 }
 
-func (h OAuthHandler) getAccessTokenUserID(c *gin.Context) (uint, error) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+func (h OAuthHandler) getAccessTokenUserID(c *gin.Context) (userID uint, isError bool) {
+	userID = c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	if userID == 0 {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get authorized userID", fmt.Errorf("failed to get authorized userID"))
-		return 0, consts.ErrUserUnauthorized
+		handlers.HandlerUCError(c, h.logger, "failed to get oauth access token userID from context", nil)
+		return 0, true
 	}
 
-	return userID, nil
+	return userID, false
 }
 
-func (h OAuthHandler) getAccessTokenScopes(c *gin.Context) (string, error) {
-	username := c.GetString(consts.MiddlewareKeyOAuthScopes)
-	if username == "" {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get authorized scopes", fmt.Errorf("failed to get authorized scopes"))
-		return "", consts.ErrUserUnauthorized
+func (h OAuthHandler) getAccessTokenScopes(c *gin.Context) (scopes string, isError bool) {
+	scopes = c.GetString(consts.MiddlewareKeyOAuthScopes)
+	if scopes == "" {
+		handlers.HandlerUCError(c, h.logger, "failed to get oauth access token scopes from context", nil)
+		return "", true
 	}
 
-	return username, nil
+	return scopes, false
 }
 
-func (h OAuthHandler) getAuthenticatedUserID(c *gin.Context) (uint, error) {
-	userID := c.GetUint(consts.MiddlewareKeyUserUserID)
+func (h OAuthHandler) getAuthenticatedUserID(c *gin.Context) (userID uint, isError bool) {
+	userID = c.GetUint(consts.MiddlewareKeyUserUserID)
 
 	if userID == 0 {
-		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "authenticate error", fmt.Errorf("Failed to get authenticated user ID from context"))
-		return 0, consts.ErrUserUnauthorized
+		handlers.HandlerUCError(c, h.logger, "failed to get oauth authenticated userID from context", nil)
+		return 0, true
 	}
 
-	return userID, nil
+	return userID, false
 }
