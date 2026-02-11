@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 )
 
@@ -17,7 +18,7 @@ func (r *PostgresRepository) GetClientBalance(ctx context.Context, clientId stri
 		Error
 
 	if err != nil {
-		return nil, err
+		return nil, utils.StackError(err)
 	}
 
 	return &clientStatistics, nil
@@ -36,7 +37,7 @@ func (r *PostgresRepository) UpdateClientBalance(ctx context.Context, clientId s
 
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	tx.Commit()
@@ -49,7 +50,7 @@ func (r *PostgresRepository) GetAllClientBalances(ctx context.Context) ([]gormMo
 
 	err := r.db.WithContext(ctx).Find(&allClientStatistics).Error
 	if err != nil {
-		return nil, err
+		return nil, utils.StackError(err)
 	}
 
 	return allClientStatistics, nil
@@ -65,7 +66,7 @@ func (r *PostgresRepository) AddClientPaymentReceipt(ctx context.Context, client
 
 	e := r.db.WithContext(ctx).Create(&paymentReceipt).Error
 	if e != nil {
-		return e
+		return utils.StackError(e)
 	}
 
 	return nil

@@ -57,8 +57,7 @@ func GetBearerToken(c *gin.Context) (string, error) {
 	authHeader := c.GetHeader("Authorization")
 
 	if !strings.HasPrefix(authHeader, consts.TokenTypeBearer) {
-		errorMsg := "invalid authorization header"
-		return "", fmt.Errorf(errorMsg)
+		return "", fmt.Errorf("invalid authorization header")
 	}
 
 	return authHeader[len(consts.TokenTypeBearer)+1:], nil

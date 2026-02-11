@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h OAuthHandler) AuthorizeContext(c *gin.Context) {
+func (h OAuthHandler) GetAuthorizeContext(c *gin.Context) {
 	var req requestdto.OAuthAuthorizeContext
 	req.ClientID = c.Query("client_id")
 	req.Scopes = c.DefaultQuery("scope", string(consts.OAuthScopeReadUser))
@@ -24,7 +24,7 @@ func (h OAuthHandler) AuthorizeContext(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func (h OAuthHandler) AuthorizeDecision(c *gin.Context) {
+func (h OAuthHandler) PostAuthorizeDecision(c *gin.Context) {
 	userID, err := h.getAuthenticatedUserID(c)
 	if err != nil {
 		return

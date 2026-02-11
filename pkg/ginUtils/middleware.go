@@ -63,7 +63,7 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 
 		c.Next() // handle request
 
-		if path == "/health" || strings.HasPrefix(path, "assets/") {
+		if path == "/health" || path == "/config.js" || strings.HasPrefix(path, "/assets") {
 			return
 		}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
 func (r *PostgresRepository) SaveProofOfEmailVerification(
@@ -21,7 +22,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	err = tx.Where("user_id = ?", userId).
@@ -29,7 +30,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 		Error
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	err = tx.Model(&gormModels.UserMetadata{}).
@@ -38,7 +39,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 		Error
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	tx.Commit()
@@ -55,7 +56,7 @@ func (r *PostgresRepository) SaveEmailVerificationData(ctx context.Context, data
 
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	tx.Commit()
@@ -66,7 +67,7 @@ func (r *PostgresRepository) GetEmailVerificationData(ctx context.Context, userI
 	var data gormModels.EmailVerificationData
 	e := r.db.WithContext(ctx).Where("user_id = ?", userId).First(&data).Error
 	if e != nil {
-		return gormModels.EmailVerificationData{}, e
+		return gormModels.EmailVerificationData{}, utils.StackError(e)
 	}
 
 	return data, nil
@@ -81,7 +82,7 @@ func (r *PostgresRepository) SavePhoneNumberVerificationData(ctx context.Context
 		Error
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	tx.Commit()
@@ -95,7 +96,7 @@ func (r *PostgresRepository) GetPhoneNumberVerificationData(
 	var data gormModels.PhoneNumberVerificationData
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&data).Error
 	if err != nil {
-		return gormModels.PhoneNumberVerificationData{}, err
+		return gormModels.PhoneNumberVerificationData{}, utils.StackError(err)
 	}
 
 	return data, nil
@@ -117,10 +118,9 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 			"phone_number_zk_proof":          phoneNumberZkProof,
 			"phone_number_zk_pair_id":        phoneNumberZkPairID,
 		}).Error
-
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	err = tx.Where("user_id = ?", userID).
@@ -128,7 +128,7 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 		Error
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	err = tx.Model(&gormModels.UserMetadata{}).
@@ -137,7 +137,7 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 		Error
 	if err != nil {
 		tx.Rollback()
-		return err
+		return utils.StackError(err)
 	}
 
 	tx.Commit()
@@ -145,8 +145,8 @@ func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 }
 
 func (r *PostgresRepository) SaveTelegramSessionIDHash(ctx context.Context, userID uint, sessionID []byte) error {
-	return r.db.WithContext(ctx).Model(&gormModels.User{}).
+	return utils.StackError(r.db.WithContext(ctx).Model(&gormModels.User{}).
 		Where("id = ?", userID).
 		Update("telegram_session_id_hash", sessionID).
-		Error
+		Error)
 }

@@ -2,6 +2,7 @@ package codeGenRepo
 
 import (
 	"globe-and-citizen/layer8/auth-server/pkg/code"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
 type ICodeGeneratorRepository interface {
@@ -20,9 +21,11 @@ func NewCodeGenerateRepository(generator code.ICodeGenerator) ICodeGeneratorRepo
 }
 
 func (cgr *CodeGeneratorRepository) GenerateEmailVerificationCode(salt string, userEmail string) (string, error) {
-	return cgr.generator.GenerateCode(salt, userEmail)
+	verCode, err := cgr.generator.GenerateCode(salt, userEmail)
+	return verCode, utils.StackError(err)
 }
 
 func (cgr *CodeGeneratorRepository) GeneratePhoneVerificationCode(salt string, phoneNumber string) (string, error) {
-	return cgr.generator.GenerateCode(salt, phoneNumber)
+	verCode, err := cgr.generator.GenerateCode(salt, phoneNumber)
+	return verCode, utils.StackError(err)
 }

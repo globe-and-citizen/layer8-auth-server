@@ -4,6 +4,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func NewEmailRepository(config config.EmailConfig) *EmailRepository {
 }
 
 func (r *EmailRepository) SendVerificationEmail(user *gormModels.User, userEmail string, verificationCode string) error {
-	return r.sender.Send(
+	err := r.sender.Send(
 		&models.Email{
 			From:    r.verifier.adminEmailAddress,
 			To:      userEmail,
@@ -40,10 +41,12 @@ func (r *EmailRepository) SendVerificationEmail(user *gormModels.User, userEmail
 			},
 		},
 	)
+
+	return utils.StackError(err)
 }
 
 func (r *EmailRepository) VerifyCode(verificationData *gormModels.EmailVerificationData, code string) error {
-	return r.verifier.VerifyCode(verificationData, code)
+	return utils.StackError(r.verifier.VerifyCode(verificationData, code))
 }
 
 func (r *EmailRepository) GetVerificationCodeExpiry() time.Duration {

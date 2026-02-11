@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/pkg/telegram"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/url"
 	"time"
 )
@@ -32,14 +33,17 @@ func (r *PhoneRepository) GetPhoneNumberViaTelegramBot(telegramSessionIDHash []b
 	var telegramUserID int64
 	telegramUserID, err = r.telegramBot.Start(telegramSessionIDHash)
 	if err != nil {
+		err = utils.StackError(err)
 		return
 	}
 
-	return r.telegramBot.WaitForContactShare(telegramUserID)
+	phoneNumber, chatID, err = r.telegramBot.WaitForContactShare(telegramUserID)
+	err = utils.StackError(err)
+	return
 }
 
 func (r *PhoneRepository) SendVerificationCode(chatID int64, verificationCode string) error {
-	return r.telegramBot.SendVerificationCode(chatID, verificationCode)
+	return utils.StackError(r.telegramBot.SendVerificationCode(chatID, verificationCode))
 }
 
 func (r *PhoneRepository) GetVerificationCodeExiry() time.Duration {

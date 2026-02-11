@@ -6,6 +6,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,7 +21,7 @@ func (t TokenRepository) GenerateOAuthJWTToken(user gormModels.User) (string, er
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(t.oauthJWTSecret)
 	if err != nil {
-		return "", fmt.Errorf("could not generate oauth token: %s", err)
+		return "", utils.StackError(fmt.Errorf("could not generate oauth token: %s", err))
 	}
 
 	return tokenString, nil
@@ -32,11 +33,11 @@ func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (models.OAuthAu
 		return t.oauthJWTSecret, nil
 	})
 	if err != nil {
-		return models.OAuthAuthenticationClaims{}, err
+		return models.OAuthAuthenticationClaims{}, utils.StackError(err)
 	}
 
 	if !token.Valid {
-		return models.OAuthAuthenticationClaims{}, fmt.Errorf("invalid token")
+		return models.OAuthAuthenticationClaims{}, utils.StackError(fmt.Errorf("invalid token"))
 	}
 
 	return *claims, nil
@@ -58,7 +59,7 @@ func (t TokenRepository) GenerateOAuthAccessToken(client gormModels.Client, auth
 
 	signedToken, err := token.SignedString([]byte(client.Secret))
 	if err != nil {
-		return "", err
+		return "", utils.StackError(err)
 	}
 
 	return signedToken, nil
@@ -69,7 +70,7 @@ func (t TokenRepository) ParseOAuthAccessToken(tokenString string) (*models.Clie
 	parser := jwt.NewParser()
 	_, _, err := parser.ParseUnverified(tokenString, claims)
 	if err != nil {
-		return nil, err
+		return nil, utils.StackError(err)
 	}
 
 	return claims, nil
@@ -81,11 +82,11 @@ func (t TokenRepository) VerifyOAuthAccessToken(tokenString string, clientSecret
 		return clientSecret, nil
 	})
 	if err != nil {
-		return err
+		return utils.StackError(err)
 	}
 
 	if !token.Valid {
-		return fmt.Errorf("invalid token")
+		return utils.StackError(fmt.Errorf("invalid token"))
 	}
 
 	return nil

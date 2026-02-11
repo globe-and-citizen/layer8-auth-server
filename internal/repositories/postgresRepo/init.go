@@ -38,9 +38,9 @@ func (r *PostgresRepository) TX() PostgresRepository {
 }
 
 func (r *PostgresRepository) Commit() error {
-	return r.db.Commit().Error
+	return utils.StackError(r.db.Commit().Error)
 }
 
 func (r *PostgresRepository) Rollback() error {
-	return r.db.Rollback().Error
+	return utils.StackError(r.db.Rollback().Error)
 }

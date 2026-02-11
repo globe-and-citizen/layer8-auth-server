@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"strconv"
 	"time"
 
@@ -43,7 +44,7 @@ func (r *InfluxdbRepository) IsConnected(ctx context.Context) error {
 
 	result, err := queryAPI.Query(ctx, query)
 	if err != nil {
-		return err
+		return utils.StackError(err)
 	}
 	// ensure we consume and check for query errors
 	defer result.Close()
@@ -53,7 +54,7 @@ func (r *InfluxdbRepository) IsConnected(ctx context.Context) error {
 		return nil
 	}
 	if result.Err() != nil {
-		return result.Err()
+		return utils.StackError(result.Err())
 	}
 	// no records but no error -> server responded; treat as healthy
 	return nil
@@ -75,7 +76,7 @@ func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(ctx context.Con
 
 	rawDataFromInflux, err := queryAPI.Query(ctx, query)
 	if err != nil {
-		return models.Statistics{}, err
+		return models.Statistics{}, utils.StackError(err)
 	}
 
 	var totalRequest float64
@@ -126,7 +127,7 @@ func (r *InfluxdbRepository) GetTotalByDateRangeByClient(ctx context.Context, st
 
 	rawDataFromInflux, err := queryAPI.Query(ctx, query)
 	if err != nil {
-		return 0, err
+		return 0, utils.StackError(err)
 	}
 
 	// TODO: assert that rawDataFromInflux contains only one record
@@ -140,7 +141,7 @@ func (r *InfluxdbRepository) GetTotalByDateRangeByClient(ctx context.Context, st
 		}
 	}
 
-	return decimalValueTotal, err
+	return decimalValueTotal, utils.StackError(err)
 }
 
 func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(ctx context.Context, start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error) {
@@ -156,7 +157,7 @@ func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(ctx
 
 	queryResult, err := queryAPI.Query(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, utils.StackError(err)
 	}
 
 	response := make([]models.ClientUsageStatisticsByRange, 0)
@@ -168,7 +169,7 @@ func (r *InfluxdbRepository) GetTotalUsageStatisticsByDateRangeForEachClient(ctx
 
 		totalBytes, err := strconv.ParseFloat(fmt.Sprint(rawTotalBytes), 64)
 		if err != nil {
-			return nil, err
+			return nil, utils.StackError(err)
 		}
 
 		if totalBytes == 0 {

@@ -29,8 +29,8 @@ func (h OAuthHandler) RegisterAPIs() {
 	h.router.POST("/oauth-login", h.UserLogin)
 
 	oauthGroup := h.router.Group("/oauth")
-	oauthGroup.GET("/authorize", h.AuthenticateOAuth, h.AuthorizeContext)
-	oauthGroup.POST("/authorize", h.AuthenticateOAuth, h.AuthorizeDecision)
+	oauthGroup.GET("/authorize", h.AuthenticateOAuth, h.GetAuthorizeContext)
+	oauthGroup.POST("/authorize", h.AuthenticateOAuth, h.PostAuthorizeDecision)
 
 	oauthGroup.POST("/token", h.GetAccessToken)
 	oauthGroup.POST("/zk-metadata", h.AuthenticateClient, h.GetZkUserMetadata)

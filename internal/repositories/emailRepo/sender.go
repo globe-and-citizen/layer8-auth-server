@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/models"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"net/http"
 
 	"github.com/mailersend/mailersend-go"
@@ -64,14 +65,14 @@ func (s *EmailSender) Send(email *models.Email) error {
 
 	response, e := mailerSendClient.Email.Send(ctx, message)
 	if e != nil {
-		return fmt.Errorf("error while sending a verification email via MailerSend: %e", e)
+		return utils.StackError(fmt.Errorf("error while sending a verification email via MailerSend: %e", e))
 	}
 
 	if response.StatusCode != http.StatusAccepted {
-		return fmt.Errorf(
+		return utils.StackError(fmt.Errorf(
 			"failed to send a verification email, status code %d",
 			response.StatusCode,
-		)
+		))
 	}
 
 	return nil

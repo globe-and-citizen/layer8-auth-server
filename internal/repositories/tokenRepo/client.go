@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,7 +23,7 @@ func (t TokenRepository) GenerateClientJWTToken(client gormModels.Client) (strin
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := jwtToken.SignedString(t.clientJWTSecret)
 	if err != nil {
-		return "", err
+		return "", utils.StackError(err)
 	}
 
 	return tokenString, nil
@@ -34,11 +35,11 @@ func (t TokenRepository) VerifyClientJWTToken(tokenString string) (models.Client
 		return t.clientJWTSecret, nil
 	})
 	if err != nil {
-		return models.ClientClaims{}, err
+		return models.ClientClaims{}, utils.StackError(err)
 	}
 
 	if !token.Valid {
-		return models.ClientClaims{}, fmt.Errorf("invalid token")
+		return models.ClientClaims{}, utils.StackError(fmt.Errorf("invalid token"))
 	}
 
 	return *claims, nil

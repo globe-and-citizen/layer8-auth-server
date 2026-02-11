@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 )
 
@@ -25,16 +26,18 @@ func NewEmailVerifier(config config.EmailConfig) *EmailVerifier {
 
 func (v *EmailVerifier) VerifyCode(verificationData *gormModels.EmailVerificationData, code string) error {
 	if verificationData.ExpiresAt.Before(v.now()) {
-		return fmt.Errorf(
-			"the verification code is expired. Please try to run the verification process again",
+		return utils.StackError(
+			fmt.Errorf("the verification code is expired. Please try to run the verification process again"),
 		)
 	}
 
 	if code != verificationData.VerificationCode {
-		return fmt.Errorf(
-			"invalid verification code, expected %s, got %s",
-			verificationData.VerificationCode,
-			code,
+		return utils.StackError(
+			fmt.Errorf(
+				"invalid verification code, expected %s, got %s",
+				verificationData.VerificationCode,
+				code,
+			),
 		)
 	}
 
