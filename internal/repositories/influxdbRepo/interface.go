@@ -14,7 +14,7 @@ import (
 
 type IInfluxdbRepository interface {
 	IsConnected(ctx context.Context) error
-	GetTotalRequestsInLastXDaysByClient(ctx context.Context, days int, clientID string) (models.Statistics, error)
+	GetTotalRequestsInLastXDaysByClient(ctx context.Context, days int, clientID string) (*models.Statistics, error)
 	GetTotalByDateRangeByClient(ctx context.Context, start time.Time, end time.Time, clientID string) (float64, error)
 	GetTotalUsageStatisticsByDateRangeForEachClient(ctx context.Context, start time.Time, end time.Time) ([]models.ClientUsageStatisticsByRange, error)
 }
@@ -60,7 +60,7 @@ func (r *InfluxdbRepository) IsConnected(ctx context.Context) error {
 	return nil
 }
 
-func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(ctx context.Context, days int, clientID string) (models.Statistics, error) {
+func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(ctx context.Context, days int, clientID string) (*models.Statistics, error) {
 	result := make([]models.UsageStatisticPerDate, 0)
 
 	queryAPI := r.client.QueryAPI(r.config.Org)
@@ -76,7 +76,7 @@ func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(ctx context.Con
 
 	rawDataFromInflux, err := queryAPI.Query(ctx, query)
 	if err != nil {
-		return models.Statistics{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
 	var totalRequest float64
@@ -106,7 +106,7 @@ func (r *InfluxdbRepository) GetTotalRequestsInLastXDaysByClient(ctx context.Con
 		averageRequest = totalRequest / float64(len(result))
 	}
 
-	return models.Statistics{
+	return &models.Statistics{
 		Total:   totalRequest,
 		Average: averageRequest,
 		Details: result,

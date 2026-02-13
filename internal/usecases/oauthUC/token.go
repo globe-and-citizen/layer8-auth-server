@@ -38,7 +38,7 @@ func (uc *OAuthUsecase) GetAccessToken(
 		return nil, ucerror.New(fmt.Errorf("failed to verify authorization code: %w", err), consts.ErrBadRequest)
 	}
 
-	accessToken, err := uc.token.GenerateOAuthAccessToken(client, *claims)
+	accessToken, err := uc.token.GenerateOAuthAccessToken(*client, *claims)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("failed to generate access token: %w", err), consts.ErrInternalServer)
 	}

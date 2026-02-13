@@ -15,7 +15,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func (uc *UserUsecase) PrecheckRegister(ctx context.Context, req requestdto.UserRegisterPrecheck, iterCount int) (responsedto.UserRegisterPrecheck, *ucerror.UCError) {
+func (uc *UserUsecase) PrecheckRegister(
+	ctx context.Context, req requestdto.UserRegisterPrecheck, iterCount int,
+) (*responsedto.UserRegisterPrecheck, *ucerror.UCError) {
 	registerMsg := scram.CreateServerRegisterFirstMessage(iterCount)
 
 	user := gormModels.User{
@@ -27,10 +29,10 @@ func (uc *UserUsecase) PrecheckRegister(ctx context.Context, req requestdto.User
 
 	err := uc.postgres.CreateUser(ctx, user)
 	if err != nil {
-		return responsedto.UserRegisterPrecheck{}, ucerror.New(fmt.Errorf("failed to create user: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to create user: %w", err), consts.ErrInternalServer)
 	}
 
-	return responsedto.UserRegisterPrecheck{
+	return &responsedto.UserRegisterPrecheck{
 		ServerRegisterFirstMessage: registerMsg,
 	}, nil
 }
@@ -59,55 +61,57 @@ func (uc *UserUsecase) Register(ctx context.Context, req requestdto.UserRegister
 	return nil
 }
 
-func (uc *UserUsecase) PrecheckLogin(ctx context.Context, req requestdto.UserLoginPrecheck) (responsedto.UserLoginPrecheck, *ucerror.UCError) {
+func (uc *UserUsecase) PrecheckLogin(
+	ctx context.Context, req requestdto.UserLoginPrecheck,
+) (*responsedto.UserLoginPrecheck, *ucerror.UCError) {
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return responsedto.UserLoginPrecheck{}, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+			return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
 		}
-		return responsedto.UserLoginPrecheck{}, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
 	}
 
 	loginPrecheckResp := responsedto.UserLoginPrecheck{
 		ServerLoginFirstMessage: scram.CreateServerLoginFirstMessage(user.ScramSalt, user.ScramIterationCount, req.ClientLoginFirstMessage),
 	}
 
-	return loginPrecheckResp, nil
+	return &loginPrecheckResp, nil
 }
 
-func (uc *UserUsecase) Login(ctx context.Context, req requestdto.UserLogin) (responsedto.UserLogin, *ucerror.UCError) {
+func (uc *UserUsecase) Login(ctx context.Context, req requestdto.UserLogin) (*responsedto.UserLogin, *ucerror.UCError) {
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return responsedto.UserLogin{}, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+			return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
 		}
-		return responsedto.UserLogin{}, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
 	}
 
-	tokenString, err := uc.token.GenerateUserJWTToken(user)
+	tokenString, err := uc.token.GenerateUserJWTToken(*user)
 	if err != nil {
-		return responsedto.UserLogin{}, ucerror.New(fmt.Errorf("error generating token: %v", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("error generating token: %v", err), consts.ErrInternalServer)
 	}
 
 	serverFinalMsg, err := scram.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce, user.ScramSalt,
 		user.ScramIterationCount, user.ScramStoredKey, user.ScramServerKey)
 	if err != nil {
-		return responsedto.UserLogin{}, ucerror.New(fmt.Errorf("error creating server final message: %v", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("error creating server final message: %v", err), consts.ErrInternalServer)
 	}
 
-	return responsedto.UserLogin{
+	return &responsedto.UserLogin{
 		ServerLoginFinalMessage: serverFinalMsg,
 		Token:                   tokenString,
 	}, nil
 }
 
-func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (responsedto.UserProfile, *ucerror.UCError) {
+func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (*responsedto.UserProfile, *ucerror.UCError) {
 	user, metadata, err := uc.postgres.GetUserProfile(ctx, userID)
 	if err != nil {
-		return responsedto.UserProfile{}, ucerror.New(fmt.Errorf("failed to get user profile: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to get user profile: %w", err), consts.ErrInternalServer)
 	}
 
-	return responsedto.UserProfile{
+	return &responsedto.UserProfile{
 		Username:            user.Username,
 		DisplayName:         metadata.DisplayName,
 		Bio:                 metadata.Bio,
@@ -120,13 +124,13 @@ func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (responsedto
 func (uc *UserUsecase) PrecheckResetPassword(
 	ctx context.Context,
 	req requestdto.UserResetPasswordPrecheck,
-) (responsedto.UserResetPasswordPrecheck, *ucerror.UCError) {
+) (*responsedto.UserResetPasswordPrecheck, *ucerror.UCError) {
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
-		return responsedto.UserResetPasswordPrecheck{}, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
 	}
 
-	return responsedto.UserResetPasswordPrecheck{
+	return &responsedto.UserResetPasswordPrecheck{
 		ServerRegisterFirstMessage: scram.ServerRegisterFirstMessage{
 			Salt:           user.ScramSalt,
 			IterationCount: user.ScramIterationCount,

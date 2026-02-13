@@ -7,12 +7,12 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
-func (r *PostgresRepository) GetMetadataByUserID(ctx context.Context, userID uint) (gormModels.UserMetadata, error) {
+func (r *PostgresRepository) GetMetadataByUserID(ctx context.Context, userID uint) (*gormModels.UserMetadata, error) {
 	var userMetadata gormModels.UserMetadata
 	if err := r.db.WithContext(ctx).Where("id = ?", userID).Find(&userMetadata).Error; err != nil {
-		return gormModels.UserMetadata{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
-	return userMetadata, nil
+	return &userMetadata, nil
 }
 
 func (r *PostgresRepository) UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error {

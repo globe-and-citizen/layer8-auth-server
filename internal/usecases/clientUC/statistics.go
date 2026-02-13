@@ -13,7 +13,7 @@ import (
 func (uc *ClientUsecase) GetUsageStatistics(
 	ctx context.Context,
 	clientID string,
-) (responsedto.ClientUsageStatistic, *ucerror.UCError) {
+) (*responsedto.ClientUsageStatistic, *ucerror.UCError) {
 	now := time.Now()
 	firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	firstDayOfNextMonth := time.Date(firstDayOfMonth.Year(), firstDayOfMonth.Month()+1, 1, 0, 0, 0, 0, time.UTC)
@@ -23,19 +23,19 @@ func (uc *ClientUsecase) GetUsageStatistics(
 
 	thirtyDaysStatistic, err := uc.influxdb.GetTotalRequestsInLastXDaysByClient(ctx, 30, clientID)
 	if err != nil {
-		return responsedto.ClientUsageStatistic{}, ucerror.New(fmt.Errorf("failed to get last thirty days usage statistic: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to get last thirty days usage statistic: %w", err), consts.ErrInternalServer)
 	}
 
 	monthToDateTotal, err := uc.influxdb.GetTotalByDateRangeByClient(ctx, firstDayOfMonth, firstDayOfNextMonth, clientID)
 	if err != nil {
-		return responsedto.ClientUsageStatistic{}, ucerror.New(fmt.Errorf("failed to get month to date usage statistic: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to get month to date usage statistic: %w", err), consts.ErrInternalServer)
 	}
 
 	finalResponse := responsedto.ClientUsageStatistic{
 		MonthToDate: models.MonthToDateStatistic{
 			Month: firstDayOfMonth.Month().String(),
 		},
-		LastThirtyDaysStatistic: thirtyDaysStatistic,
+		LastThirtyDaysStatistic: *thirtyDaysStatistic,
 		MetricType:              "data_transferred",
 		UnitOfMeasurement:       "GB",
 	}
@@ -45,5 +45,5 @@ func (uc *ClientUsecase) GetUsageStatistics(
 		finalResponse.MonthToDate.ForecastedEndOfMonthUsage = (monthToDateTotal / 1000000000) + float64(totalDaysBeforeNextMonth)*thirtyDaysStatistic.Average
 	}
 
-	return finalResponse, nil
+	return &finalResponse, nil
 }

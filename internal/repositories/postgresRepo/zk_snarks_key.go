@@ -15,12 +15,12 @@ func (r *PostgresRepository) SaveZkSnarksKeyPair(keyPair gormModels.ZkSnarksKeyP
 	return keyPair.ID, nil
 }
 
-func (r *PostgresRepository) GetLatestZkSnarksKeys() (gormModels.ZkSnarksKeyPair, error) {
+func (r *PostgresRepository) GetLatestZkSnarksKeys() (*gormModels.ZkSnarksKeyPair, error) {
 	var keyPair gormModels.ZkSnarksKeyPair
 	err := r.db.Model(&gormModels.ZkSnarksKeyPair{}).Last(&keyPair).Error
 	if err != nil {
-		return gormModels.ZkSnarksKeyPair{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
-	return keyPair, nil
+	return &keyPair, nil
 }

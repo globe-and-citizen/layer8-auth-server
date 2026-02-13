@@ -29,18 +29,18 @@ func (t TokenRepository) GenerateClientJWTToken(client gormModels.Client) (strin
 	return tokenString, nil
 }
 
-func (t TokenRepository) VerifyClientJWTToken(tokenString string) (models.ClientClaims, error) {
+func (t TokenRepository) VerifyClientJWTToken(tokenString string) (*models.ClientClaims, error) {
 	claims := &models.ClientClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return t.clientJWTSecret, nil
 	})
 	if err != nil {
-		return models.ClientClaims{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
 	if !token.Valid {
-		return models.ClientClaims{}, utils.StackError(fmt.Errorf("invalid token"))
+		return nil, utils.StackError(fmt.Errorf("invalid token"))
 	}
 
-	return *claims, nil
+	return claims, nil
 }

@@ -50,20 +50,20 @@ func (r *PostgresRepository) UpdateClient(ctx context.Context, newClient gormMod
 	return nil
 }
 
-func (r *PostgresRepository) GetClientByName(ctx context.Context, name string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByName(ctx context.Context, name string) (*gormModels.Client, error) {
 	var client gormModels.Client
 	if err := r.db.WithContext(ctx).Where("name = ?", name).First(&client).Error; err != nil {
-		return gormModels.Client{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
-	return client, nil
+	return &client, nil
 }
 
-func (r *PostgresRepository) GetClientByBackendURI(ctx context.Context, backendURI string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByBackendURI(ctx context.Context, backendURI string) (*gormModels.Client, error) {
 	var client gormModels.Client
 	if err := r.db.WithContext(ctx).Where("backend_uri = ?", backendURI).First(&client).Error; err != nil {
-		return gormModels.Client{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
-	return client, nil
+	return &client, nil
 }
 
 func (r *PostgresRepository) IsBackendURIExists(ctx context.Context, backendURL string) (bool, error) {
@@ -78,20 +78,20 @@ func (r *PostgresRepository) IsBackendURIExists(ctx context.Context, backendURL 
 	return count > 0, nil
 }
 
-func (r *PostgresRepository) GetClientByUsername(ctx context.Context, username string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByUsername(ctx context.Context, username string) (*gormModels.Client, error) {
 	var client gormModels.Client
 	if err := r.db.WithContext(ctx).Where("username = ?", username).First(&client).Error; err != nil {
-		return gormModels.Client{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
-	return client, nil
+	return &client, nil
 }
 
-func (r *PostgresRepository) GetClientProfile(ctx context.Context, username string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientProfile(ctx context.Context, username string) (*gormModels.Client, error) {
 	var client gormModels.Client
 	if err := r.db.WithContext(ctx).Where("username = ?", username).First(&client).Error; err != nil {
-		return gormModels.Client{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
-	return client, nil
+	return &client, nil
 }
 
 func (r *PostgresRepository) CreateClient(ctx context.Context, client gormModels.Client) error {
@@ -109,12 +109,12 @@ func (r *PostgresRepository) SaveX509Certificate(ctx context.Context, clientID s
 		Error)
 }
 
-func (r *PostgresRepository) GetClientByID(ctx context.Context, id string) (gormModels.Client, error) {
+func (r *PostgresRepository) GetClientByID(ctx context.Context, id string) (*gormModels.Client, error) {
 	var client gormModels.Client
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&client).Error
 	if err != nil {
-		return gormModels.Client{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
-	return client, nil
+	return &client, nil
 }

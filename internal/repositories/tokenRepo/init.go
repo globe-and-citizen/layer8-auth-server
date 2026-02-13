@@ -8,11 +8,11 @@ import (
 
 type ITokenRepository interface {
 	GenerateUserJWTToken(user gormModels.User) (string, error)
-	VerifyUserJWTToken(tokenString string) (models.UserClaims, error)
+	VerifyUserJWTToken(tokenString string) (*models.UserClaims, error)
 	GenerateClientJWTToken(client gormModels.Client) (string, error)
-	VerifyClientJWTToken(tokenString string) (models.ClientClaims, error)
+	VerifyClientJWTToken(tokenString string) (*models.ClientClaims, error)
 	GenerateOAuthJWTToken(user gormModels.User) (string, error)
-	VerifyOAuthJWTToken(tokenString string) (models.OAuthAuthenticationClaims, error)
+	VerifyOAuthJWTToken(tokenString string) (*models.OAuthAuthenticationClaims, error)
 	GenerateOAuthAccessToken(client gormModels.Client, authClaims oauth.AuthorizationCodeClaims) (string, error)
 	ParseOAuthAccessToken(tokenString string) (*models.ClientAccessTokenClaims, error)
 	VerifyOAuthAccessToken(tokenString string, clientSecret []byte) error

@@ -42,17 +42,17 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, updates gormModels.
 	return nil
 }
 
-func (r *PostgresRepository) GetUserByID(ctx context.Context, userId uint) (gormModels.User, error) {
+func (r *PostgresRepository) GetUserByID(ctx context.Context, userId uint) (*gormModels.User, error) {
 	var user gormModels.User
 	e := r.db.WithContext(ctx).Where("id = ?", userId).First(&user).Error
 	if e != nil {
-		return gormModels.User{}, utils.StackError(e)
+		return nil, utils.StackError(e)
 	}
 
-	return user, e
+	return &user, e
 }
 
-func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username string) (gormModels.User, error) {
+func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username string) (*gormModels.User, error) {
 	var user gormModels.User
 
 	err := r.db.WithContext(ctx).Model(&gormModels.User{}).
@@ -60,22 +60,22 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 		First(&user).
 		Error
 	if err != nil {
-		return gormModels.User{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
-	return user, nil
+	return &user, nil
 }
 
-func (r *PostgresRepository) GetUserProfile(ctx context.Context, userID uint) (gormModels.User, gormModels.UserMetadata, error) {
+func (r *PostgresRepository) GetUserProfile(ctx context.Context, userID uint) (*gormModels.User, *gormModels.UserMetadata, error) {
 	var user gormModels.User
 	if err := r.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
-		return gormModels.User{}, gormModels.UserMetadata{}, utils.StackError(err)
+		return nil, nil, utils.StackError(err)
 	}
 	var userMetadata gormModels.UserMetadata
 	if err := r.db.WithContext(ctx).Where("id = ?", userID).Find(&userMetadata).Error; err != nil {
-		return gormModels.User{}, gormModels.UserMetadata{}, utils.StackError(err)
+		return nil, nil, utils.StackError(err)
 	}
-	return user, userMetadata, nil
+	return &user, &userMetadata, nil
 }
 
 func (r *PostgresRepository) CreateUser(ctx context.Context, user gormModels.User) error {

@@ -24,7 +24,13 @@ func (r *PostgresRepository) GetClientBalance(ctx context.Context, clientId stri
 	return &clientStatistics, nil
 }
 
-func (r *PostgresRepository) UpdateClientBalance(ctx context.Context, clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdatedAt time.Time) error {
+func (r *PostgresRepository) UpdateClientBalance(
+	ctx context.Context,
+	clientId string,
+	newBalance string,
+	status gormModels.AccountStatus,
+	lastUsageUpdatedAt time.Time,
+) error {
 	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 
 	err := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
@@ -56,7 +62,13 @@ func (r *PostgresRepository) GetAllClientBalances(ctx context.Context) ([]gormMo
 	return allClientStatistics, nil
 }
 
-func (r *PostgresRepository) AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, timestamp time.Time, txHash string) error {
+func (r *PostgresRepository) AddClientPaymentReceipt(
+	ctx context.Context,
+	clientId string,
+	amount string,
+	timestamp time.Time,
+	txHash string,
+) error {
 	paymentReceipt := gormModels.ClientPaymentReceipt{
 		ClientID:      clientId,
 		PaidAmountWei: amount,

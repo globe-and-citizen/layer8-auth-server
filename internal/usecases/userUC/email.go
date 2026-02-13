@@ -27,7 +27,7 @@ func (uc *UserUsecase) VerifyEmail(ctx context.Context, userID uint, userEmail s
 		return ucerror.New(fmt.Errorf("failed to generate verification code: %w", err), consts.ErrInternalServer)
 	}
 
-	err = uc.email.SendVerificationEmail(&user, userEmail, verificationCode)
+	err = uc.email.SendVerificationEmail(user, userEmail, verificationCode)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to send verification email: %w", err), consts.ErrInternalServer)
 	}
@@ -49,7 +49,7 @@ func (uc *UserUsecase) CheckEmailVerificationCode(ctx context.Context, userId ui
 		return ucerror.New(fmt.Errorf("failed to get verification data: %w", err), consts.ErrInternalServer)
 	}
 
-	err = uc.email.VerifyCode(&verificationData, code)
+	err = uc.email.VerifyCode(verificationData, code)
 	return ucerror.New(fmt.Errorf("error verify verification code: %w", err), consts.ErrInternalServer)
 }
 

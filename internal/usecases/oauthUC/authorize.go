@@ -104,7 +104,7 @@ func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req request
 		scopes = append(scopes, consts.OAuthScopeReadUser)
 	}
 
-	return &client, scopes, nil
+	return client, scopes, nil
 }
 
 func (uc *OAuthUsecase) getAuthorizeScopes(scopes []consts.OAuthScope) []responsedto.OAuthAuthorizeScopes {

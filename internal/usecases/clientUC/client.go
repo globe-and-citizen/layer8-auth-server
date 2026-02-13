@@ -28,7 +28,7 @@ func (uc *ClientUsecase) PrecheckRegister(
 	ctx context.Context,
 	req requestdto.ClientRegisterPrecheck,
 	iterCount int,
-) (responsedto.ClientRegisterPrecheck, *ucerror.UCError) {
+) (*responsedto.ClientRegisterPrecheck, *ucerror.UCError) {
 	scramMsg := scram.CreateServerRegisterFirstMessage(iterCount)
 
 	client := gormModels.Client{
@@ -40,12 +40,12 @@ func (uc *ClientUsecase) PrecheckRegister(
 	err := uc.postgres.CreateClient(ctx, client)
 	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return responsedto.ClientRegisterPrecheck{}, ucerror.New(err, consts.ErrDuplicateKey)
+			return nil, ucerror.New(err, consts.ErrDuplicateKey)
 		}
-		return responsedto.ClientRegisterPrecheck{}, ucerror.New(err, consts.ErrInternalServer)
+		return nil, ucerror.New(err, consts.ErrInternalServer)
 	}
 
-	return responsedto.ClientRegisterPrecheck{
+	return &responsedto.ClientRegisterPrecheck{
 		ServerRegisterFirstMessage: scramMsg,
 	}, nil
 }
@@ -79,10 +79,10 @@ func (uc *ClientUsecase) Register(ctx context.Context, req requestdto.ClientRegi
 func (uc *ClientUsecase) PrecheckLogin(
 	ctx context.Context,
 	req requestdto.ClientLoginPrecheck,
-) (responsedto.ClientLoginPrecheck, *ucerror.UCError) {
+) (*responsedto.ClientLoginPrecheck, *ucerror.UCError) {
 	client, err := uc.postgres.GetClientByUsername(ctx, req.Username)
 	if err != nil {
-		return responsedto.ClientLoginPrecheck{}, ucerror.New(err, consts.ErrBadRequest) // todo handle errors
+		return nil, ucerror.New(err, consts.ErrBadRequest) // todo handle errors
 	}
 
 	scramMsg := scram.CreateServerLoginFirstMessage(client.ScramSalt, client.ScramIterationCount, req.ClientLoginFirstMessage)
@@ -90,36 +90,36 @@ func (uc *ClientUsecase) PrecheckLogin(
 		ServerLoginFirstMessage: scramMsg,
 	}
 
-	return loginPrecheckResp, nil
+	return &loginPrecheckResp, nil
 }
 
-func (uc *ClientUsecase) Login(ctx context.Context, req requestdto.ClientLogin) (responsedto.ClientLogin, *ucerror.UCError) {
+func (uc *ClientUsecase) Login(ctx context.Context, req requestdto.ClientLogin) (*responsedto.ClientLogin, *ucerror.UCError) {
 	client, err := uc.postgres.GetClientByUsername(ctx, req.Username)
 	if err != nil {
-		return responsedto.ClientLogin{}, ucerror.New(fmt.Errorf("failed to get login client: %w", err), consts.ErrBadRequest) // todo
+		return nil, ucerror.New(fmt.Errorf("failed to get login client: %w", err), consts.ErrBadRequest) // todo
 	}
 
 	scramMsg, err := scram.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce,
 		client.ScramSalt, client.ScramIterationCount, client.ScramStoredKey, client.ScramServerKey)
 	if err != nil {
-		return responsedto.ClientLogin{}, ucerror.New(fmt.Errorf("error creating final message: %w", err), consts.ErrInternalServer) //todo
+		return nil, ucerror.New(fmt.Errorf("error creating final message: %w", err), consts.ErrInternalServer) //todo
 	}
 
-	tokenString, err := uc.token.GenerateClientJWTToken(client)
+	tokenString, err := uc.token.GenerateClientJWTToken(*client)
 	if err != nil {
-		return responsedto.ClientLogin{}, ucerror.New(fmt.Errorf("error generating token: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("error generating token: %w", err), consts.ErrInternalServer)
 	}
 
-	return responsedto.ClientLogin{
+	return &responsedto.ClientLogin{
 		ServerLoginFinalMessage: scramMsg,
 		Token:                   tokenString,
 	}, nil
 }
 
-func (uc *ClientUsecase) GetProfile(ctx context.Context, username string) (responsedto.ClientProfile, *ucerror.UCError) {
+func (uc *ClientUsecase) GetProfile(ctx context.Context, username string) (*responsedto.ClientProfile, *ucerror.UCError) {
 	clientData, err := uc.postgres.GetClientByUsername(ctx, username)
 	if err != nil {
-		return responsedto.ClientProfile{}, ucerror.New(fmt.Errorf("failed to get client data: %w", err), consts.ErrBadRequest) // todo
+		return nil, ucerror.New(fmt.Errorf("failed to get client data: %w", err), consts.ErrBadRequest) // todo
 	}
 
 	clientModel := responsedto.ClientProfile{
@@ -130,35 +130,42 @@ func (uc *ClientUsecase) GetProfile(ctx context.Context, username string) (respo
 		BackendURI:      clientData.BackendURI,
 		NTorCertificate: string(clientData.NTorX509Certificate),
 	}
-	return clientModel, nil
+	return &clientModel, nil
 }
 
-func (uc *ClientUsecase) GetUnpaidAmount(ctx context.Context, clientID string) (responsedto.ClientGetBalance, *ucerror.UCError) {
+func (uc *ClientUsecase) GetUnpaidAmount(ctx context.Context, clientID string) (*responsedto.ClientGetBalance, *ucerror.UCError) {
 	stats, err := uc.postgres.GetClientBalance(ctx, clientID)
 	if err != nil {
-		return responsedto.ClientGetBalance{}, ucerror.New(fmt.Errorf("failed to get client balance: %w", err), consts.ErrInternalServer) // todo
+		return nil, ucerror.New(fmt.Errorf("failed to get client balance: %w", err), consts.ErrInternalServer) // todo
 	}
 
 	balanceWei, err := utils.DBWeiToBigInt(stats.BalanceWei)
 	if err != nil {
-		return responsedto.ClientGetBalance{}, ucerror.New(fmt.Errorf("failed to convert balance wei: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to convert balance wei: %w", err), consts.ErrInternalServer)
 	}
 
-	return responsedto.ClientGetBalance{
+	return &responsedto.ClientGetBalance{
 		Balance: utils.WeiToEthString(balanceWei, 18),
 	}, nil
 }
 
-func (uc *ClientUsecase) SaveNTorCertificate(ctx context.Context, clientID string, req requestdto.ClientUploadNTorCertificate) *ucerror.UCError {
+func (uc *ClientUsecase) SaveNTorCertificate(
+	ctx context.Context,
+	clientID string,
+	req requestdto.ClientUploadNTorCertificate,
+) *ucerror.UCError {
 	// todo validate certificate
 	err := uc.postgres.SaveX509Certificate(ctx, clientID, req.Certificate)
 	if err != nil {
-		ucerror.New(fmt.Errorf("failed to save ntor certificate: %w", err), consts.ErrInternalServer) // todo
+		return ucerror.New(fmt.Errorf("failed to save ntor certificate: %w", err), consts.ErrInternalServer) // todo
 	}
 	return nil
 }
 
-func (uc *ClientUsecase) GetNTorCertificate(ctx context.Context, req requestdto.ClientGetNTorCertificate) (*responsedto.ClientGetNTorCertificate, *ucerror.UCError) {
+func (uc *ClientUsecase) GetNTorCertificate(
+	ctx context.Context,
+	req requestdto.ClientGetNTorCertificate,
+) (*responsedto.ClientGetNTorCertificate, *ucerror.UCError) {
 	client, err := uc.postgres.GetClientByBackendURI(ctx, req.BackendURI)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -27,20 +27,20 @@ func (t TokenRepository) GenerateOAuthJWTToken(user gormModels.User) (string, er
 	return tokenString, nil
 }
 
-func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (models.OAuthAuthenticationClaims, error) {
+func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (*models.OAuthAuthenticationClaims, error) {
 	claims := &models.OAuthAuthenticationClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return t.oauthJWTSecret, nil
 	})
 	if err != nil {
-		return models.OAuthAuthenticationClaims{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
 	if !token.Valid {
-		return models.OAuthAuthenticationClaims{}, utils.StackError(fmt.Errorf("invalid token"))
+		return nil, utils.StackError(fmt.Errorf("invalid token"))
 	}
 
-	return *claims, nil
+	return claims, nil
 }
 
 func (t TokenRepository) GenerateOAuthAccessToken(client gormModels.Client, authClaims oauth.AuthorizationCodeClaims) (string, error) {

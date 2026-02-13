@@ -59,7 +59,11 @@ func (uc *UserUsecase) VerifyPhoneNumber(ctx context.Context, userID uint) *ucer
 	return nil
 }
 
-func (uc *UserUsecase) CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) *ucerror.UCError {
+func (uc *UserUsecase) CheckPhoneNumberVerificationCode(
+	ctx context.Context,
+	userID uint,
+	req requestdto.UserCheckPhoneNumberVerificationCode,
+) *ucerror.UCError {
 	verificationData, err := uc.postgres.GetPhoneNumberVerificationData(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

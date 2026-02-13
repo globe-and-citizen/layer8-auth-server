@@ -46,7 +46,9 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	return nil
 }
 
-func (r *PostgresRepository) SaveEmailVerificationData(ctx context.Context, data gormModels.EmailVerificationData) error {
+func (r *PostgresRepository) SaveEmailVerificationData(
+	ctx context.Context, data gormModels.EmailVerificationData,
+) error {
 	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Where(gormModels.EmailVerificationData{UserId: data.UserId}).
@@ -63,14 +65,14 @@ func (r *PostgresRepository) SaveEmailVerificationData(ctx context.Context, data
 	return nil
 }
 
-func (r *PostgresRepository) GetEmailVerificationData(ctx context.Context, userId uint) (gormModels.EmailVerificationData, error) {
+func (r *PostgresRepository) GetEmailVerificationData(ctx context.Context, userId uint) (*gormModels.EmailVerificationData, error) {
 	var data gormModels.EmailVerificationData
 	e := r.db.WithContext(ctx).Where("user_id = ?", userId).First(&data).Error
 	if e != nil {
-		return gormModels.EmailVerificationData{}, utils.StackError(e)
+		return nil, utils.StackError(e)
 	}
 
-	return data, nil
+	return &data, nil
 }
 
 func (r *PostgresRepository) SavePhoneNumberVerificationData(ctx context.Context, data gormModels.PhoneNumberVerificationData) error {
@@ -92,14 +94,14 @@ func (r *PostgresRepository) SavePhoneNumberVerificationData(ctx context.Context
 func (r *PostgresRepository) GetPhoneNumberVerificationData(
 	ctx context.Context,
 	userID uint,
-) (gormModels.PhoneNumberVerificationData, error) {
+) (*gormModels.PhoneNumberVerificationData, error) {
 	var data gormModels.PhoneNumberVerificationData
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&data).Error
 	if err != nil {
-		return gormModels.PhoneNumberVerificationData{}, utils.StackError(err)
+		return nil, utils.StackError(err)
 	}
 
-	return data, nil
+	return &data, nil
 }
 
 func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
