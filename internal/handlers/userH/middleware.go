@@ -33,7 +33,7 @@ func (h UserHandler) getAuthenticatedUserID(c *gin.Context) (uint, error) {
 
 	if userID == 0 {
 		ginUtils.HandleError(c, h.logger, http.StatusInternalServerError, "Failed to get authenticated user ID from context", nil)
-		return 0, consts.ErrUserUnauthorized
+		return 0, consts.ErrUnauthorized
 	}
 
 	return userID, nil

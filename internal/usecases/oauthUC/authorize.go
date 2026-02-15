@@ -39,28 +39,28 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 		return nil, ucErr
 	}
 
-	scopes = append([]consts.OAuthScope{}, scopes...)
+	scopes = append([]OAuthScope{}, scopes...)
 
 	if req.Share.DisplayName {
-		scopes = append(scopes, consts.OAuthScopeReadUserDisplayName)
+		scopes = append(scopes, ScopeReadUserDisplayName)
 	}
 	if req.Share.Color {
-		scopes = append(scopes, consts.OAuthScopeReadUserColor)
+		scopes = append(scopes, ScopeReadUserColor)
 	}
 	if req.Share.Bio {
-		scopes = append(scopes, consts.OAuthScopeReadUserBio)
+		scopes = append(scopes, ScopeReadUserBio)
 	}
 	if req.Share.IsEmailVerified {
-		scopes = append(scopes, consts.OAuthScopeReadUserIsEmailVerified)
+		scopes = append(scopes, ScopeReadUserIsEmailVerified)
 	}
 
 	code, err := oauth.GenerateAuthorizationCode(req.ClientID, client.Secret,
-		client.RedirectURI, consts.OAuthScopesToStringSlice(scopes), userID, authzCodeExpiry)
+		client.RedirectURI, ScopesToStringSlice(scopes), userID, authzCodeExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authorization code: %w", err), consts.ErrInternalServer)
 	}
 
-	redirectURL, err := oauth.GenerateAuthURL(req.ClientID, code, client.RedirectURI, consts.OAuthScopesToStringSlice(scopes))
+	redirectURL, err := oauth.GenerateAuthURL(req.ClientID, code, client.RedirectURI, ScopesToStringSlice(scopes))
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authURL: %w", err), consts.ErrInternalServer)
 	}
@@ -71,7 +71,7 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 	}, nil
 }
 
-func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, []consts.OAuthScope, *ucerror.UCError) {
+func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, []OAuthScope, *ucerror.UCError) {
 	client, err := uc.postgres.GetClientByID(ctx, req.ClientID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -90,29 +90,29 @@ func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req request
 			)
 	}
 
-	var scopes []consts.OAuthScope
+	var scopes []OAuthScope
 	requestedScopes := strings.Split(req.Scopes, ",")
 	for _, scope := range requestedScopes {
-		if !consts.OAuthScope(scope).IsValid() {
+		if !OAuthScope(scope).IsValid() {
 			return nil, nil,
 				ucerror.New(fmt.Errorf("invalid scope requested: %s", scope), consts.ErrBadRequest)
 		}
-		scopes = append(scopes, consts.OAuthScope(scope))
+		scopes = append(scopes, OAuthScope(scope))
 	}
 
 	if req.Scopes == "" {
-		scopes = append(scopes, consts.OAuthScopeReadUser)
+		scopes = append(scopes, ScopeReadUser)
 	}
 
 	return client, scopes, nil
 }
 
-func (uc *OAuthUsecase) getAuthorizeScopes(scopes []consts.OAuthScope) []responsedto.OAuthAuthorizeScopes {
+func (uc *OAuthUsecase) getAuthorizeScopes(scopes []OAuthScope) []responsedto.OAuthAuthorizeScopes {
 	var scopesDesc []responsedto.OAuthAuthorizeScopes
 	for _, s := range scopes {
 		scopesDesc = append(scopesDesc, responsedto.OAuthAuthorizeScopes{
 			Name:        string(s),
-			Description: consts.ScopeDescriptions[s],
+			Description: ScopeDescriptions[s],
 		})
 	}
 	return scopesDesc

@@ -14,7 +14,6 @@ var (
 	ErrNotFound                 = errors.New("not found")
 	ErrInvalidPassword          = errors.New("password is invalid")
 	ErrMissingFields            = errors.New("missing fields")
-	ErrUserUnauthorized         = errors.New("unauthorized user") // todo rename?
 	ErrInternalServer           = errors.New("internal server error")
 	ErrBadRequest               = errors.New("bad request")
 	ErrUnauthorized             = errors.New("unauthorized")

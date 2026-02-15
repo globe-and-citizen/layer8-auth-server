@@ -12,3 +12,7 @@ const MiddlewareKeyUserUserID = "user_id"
 const MiddlewareKeyClientUsername = "client_username"
 const MiddlewareKeyClientClientID = "client_id"
 const MiddlewareKeyOAuthScopes = "oauth_scopes"
+
+const (
+	OAuthCookieName = "oauth_token"
+)

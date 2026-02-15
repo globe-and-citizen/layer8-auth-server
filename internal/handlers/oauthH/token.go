@@ -9,7 +9,7 @@ import (
 )
 
 func (h OAuthHandler) GetAccessToken(c *gin.Context) {
-	req, err := ginUtils.DecodeJSONFromRequest[requestdto.OAuthAccessToken](c, h.logger)
+	req, err := ginUtils.DecodeJSONFromRequest[requestdto.OAuthAccessToken](c, h.logger) // todo: request content-type must be application/x-www-form-urlencoded
 	if err != nil {
 		return
 	}

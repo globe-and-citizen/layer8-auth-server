@@ -24,14 +24,14 @@ func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OA
 
 	scopes := strings.Split(req.Scopes, ",")
 	for _, scope := range scopes {
-		switch consts.OAuthScope(scope) {
-		case consts.OAuthScopeReadUserBio:
+		switch OAuthScope(scope) {
+		case ScopeReadUserBio:
 			zkMetadata.Bio = userMetadata.Bio
-		case consts.OAuthScopeReadUserColor:
+		case ScopeReadUserColor:
 			zkMetadata.Color = userMetadata.Color
-		case consts.OAuthScopeReadUserDisplayName:
+		case ScopeReadUserDisplayName:
 			zkMetadata.DisplayName = userMetadata.DisplayName
-		case consts.OAuthScopeReadUserIsEmailVerified:
+		case ScopeReadUserIsEmailVerified:
 			zkMetadata.IsEmailVerified = userMetadata.IsEmailVerified
 		default:
 			continue

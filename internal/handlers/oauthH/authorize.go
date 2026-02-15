@@ -1,7 +1,6 @@
 package oauthH
 
 import (
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
@@ -13,7 +12,7 @@ import (
 func (h OAuthHandler) GetAuthorizeContext(c *gin.Context) {
 	var req requestdto.OAuthAuthorizeContext
 	req.ClientID = c.Query("client_id")
-	req.Scopes = c.DefaultQuery("scope", string(consts.OAuthScopeReadUser))
+	req.Scopes = c.Query("scope")
 	req.RedirectURI = c.Query("redirect_uri")
 
 	response, err := h.uc.GetAuthorizeContext(c.Request.Context(), req)
