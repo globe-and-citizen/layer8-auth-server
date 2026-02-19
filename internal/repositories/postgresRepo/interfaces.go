@@ -34,6 +34,7 @@ type IUserRepository interface {
 	GetUserProfile(ctx context.Context, userID uint) (*gormModels.User, *gormModels.UserMetadata, error)
 	CreateUser(ctx context.Context, user gormModels.User) error
 	UpdateUserPassword(ctx context.Context, username string, storedKey string, serverKey string) error
+	IsUserIDExists(ctx context.Context, id uint) (bool, error)
 }
 
 type IClientRepository interface {
@@ -46,6 +47,7 @@ type IClientRepository interface {
 	CreateClient(ctx context.Context, req gormModels.Client) error
 	SaveX509Certificate(ctx context.Context, clientID string, certificate string) error
 	GetClientByID(ctx context.Context, id string) (*gormModels.Client, error)
+	IsClientIDExists(ctx context.Context, id string) (bool, error)
 }
 
 type IClientBalanceRepository interface {

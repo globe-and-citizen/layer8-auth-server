@@ -1,7 +1,7 @@
 package gormModels
 
 type User struct {
-	ID       uint   `gorm:"primaryKey; unique; autoIncrement; not null"`
+	ID       uint   `gorm:"column:id; primaryKey; unique; autoIncrement; not null"`
 	Username string `gorm:"column:username; unique; not null"`
 
 	EmailVerificationCode string `gorm:"column:verification_code"`

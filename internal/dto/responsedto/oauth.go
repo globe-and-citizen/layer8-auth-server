@@ -27,6 +27,8 @@ type OAuthAccessToken struct {
 	AccessToken      string `json:"access_token"`
 	TokenType        string `json:"token_type"`
 	ExpiresInMinutes int    `json:"expires_in_minutes"`
+	IDToken          string `json:"id_token,omitempty"`
+	RefreshToken     string `json:"refresh_token,omitempty"`
 }
 
 type OAuthZkMetadata struct {

@@ -1,46 +1,28 @@
 package tokenRepo
 
 import (
-	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (t TokenRepository) GenerateClientJWTToken(client gormModels.Client) (string, error) {
-	expirationTime := time.Now().Add(60 * time.Minute)
+func (t TokenRepository) GenerateClientJWTToken(client gormModels.Client, expiry time.Duration) (string, error) {
 	claims := &models.ClientClaims{
 		Username: client.Username,
 		ClientID: client.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-			Issuer:    "GlobeAndCitizen",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
+			Issuer:    t.JWTIssuer,
 		},
 	}
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := jwtToken.SignedString(t.clientJWTSecret)
-	if err != nil {
-		return "", utils.StackError(err)
-	}
 
-	return tokenString, nil
+	return t.generateJWTToken(claims, t.clientJWTSecret)
 }
 
 func (t TokenRepository) VerifyClientJWTToken(tokenString string) (*models.ClientClaims, error) {
 	claims := &models.ClientClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return t.clientJWTSecret, nil
-	})
-	if err != nil {
-		return nil, utils.StackError(err)
-	}
-
-	if !token.Valid {
-		return nil, utils.StackError(fmt.Errorf("invalid token"))
-	}
-
-	return claims, nil
+	err := t.verifyJWTToken(tokenString, t.clientJWTSecret, claims)
+	return claims, err
 }

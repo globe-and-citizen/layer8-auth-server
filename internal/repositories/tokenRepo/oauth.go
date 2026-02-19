@@ -2,92 +2,71 @@ package tokenRepo
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
-	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (t TokenRepository) GenerateOAuthJWTToken(user gormModels.User) (string, error) {
+func (t TokenRepository) GenerateOAuthJWTToken(user gormModels.User, expiry time.Duration) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		Subject:   user.Username, // The value was originally user.ID; it I changed it to Username to avoid type conversion overhead
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(t.oauthJWTSecret)
-	if err != nil {
-		return "", utils.StackError(fmt.Errorf("could not generate oauth token: %s", err))
-	}
-
-	return tokenString, nil
+	return t.generateJWTToken(claims, t.oauthJWTSecret)
 }
 
 func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (*models.OAuthAuthenticationClaims, error) {
 	claims := &models.OAuthAuthenticationClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return t.oauthJWTSecret, nil
-	})
-	if err != nil {
-		return nil, utils.StackError(err)
-	}
-
-	if !token.Valid {
-		return nil, utils.StackError(fmt.Errorf("invalid token"))
-	}
-
-	return claims, nil
+	err := t.verifyJWTToken(tokenString, t.clientJWTSecret, claims)
+	return claims, err
 }
 
-func (t TokenRepository) GenerateOAuthAccessToken(client gormModels.Client, authClaims oauth.AuthorizationCodeClaims) (string, error) {
-	claims := models.ClientAccessTokenClaims{
+func (t TokenRepository) GenerateOAuthAccessToken(
+	clientID string, authClaims oauth.AuthorizationCodeClaims, secret []byte, expiry time.Duration,
+) (string, error) {
+	claims := models.OAuthAccessTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "Globe and Citizen",
+			Issuer:    t.JWTIssuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-			Subject:   client.ID,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(consts.AccessTokenValidityMinutes * time.Minute).UTC()),
+			Subject:   clientID,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry).UTC()),
 		},
 		Scopes: authClaims.Scopes,
 		UserID: authClaims.UserID,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	signedToken, err := token.SignedString([]byte(client.Secret))
-	if err != nil {
-		return "", utils.StackError(err)
-	}
-
-	return signedToken, nil
+	return t.generateJWTToken(claims, secret)
 }
 
-func (t TokenRepository) ParseOAuthAccessToken(tokenString string) (*models.ClientAccessTokenClaims, error) {
-	claims := &models.ClientAccessTokenClaims{}
-	parser := jwt.NewParser()
-	_, _, err := parser.ParseUnverified(tokenString, claims)
-	if err != nil {
-		return nil, utils.StackError(err)
-	}
-
-	return claims, nil
+func (t TokenRepository) VerifyOAuthAccessToken(tokenString string, secret []byte) (*models.OAuthAccessTokenClaims, error) {
+	claims := &models.OAuthAccessTokenClaims{}
+	err := t.verifyJWTToken(tokenString, secret, claims)
+	return claims, err
 }
 
-func (t TokenRepository) VerifyOAuthAccessToken(tokenString string, clientSecret []byte) error {
-	claims := &models.ClientAccessTokenClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return clientSecret, nil
-	})
-	if err != nil {
-		return utils.StackError(err)
+func (t TokenRepository) GenerateOAuthIDToken(
+	userID uint, clientID string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration,
+) (string, error) {
+	claims := &models.OAuthIDTokenClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    t.JWTIssuer,
+			Subject:   fmt.Sprintf("%d", userID), // Convert uint to string for the 'sub' claim
+			Audience:  jwt.ClaimStrings{clientID},
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry).UTC()),
+		},
+		AuthTime:        time.Now().UTC(),
+		OIDCUserProfile: metadata,
 	}
+	return t.generateJWTToken(claims, secret)
+}
 
-	if !token.Valid {
-		return utils.StackError(fmt.Errorf("invalid token"))
-	}
-
-	return nil
+func (t TokenRepository) VerifyOAuthIDToken(tokenString string) (*models.OAuthIDTokenClaims, error) {
+	claims := &models.OAuthIDTokenClaims{}
+	err := t.verifyJWTToken(tokenString, t.oauthJWTSecret, claims)
+	return claims, err
 }

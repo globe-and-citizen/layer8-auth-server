@@ -7,6 +7,17 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
+func (r *PostgresRepository) IsUserIDExists(ctx context.Context, id uint) (bool, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).
+		Model(&gormModels.User{}).
+		Where("id = ?", id).
+		Count(&count).Error; err != nil {
+		return false, utils.StackError(err)
+	}
+	return count > 0, nil
+}
+
 func (r *PostgresRepository) UpdateUser(ctx context.Context, updates gormModels.User) error {
 	tx := r.db.WithContext(ctx).Begin()
 	user := gormModels.User{}

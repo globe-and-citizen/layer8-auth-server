@@ -88,7 +88,7 @@ func (uc *UserUsecase) Login(ctx context.Context, req requestdto.UserLogin) (*re
 		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
 	}
 
-	tokenString, err := uc.token.GenerateUserJWTToken(*user)
+	tokenString, err := uc.token.GenerateUserJWTToken(*user, consts.UserLoginTokenExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating token: %v", err), consts.ErrInternalServer)
 	}
@@ -122,8 +122,7 @@ func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (*responsedt
 }
 
 func (uc *UserUsecase) PrecheckResetPassword(
-	ctx context.Context,
-	req requestdto.UserResetPasswordPrecheck,
+	ctx context.Context, req requestdto.UserResetPasswordPrecheck,
 ) (*responsedto.UserResetPasswordPrecheck, *ucerror.UCError) {
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {

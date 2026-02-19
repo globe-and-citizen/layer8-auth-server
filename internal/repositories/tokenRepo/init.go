@@ -1,21 +1,51 @@
 package tokenRepo
 
 import (
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type ITokenRepository interface {
-	GenerateUserJWTToken(user gormModels.User) (string, error)
+	GenerateUserJWTToken(user gormModels.User, expiry time.Duration) (string, error)
 	VerifyUserJWTToken(tokenString string) (*models.UserClaims, error)
-	GenerateClientJWTToken(client gormModels.Client) (string, error)
+	GenerateClientJWTToken(client gormModels.Client, expiry time.Duration) (string, error)
 	VerifyClientJWTToken(tokenString string) (*models.ClientClaims, error)
-	GenerateOAuthJWTToken(user gormModels.User) (string, error)
+	GenerateOAuthJWTToken(user gormModels.User, expiry time.Duration) (string, error)
 	VerifyOAuthJWTToken(tokenString string) (*models.OAuthAuthenticationClaims, error)
-	GenerateOAuthAccessToken(client gormModels.Client, authClaims oauth.AuthorizationCodeClaims) (string, error)
-	ParseOAuthAccessToken(tokenString string) (*models.ClientAccessTokenClaims, error)
-	VerifyOAuthAccessToken(tokenString string, clientSecret []byte) error
+
+	// GenerateOAuthAccessToken issues an OAuth2 access token.
+	//
+	// Normative:
+	//   - MUST represent authorization granted.
+	//   - MUST associate token with client_id.
+	//   - MUST bind token to resource owner (if applicable).
+	//   - MUST return token_type = "Bearer".
+	//
+	// NOT Normative (OAuth 2.0 does NOT mandate):
+	//   - Token format (opaque vs JWT).
+	//   - Claim structure.
+	//   - Encoding strategy.
+	//
+	// Best Practice (Not strictly normative):
+	//   - Include exp.
+	//   - Include audience (resource server).
+	//   - Include scope.
+	//   - Include jti for revocation.
+	//
+	// Non-Normative:
+	//   - Storage mechanism.
+	//   - Signing algorithm (unless JWT chosen).
+	//
+	GenerateOAuthAccessToken(clientID string, authClaims oauth.AuthorizationCodeClaims, secret []byte, expiry time.Duration) (string, error)
+	VerifyOAuthAccessToken(tokenString string, secret []byte) (*models.OAuthAccessTokenClaims, error)
+	GenerateOAuthIDToken(userID uint, clientID string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration) (string, error)
+	VerifyOAuthIDToken(tokenString string) (*models.OAuthIDTokenClaims, error)
 }
 
 func NewTokenRepository(userJWTSecret []byte, clientJWTSecret []byte, oauthJWTSecret []byte) ITokenRepository {
@@ -27,7 +57,33 @@ func NewTokenRepository(userJWTSecret []byte, clientJWTSecret []byte, oauthJWTSe
 }
 
 type TokenRepository struct {
+	JWTIssuer       string
 	userJWTSecret   []byte
 	clientJWTSecret []byte
 	oauthJWTSecret  []byte
+}
+
+func (t TokenRepository) generateJWTToken(claims jwt.Claims, secret []byte) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		return "", utils.StackError(err)
+	}
+
+	return tokenString, nil
+}
+
+func (t TokenRepository) verifyJWTToken(tokenString string, secret []byte, claims jwt.Claims) error {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return secret, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if !token.Valid {
+		return utils.StackError(fmt.Errorf("invalid token"))
+	}
+
+	return nil
 }

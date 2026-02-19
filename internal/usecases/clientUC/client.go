@@ -105,7 +105,7 @@ func (uc *ClientUsecase) Login(ctx context.Context, req requestdto.ClientLogin) 
 		return nil, ucerror.New(fmt.Errorf("error creating final message: %w", err), consts.ErrInternalServer) //todo
 	}
 
-	tokenString, err := uc.token.GenerateClientJWTToken(*client)
+	tokenString, err := uc.token.GenerateClientJWTToken(*client, consts.ClientLoginTokenExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating token: %w", err), consts.ErrInternalServer)
 	}

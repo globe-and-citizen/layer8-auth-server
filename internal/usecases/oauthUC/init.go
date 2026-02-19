@@ -2,6 +2,7 @@ package oauthUC
 
 import (
 	"context"
+	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
@@ -21,14 +22,16 @@ type IOAuthUsecase interface {
 	MdwVerifyClientAccessToken(ctx context.Context, tokenString string) (userID uint, scopes string, err *ucerror.UCError)
 }
 
-func NewOAuthUsecase(postgres postgresRepo.IPostgresRepository, token tokenRepo.ITokenRepository) IOAuthUsecase {
+func NewOAuthUsecase(conf config.OAuthConfig, postgres postgresRepo.IPostgresRepository, token tokenRepo.ITokenRepository) IOAuthUsecase {
 	return &OAuthUsecase{
+		config:   conf,
 		postgres: postgres,
 		token:    token,
 	}
 }
 
 type OAuthUsecase struct {
+	config   config.OAuthConfig
 	postgres postgresRepo.IPostgresRepository
 	token    tokenRepo.ITokenRepository
 }

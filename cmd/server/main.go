@@ -104,7 +104,7 @@ func main() {
 		tokenRepository,
 		influxdbRepository,
 	)
-	oauthUsecase := oauthUC.NewOAuthUsecase(postgresRepository, tokenRepository)
+	oauthUsecase := oauthUC.NewOAuthUsecase(appConfig.OAuthConfig, postgresRepository, tokenRepository)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

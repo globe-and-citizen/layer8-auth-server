@@ -43,7 +43,7 @@ func (uc *OAuthUsecase) UserLogin(ctx context.Context, req requestdto.OAuthUserL
 		return nil, ucerror.New(fmt.Errorf("failed to get user by username: %w", err), consts.ErrInternalServer)
 	}
 
-	tokenString, err := uc.token.GenerateOAuthJWTToken(*user)
+	tokenString, err := uc.token.GenerateOAuthJWTToken(*user, consts.OAuthLoginTokenExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating login token: %w", err), consts.ErrInternalServer)
 	}

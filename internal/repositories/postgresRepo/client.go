@@ -8,6 +8,17 @@ import (
 	"time"
 )
 
+func (r *PostgresRepository) IsClientIDExists(ctx context.Context, id string) (bool, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).
+		Model(&gormModels.Client{}).
+		Where("id = ?", id).
+		Count(&count).Error; err != nil {
+		return false, utils.StackError(err)
+	}
+	return count > 0, nil
+}
+
 func (r *PostgresRepository) UpdateClient(ctx context.Context, newClient gormModels.Client) error {
 	tx := r.db.WithContext(ctx).Begin()
 

@@ -8,10 +8,13 @@ type OAuthUserLogin struct {
 	UserLogin `json:",inline"`
 }
 
+// OAuthAuthorizeContext fields are from query params
 type OAuthAuthorizeContext struct {
-	ClientID    string `json:"client_id"`
-	RedirectURI string `json:"redirect_uri"`
-	Scopes      string `json:"scopes"`
+	ResponseType string `json:"response_type" validate:"required"`
+	ClientID     string `json:"client_id" validate:"required"`
+	RedirectURI  string `json:"redirect_uri" validate:"required"`
+	Scopes       string `json:"scopes" validate:"required"`
+	State        string `json:"state"`
 }
 
 type OAuthAuthorizeDecision struct {
@@ -26,7 +29,7 @@ type OAuthAuthorizeDecision struct {
 }
 
 type OAuthAccessToken struct {
-	GrantType         string `json:"grant_type" default:"authorization_code"`
+	GrantType         string `json:"grant_type" validate:"required"`
 	ClientID          string `json:"client_id" validate:"required"`
 	ClientSecret      string `json:"client_secret" validate:"required"`
 	AuthorizationCode string `json:"code" validate:"required"`

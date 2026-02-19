@@ -33,12 +33,12 @@ func (uc *OAuthUsecase) GetAccessToken(
 		return nil, ucerror.New(fmt.Errorf("redirect uri mismatch"), consts.ErrBadRequest)
 	}
 
-	claims, err := oauth.VerifyAuthorizationCode(req.ClientSecret, req.AuthorizationCode)
+	claims, err := oauth.VerifyAuthorizationCode(uc.config.AuthzCodeSecret, req.AuthorizationCode)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("failed to verify authorization code: %w", err), consts.ErrBadRequest)
 	}
 
-	accessToken, err := uc.token.GenerateOAuthAccessToken(*client, *claims)
+	accessToken, err := uc.token.GenerateOAuthAccessToken(client.ID, *claims, []byte(uc.config.AccessTokenSecret), uc.config.AccessTokenExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("failed to generate access token: %w", err), consts.ErrInternalServer)
 	}
@@ -46,6 +46,6 @@ func (uc *OAuthUsecase) GetAccessToken(
 	return &responsedto.OAuthAccessToken{
 		AccessToken:      accessToken,
 		TokenType:        consts.TokenTypeBearer,
-		ExpiresInMinutes: consts.AccessTokenValidityMinutes,
+		ExpiresInMinutes: int(uc.config.AccessTokenExpiry.Minutes()),
 	}, nil
 }

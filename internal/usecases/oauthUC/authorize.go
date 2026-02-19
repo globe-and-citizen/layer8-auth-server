@@ -54,7 +54,7 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 		scopes = append(scopes, ScopeReadUserIsEmailVerified)
 	}
 
-	code, err := oauth.GenerateAuthorizationCode(req.ClientID, client.Secret,
+	code, err := oauth.GenerateAuthorizationCode(req.ClientID, uc.config.AuthzCodeSecret,
 		client.RedirectURI, ScopesToStringSlice(scopes), userID, authzCodeExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authorization code: %w", err), consts.ErrInternalServer)
@@ -71,7 +71,27 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 	}, nil
 }
 
+// Normative (MUST / REQUIRED):
+//   - MUST support HTTP GET.
+//   - MAY support POST.
+//   - MUST validate required parameters:
+//     response_type
+//     client_id
+//     redirect_uri (if multiple registered)
+//     scope
+//   - MUST require "openid" scope for OIDC requests.
+//   - MUST validate redirect_uri via exact string match.
+//   - MUST return errors using redirect-based error response format.
+//   - MUST echo `state` exactly if provided.
+//   - MUST require and bind `nonce` for OIDC flows issuing ID tokens.
+//   - MUST validate PKCE (code_challenge) if present.
 func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, []OAuthScope, *ucerror.UCError) {
+	// 1. Validate response_type
+	if req.ResponseType != oauth.ResponseTypeCode {
+		return nil, nil, ucerror.New(fmt.Errorf("invalid response type: %s", req.ResponseType), consts.ErrBadRequest)
+	}
+
+	// 2. Validate client_id and redirect_uri
 	client, err := uc.postgres.GetClientByID(ctx, req.ClientID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -90,12 +110,12 @@ func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req request
 			)
 	}
 
+	// 3. Validate scopes
 	var scopes []OAuthScope
 	requestedScopes := strings.Split(req.Scopes, ",")
 	for _, scope := range requestedScopes {
 		if !OAuthScope(scope).IsValid() {
-			return nil, nil,
-				ucerror.New(fmt.Errorf("invalid scope requested: %s", scope), consts.ErrBadRequest)
+			return nil, nil, ucerror.New(fmt.Errorf("invalid scope requested: %s", scope), consts.ErrBadRequest)
 		}
 		scopes = append(scopes, OAuthScope(scope))
 	}
