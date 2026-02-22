@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
-	"globe-and-citizen/layer8/auth-server/pkg/oauth"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -26,7 +25,7 @@ func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (*models.OAuthA
 }
 
 func (t TokenRepository) GenerateOAuthAccessToken(
-	clientID string, authClaims oauth.AuthorizationCodeClaims, secret []byte, expiry time.Duration,
+	clientID string, scopes string, userID uint, secret []byte, expiry time.Duration,
 ) (string, error) {
 	claims := models.OAuthAccessTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -35,8 +34,8 @@ func (t TokenRepository) GenerateOAuthAccessToken(
 			Subject:   clientID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry).UTC()),
 		},
-		Scopes: authClaims.Scopes,
-		UserID: authClaims.UserID,
+		Scopes: scopes,
+		UserID: userID,
 	}
 
 	return t.generateJWTToken(claims, secret)

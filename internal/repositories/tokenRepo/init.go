@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
-	"globe-and-citizen/layer8/auth-server/pkg/oauth"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 
@@ -42,7 +41,7 @@ type ITokenRepository interface {
 	//   - Storage mechanism.
 	//   - Signing algorithm (unless JWT chosen).
 	//
-	GenerateOAuthAccessToken(clientID string, authClaims oauth.AuthorizationCodeClaims, secret []byte, expiry time.Duration) (string, error)
+	GenerateOAuthAccessToken(clientID string, scopes string, userID uint, secret []byte, expiry time.Duration) (string, error)
 	VerifyOAuthAccessToken(tokenString string, secret []byte) (*models.OAuthAccessTokenClaims, error)
 
 	// GenerateOAuthIDToken creates an OpenID Connect ID Token.

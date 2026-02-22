@@ -21,6 +21,7 @@ func HandlerUCError(c *gin.Context, logger log.ILogger, message string, err *uce
 			Message:   message,
 			Error:     err.Error(),
 		})
+		return
 	}
 
 	logger.Error(message, nil)

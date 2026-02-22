@@ -8,6 +8,7 @@ import (
 type Scope string
 
 const MaxScopesSize = 50
+const AuthorizationCodeSize = 32
 
 const (
 	// API scopes

@@ -11,6 +11,7 @@ type IPostgresRepository interface {
 	Migrate()
 	IUserRepositories
 	IClientRepositories
+	IOAuthAuthorizationCodeRepository
 }
 
 type IUserRepositories interface {
@@ -89,4 +90,10 @@ type IEmailVerificationRepository interface {
 type IZKSnarksKeyRepository interface {
 	SaveZkSnarksKeyPair(keyPair gormModels.ZkSnarksKeyPair) (uint, error)
 	GetLatestZkSnarksKeys() (*gormModels.ZkSnarksKeyPair, error)
+}
+
+type IOAuthAuthorizationCodeRepository interface {
+	SaveOAuthAuthorizationCode(ctx context.Context, code, clientID string, userID uint, redirectURI string, scopes []string, expiresAt int64) error
+	GetOAuthAuthorizationCode(ctx context.Context, code string) (*gormModels.OAuthAuthorizationCode, error)
+	DeleteOAuthAuthorizationCode(ctx context.Context, code string) error
 }

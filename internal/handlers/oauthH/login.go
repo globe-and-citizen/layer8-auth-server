@@ -16,9 +16,9 @@ func (h OAuthHandler) PrecheckUserLogin(c *gin.Context) {
 		return
 	}
 
-	response, err := h.uc.PrecheckUserLogin(c.Request.Context(), request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to perform precheck, service error", err)
+	response, ucErr := h.uc.PrecheckUserLogin(c.Request.Context(), request)
+	if ucErr != nil {
+		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return
 	}
 

@@ -16,9 +16,9 @@ func (h OAuthHandler) AuthenticateOAuth(c *gin.Context) {
 		return
 	}
 
-	userID, username, err := h.uc.MdwVerifyUserLoggedInToken(c.Request.Context(), token)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
+	userID, username, ucErr := h.uc.MdwVerifyUserLoggedInToken(c.Request.Context(), token)
+	if ucErr != nil {
+		handlers.HandlerUCError(c, h.logger, "Authentication error: invalid token", ucErr)
 		return
 	}
 
@@ -35,9 +35,9 @@ func (h OAuthHandler) AuthenticateClient(c *gin.Context) {
 		return
 	}
 
-	userID, scopes, err := h.uc.MdwVerifyClientAccessToken(c.Request.Context(), token)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusUnauthorized, "Authentication error: invalid token", err)
+	userID, scopes, ucErr := h.uc.MdwVerifyClientAccessToken(c.Request.Context(), token)
+	if ucErr != nil {
+		handlers.HandlerUCError(c, h.logger, "Authentication error: invalid token", ucErr)
 		return
 	}
 

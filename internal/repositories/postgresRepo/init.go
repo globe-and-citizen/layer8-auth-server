@@ -27,6 +27,7 @@ func (r *PostgresRepository) Migrate() {
 		&gormModels.EmailVerificationData{},
 		&gormModels.PhoneNumberVerificationData{},
 		&gormModels.ZkSnarksKeyPair{},
+		&gormModels.OAuthAuthorizationCode{},
 	)
 	if err != nil {
 		log.Fatalf("Cannot migrate tables: %v", err)

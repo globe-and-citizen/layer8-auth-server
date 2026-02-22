@@ -15,6 +15,7 @@ type OAuthAuthorizeContext struct {
 	RedirectURI  string `json:"redirect_uri" validate:"required"`
 	Scopes       string `json:"scopes" validate:"required"`
 	State        string `json:"state"`
+	Nonce        string `json:"nonce,omitempty"`
 }
 
 type OAuthAuthorizeDecision struct {
