@@ -24,7 +24,7 @@ func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OA
 
 	scopes := strings.Split(req.Scopes, ",")
 	for _, scope := range scopes {
-		switch OAuthScope(scope) {
+		switch Scope(scope) {
 		case ScopeReadUserBio:
 			zkMetadata.Bio = userMetadata.Bio
 		case ScopeReadUserColor:

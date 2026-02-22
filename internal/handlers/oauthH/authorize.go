@@ -102,7 +102,7 @@ func (h OAuthHandler) PostAuthorizeDecision(c *gin.Context) {
 	req.State = c.Query(oauth.ParamState)
 	req.ReturnResult = c.DefaultQuery("return_result", "false") == "true"
 
-	response, ucErr := h.uc.PostAuthorizeDecision(c.Request.Context(), req, userID, h.config.AuthzCodeExpiry)
+	response, ucErr := h.uc.PostAuthorizeDecision(c.Request.Context(), req, userID)
 	if ucErr != nil {
 		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return

@@ -44,6 +44,33 @@ type ITokenRepository interface {
 	//
 	GenerateOAuthAccessToken(clientID string, authClaims oauth.AuthorizationCodeClaims, secret []byte, expiry time.Duration) (string, error)
 	VerifyOAuthAccessToken(tokenString string, secret []byte) (*models.OAuthAccessTokenClaims, error)
+
+	// GenerateOAuthIDToken creates an OpenID Connect ID Token.
+	//
+	// Normative (MUST include claims):
+	//
+	//	iss   - issuer identifier (Who issued the token: auth server)
+	//	sub   - stable subject identifier (Who the user is: user_id)
+	//	aud   - client_id (Who the token is intended for: client_id)
+	//	exp   - expiration time
+	//	iat   - issued-at time
+	//
+	// Conditionally Required:
+	//
+	//	nonce      - if provided in auth request
+	//	auth_time  - if max_age requested
+	//	at_hash    - if access_token returned in same response
+	//
+	// Normative Requirements:
+	//   - MUST be a JWT.
+	//   - MUST be signed.
+	//   - MUST use agreed algorithm.
+	//   - MUST validate audience and issuer consistency.
+	//
+	// Non-Normative:
+	//   - Claim ordering.
+	//   - Internal subject storage model.
+	//   - Token lifetime duration.
 	GenerateOAuthIDToken(userID uint, clientID string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration) (string, error)
 	VerifyOAuthIDToken(tokenString string) (*models.OAuthIDTokenClaims, error)
 }

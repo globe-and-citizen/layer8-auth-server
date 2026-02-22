@@ -29,34 +29,14 @@ type OAuthAccessTokenClaims struct {
 	jwt.RegisteredClaims
 }
 
-// OAuthIDTokenClaims creates an OpenID Connect ID Token.
-//
-// Normative (MUST include claims):
-//
-//	iss   - issuer identifier
-//	sub   - stable subject identifier
-//	aud   - client_id
-//	exp   - expiration time
-//	iat   - issued-at time
-//
-// Conditionally Required:
-//
-//	nonce      - if provided in auth request
-//	auth_time  - if max_age requested
-//	at_hash    - if access_token returned in same response
-//
-// Normative Requirements:
-//   - MUST be a JWT.
-//   - MUST be signed.
-//   - MUST use agreed algorithm.
-//   - MUST validate audience and issuer consistency.
-//
-// Non-Normative:
-//   - Claim ordering.
-//   - Internal subject storage model.
-//   - Token lifetime duration.
 type OAuthIDTokenClaims struct {
 	jwt.RegisteredClaims
-	AuthTime time.Time `json:"auth_time"`
-	Nonce    string    `json:"nonce"`
+	AuthTime time.Time `json:"auth_time,omitempty"`
+	Nonce    string    `json:"nonce,omitempty"`
+	OIDCUserProfile
+}
+
+type OIDCUserProfile struct {
+	DisplayName string `json:"display_name"`
+	Bio         string `json:"bio"`
 }

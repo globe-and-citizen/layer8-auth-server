@@ -10,8 +10,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 	"globe-and-citizen/layer8/auth-server/pkg/oauth"
-	"strings"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -32,14 +30,11 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 	ctx context.Context,
 	req requestdto.OAuthAuthorizeDecision,
 	userID uint,
-	authzCodeExpiry time.Duration,
 ) (*responsedto.OAuthAuthorizeDecision, *ucerror.UCError) {
 	client, scopes, ucErr := uc.validateAuthorizeParams(ctx, req.OAuthAuthorizeContext)
 	if ucErr != nil {
 		return nil, ucErr
 	}
-
-	scopes = append([]OAuthScope{}, scopes...)
 
 	if req.Share.DisplayName {
 		scopes = append(scopes, ScopeReadUserDisplayName)
@@ -55,12 +50,12 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 	}
 
 	code, err := oauth.GenerateAuthorizationCode(req.ClientID, uc.config.AuthzCodeSecret,
-		client.RedirectURI, ScopesToStringSlice(scopes), userID, authzCodeExpiry)
+		client.RedirectURI, scopes.Strings(), userID, uc.config.AuthzCodeExpiry)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authorization code: %w", err), consts.ErrInternalServer)
 	}
 
-	redirectURL, err := oauth.GenerateAuthURL(req.ClientID, code, client.RedirectURI, ScopesToStringSlice(scopes))
+	redirectURL, err := oauth.GenerateAuthURL(req.ClientID, code, client.RedirectURI, scopes.Strings())
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authURL: %w", err), consts.ErrInternalServer)
 	}
@@ -85,7 +80,7 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 //   - MUST echo `state` exactly if provided.
 //   - MUST require and bind `nonce` for OIDC flows issuing ID tokens.
 //   - MUST validate PKCE (code_challenge) if present.
-func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, []OAuthScope, *ucerror.UCError) {
+func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*gormModels.Client, Scopes, *ucerror.UCError) {
 	// 1. Validate response_type
 	if req.ResponseType != oauth.ResponseTypeCode {
 		return nil, nil, ucerror.New(fmt.Errorf("invalid response type: %s", req.ResponseType), consts.ErrBadRequest)
@@ -111,23 +106,15 @@ func (uc *OAuthUsecase) validateAuthorizeParams(ctx context.Context, req request
 	}
 
 	// 3. Validate scopes
-	var scopes []OAuthScope
-	requestedScopes := strings.Split(req.Scopes, ",")
-	for _, scope := range requestedScopes {
-		if !OAuthScope(scope).IsValid() {
-			return nil, nil, ucerror.New(fmt.Errorf("invalid scope requested: %s", scope), consts.ErrBadRequest)
-		}
-		scopes = append(scopes, OAuthScope(scope))
-	}
-
-	if req.Scopes == "" {
-		scopes = append(scopes, ScopeReadUser)
+	scopes, _, err := ValidateScopeStr(req.Scopes)
+	if err != nil {
+		return nil, nil, ucerror.New(fmt.Errorf("invalid scope: %w", err), consts.ErrBadRequest)
 	}
 
 	return client, scopes, nil
 }
 
-func (uc *OAuthUsecase) getAuthorizeScopes(scopes []OAuthScope) []responsedto.OAuthAuthorizeScopes {
+func (uc *OAuthUsecase) getAuthorizeScopes(scopes []Scope) []responsedto.OAuthAuthorizeScopes {
 	var scopesDesc []responsedto.OAuthAuthorizeScopes
 	for _, s := range scopes {
 		scopesDesc = append(scopesDesc, responsedto.OAuthAuthorizeScopes{
