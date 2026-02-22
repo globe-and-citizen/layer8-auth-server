@@ -3,6 +3,7 @@ package oauthH
 import (
 	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/internal/handlers"
+	"globe-and-citizen/layer8/auth-server/internal/usecases/oauthUC"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"net/http"
 
@@ -58,11 +59,13 @@ func (h OAuthHandler) getAccessTokenUserID(c *gin.Context) (userID uint, isError
 	return userID, false
 }
 
+// In OAuth 2.0 Spec:
+// - scope is OPTIONAL in OAuth.
+// - If omitted → server may apply default scopes.
 func (h OAuthHandler) getAccessTokenScopes(c *gin.Context) (scopes string, isError bool) {
 	scopes = c.GetString(consts.MiddlewareKeyOAuthScopes)
 	if scopes == "" {
-		handlers.HandlerUCError(c, h.logger, "failed to get oauth access token scopes from context", nil)
-		return "", true
+		scopes = string(oauthUC.DefaultScopes)
 	}
 
 	return scopes, false

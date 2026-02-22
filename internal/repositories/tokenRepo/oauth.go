@@ -29,7 +29,7 @@ func (t TokenRepository) GenerateOAuthAccessToken(
 ) (string, error) {
 	claims := models.OAuthAccessTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    t.JWTIssuer,
+			Issuer:    t.jwtIssuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			Subject:   clientID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry).UTC()),
@@ -48,16 +48,17 @@ func (t TokenRepository) VerifyOAuthAccessToken(tokenString string, secret []byt
 }
 
 func (t TokenRepository) GenerateOAuthIDToken(
-	userID uint, clientID string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration,
+	userID uint, clientID, nonce string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration,
 ) (string, error) {
 	claims := &models.OAuthIDTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    t.JWTIssuer,
+			Issuer:    t.jwtIssuer,
 			Subject:   fmt.Sprintf("%d", userID), // Convert uint to string for the 'sub' claim
 			Audience:  jwt.ClaimStrings{clientID},
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry).UTC()),
 		},
+		Nonce:           nonce,
 		AuthTime:        time.Now().UTC(),
 		OIDCUserProfile: metadata,
 	}

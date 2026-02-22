@@ -70,12 +70,13 @@ type ITokenRepository interface {
 	//   - Claim ordering.
 	//   - Internal subject storage model.
 	//   - Token lifetime duration.
-	GenerateOAuthIDToken(userID uint, clientID string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration) (string, error)
+	GenerateOAuthIDToken(userID uint, clientID, nonce string, metadata models.OIDCUserProfile, secret []byte, expiry time.Duration) (string, error)
 	VerifyOAuthIDToken(tokenString string) (*models.OAuthIDTokenClaims, error)
 }
 
-func NewTokenRepository(userJWTSecret []byte, clientJWTSecret []byte, oauthJWTSecret []byte) ITokenRepository {
+func NewTokenRepository(jwtIssuer string, userJWTSecret []byte, clientJWTSecret []byte, oauthJWTSecret []byte) ITokenRepository {
 	return &TokenRepository{
+		jwtIssuer:       jwtIssuer,
 		userJWTSecret:   userJWTSecret,
 		clientJWTSecret: clientJWTSecret,
 		oauthJWTSecret:  oauthJWTSecret,
@@ -83,7 +84,7 @@ func NewTokenRepository(userJWTSecret []byte, clientJWTSecret []byte, oauthJWTSe
 }
 
 type TokenRepository struct {
-	JWTIssuer       string
+	jwtIssuer       string
 	userJWTSecret   []byte
 	clientJWTSecret []byte
 	oauthJWTSecret  []byte

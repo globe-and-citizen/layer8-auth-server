@@ -2,7 +2,7 @@
 
 ### 1. Authorization Request
 ```
-// GetAuthorizeContext handles the OAuth2 / OIDC Authorization Endpoint.
+// Handles the OAuth2 / OIDC Authorization Endpoint.
 //
 // Normative (MUST / REQUIRED):
 //   - MUST support HTTP GET.
@@ -33,7 +33,7 @@
 
 #### Generate Authorization Code
 ```
-// GenerateAuthorizationCode Authorization Code Flow — Code Creation & Validation
+// Authorization Code Flow — Code Creation & Validation
 //
 // Specification References:
 //   - OAuth 2.0 (RFC 6749)

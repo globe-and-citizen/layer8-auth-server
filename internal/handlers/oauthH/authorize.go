@@ -39,12 +39,7 @@ import (
 //
 // TODO...
 func (h OAuthHandler) GetAuthorizeContext(c *gin.Context) {
-	var req requestdto.OAuthAuthorizeContext
-	req.ResponseType = c.Query(oauth.ParamResponseType)
-	req.ClientID = c.Query(oauth.ParamClientID)
-	req.Scopes = c.Query(oauth.ParamScope)
-	req.RedirectURI = c.Query(oauth.ParamRedirectURI)
-	req.State = c.Query(oauth.ParamState)
+	req, _ := h.getAuthorizeQueries(c)
 
 	response, err := h.uc.GetAuthorizeContext(c.Request.Context(), req)
 	if err != nil {
@@ -89,18 +84,11 @@ func (h OAuthHandler) PostAuthorizeDecision(c *gin.Context) {
 		return
 	}
 
-	req, err := ginUtils.DecodeJSONFromRequest[requestdto.OAuthAuthorizeDecision](c, h.logger)
+	req, err := ginUtils.DecodeJSONFromRequest[requestdto.OAuthAuthorizeConsent](c, h.logger)
 	if err != nil {
 		return
 	}
-
-	//var req requestdto.OAuthAuthorizeDecision
-	req.ResponseType = c.Query(oauth.ParamResponseType)
-	req.ClientID = c.Query(oauth.ParamClientID)
-	req.Scopes = c.Query(oauth.ParamScope)
-	req.RedirectURI = c.Query(oauth.ParamRedirectURI)
-	req.State = c.Query(oauth.ParamState)
-	req.ReturnResult = c.DefaultQuery("return_result", "false") == "true"
+	req.OAuthAuthorizeQueries, _ = h.getAuthorizeQueries(c)
 
 	response, ucErr := h.uc.PostAuthorizeDecision(c.Request.Context(), req, userID)
 	if ucErr != nil {
@@ -109,4 +97,16 @@ func (h OAuthHandler) PostAuthorizeDecision(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h OAuthHandler) getAuthorizeQueries(c *gin.Context) (requestdto.OAuthAuthorizeQueries, bool) {
+	var req requestdto.OAuthAuthorizeQueries
+	req.ResponseType = c.Query(oauth.ParamResponseType)
+	req.ClientID = c.Query(oauth.ParamClientID)
+	req.Scopes = c.Query(oauth.ParamScope)
+	req.RedirectURI = c.Query(oauth.ParamRedirectURI)
+	req.State = c.Query(oauth.ParamState)
+	req.Nonce = c.Query(oauth.ParamNonce)
+
+	return req, false
 }

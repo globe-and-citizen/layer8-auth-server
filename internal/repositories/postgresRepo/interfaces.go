@@ -93,7 +93,7 @@ type IZKSnarksKeyRepository interface {
 }
 
 type IOAuthAuthorizationCodeRepository interface {
-	SaveOAuthAuthorizationCode(ctx context.Context, code, clientID string, userID uint, redirectURI string, scopes []string, expiresAt int64) error
+	SaveOAuthAuthorizationCode(ctx context.Context, data gormModels.OAuthAuthorizationCode) error
 	GetOAuthAuthorizationCode(ctx context.Context, code string) (*gormModels.OAuthAuthorizationCode, error)
 	DeleteOAuthAuthorizationCode(ctx context.Context, code string) error
 }

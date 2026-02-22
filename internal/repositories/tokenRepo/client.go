@@ -14,7 +14,7 @@ func (t TokenRepository) GenerateClientJWTToken(client gormModels.Client, expiry
 		ClientID: client.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
-			Issuer:    t.JWTIssuer,
+			Issuer:    t.jwtIssuer,
 		},
 	}
 

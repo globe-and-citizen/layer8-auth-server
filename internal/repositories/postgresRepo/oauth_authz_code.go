@@ -4,21 +4,11 @@ import (
 	"context"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
-	"strings"
 )
 
 func (r *PostgresRepository) SaveOAuthAuthorizationCode(
-	ctx context.Context, code, clientID string, userID uint, redirectURI string, scopes []string, expiresAt int64,
+	ctx context.Context, authzCode gormModels.OAuthAuthorizationCode,
 ) error {
-	authzCode := gormModels.OAuthAuthorizationCode{
-		Code:        code,
-		ClientID:    clientID,
-		UserID:      userID,
-		RedirectURI: redirectURI,
-		Scopes:      strings.Join(scopes, ","),
-		ExpiresAt:   expiresAt,
-	}
-
 	return utils.StackError(r.db.WithContext(ctx).Create(&authzCode).Error)
 }
 

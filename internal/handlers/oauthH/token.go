@@ -4,11 +4,12 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-// GetAccessToken handles the OAuth2 Token Endpoint.
+// RequestToken handles the OAuth2 Token Endpoint.
 //
 // Normative (MUST / REQUIRED):
 //   - MUST use HTTP POST.
@@ -36,13 +37,16 @@ import (
 //   - Token lifetime policy.
 //
 // TODO...
-func (h OAuthHandler) GetAccessToken(c *gin.Context) {
-	req, err := ginUtils.DecodeJSONFromRequest[requestdto.OAuthAccessToken](c, h.logger) // fixme application/x-www-form-urlencoded.
+func (h OAuthHandler) RequestToken(c *gin.Context) {
+	// possibly check Content-Type header here, but that's too strict?
+	var req requestdto.OAuthTokenRequest
+	err := c.ShouldBind(&req)
 	if err != nil {
+		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Invalid request", err)
 		return
 	}
 
-	response, ucErr := h.uc.GetAccessToken(c.Request.Context(), req)
+	response, ucErr := h.uc.RequestToken(c.Request.Context(), req)
 	if ucErr != nil {
 		handlers.HandlerUCError(c, h.logger, "", ucErr)
 		return

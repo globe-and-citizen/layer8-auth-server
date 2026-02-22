@@ -70,6 +70,7 @@ func main() {
 	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.PostgresConfig)
 	postgresRepository.Migrate()
 	tokenRepository := tokenRepo.NewTokenRepository(
+		appConfig.ServerDNS,
 		[]byte(appConfig.UserConfig.JWTSecret),
 		[]byte(appConfig.ClientConfig.JWTSecret),
 		[]byte(appConfig.OAuthConfig.JWTSecret),
@@ -132,7 +133,7 @@ func main() {
 	oauthHandler.RegisterAPIs()
 
 	gin.SetMode(gin.ReleaseMode)
-	addr := fmt.Sprintf("%s:%d", appConfig.Host, appConfig.Port)
+	addr := fmt.Sprintf("%s:%d", appConfig.ServerHost, appConfig.ServerPort)
 	logger.Info("Server start at: http://" + addr)
 	err = app.Run(addr)
 	if err != nil {

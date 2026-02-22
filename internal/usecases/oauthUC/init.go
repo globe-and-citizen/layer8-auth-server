@@ -13,9 +13,9 @@ import (
 type IOAuthUsecase interface {
 	PrecheckUserLogin(ctx context.Context, req requestdto.OAuthUserLoginPrecheck) (*responsedto.OAuthUserLoginPrecheck, *ucerror.UCError)
 	UserLogin(ctx context.Context, req requestdto.OAuthUserLogin) (*responsedto.OAuthUserLogin, *ucerror.UCError)
-	GetAuthorizeContext(ctx context.Context, req requestdto.OAuthAuthorizeContext) (*responsedto.OAuthAuthorizeContext, *ucerror.UCError)
-	PostAuthorizeDecision(ctx context.Context, req requestdto.OAuthAuthorizeDecision, userID uint) (*responsedto.OAuthAuthorizeDecision, *ucerror.UCError)
-	GetAccessToken(ctx context.Context, req requestdto.OAuthAccessToken) (*responsedto.OAuthAccessToken, *ucerror.UCError)
+	GetAuthorizeContext(ctx context.Context, req requestdto.OAuthAuthorizeQueries) (*responsedto.OAuthAuthorizeContext, *ucerror.UCError)
+	PostAuthorizeDecision(ctx context.Context, req requestdto.OAuthAuthorizeConsent, userID uint) (*responsedto.OAuthAuthorizeConsent, *ucerror.UCError)
+	RequestToken(ctx context.Context, req requestdto.OAuthTokenRequest) (*responsedto.OAuthTokenRequest, *ucerror.UCError)
 	GetZkUserMetadata(ctx context.Context, req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *ucerror.UCError)
 	MdwVerifyUserLoggedInToken(ctx context.Context, tokenString string) (userID uint, userUsername string, err *ucerror.UCError)
 	MdwVerifyClientAccessToken(ctx context.Context, tokenString string) (userID uint, scopes string, err *ucerror.UCError)

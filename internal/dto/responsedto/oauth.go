@@ -18,12 +18,12 @@ type OAuthAuthorizeScopes struct {
 	Description string `json:"description"`
 }
 
-type OAuthAuthorizeDecision struct {
+type OAuthAuthorizeConsent struct {
 	RedirectURI string `json:"redirect_uri"`
 	Code        string `json:"code"`
 }
 
-type OAuthAccessToken struct {
+type OAuthTokenRequest struct {
 	AccessToken      string `json:"access_token"`
 	TokenType        string `json:"token_type"`
 	ExpiresInMinutes int    `json:"expires_in_minutes"`

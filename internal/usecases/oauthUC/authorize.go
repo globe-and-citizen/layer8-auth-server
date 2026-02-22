@@ -17,7 +17,7 @@ import (
 )
 
 func (uc *OAuthUsecase) GetAuthorizeContext(
-	ctx context.Context, req requestdto.OAuthAuthorizeContext,
+	ctx context.Context, req requestdto.OAuthAuthorizeQueries,
 ) (*responsedto.OAuthAuthorizeContext, *ucerror.UCError) {
 	client, scopes, err := uc.validateAuthorizeParams(ctx, req)
 	if err != nil {
@@ -32,11 +32,11 @@ func (uc *OAuthUsecase) GetAuthorizeContext(
 
 func (uc *OAuthUsecase) PostAuthorizeDecision(
 	ctx context.Context,
-	req requestdto.OAuthAuthorizeDecision,
+	req requestdto.OAuthAuthorizeConsent,
 	userID uint,
-) (*responsedto.OAuthAuthorizeDecision, *ucerror.UCError) {
+) (*responsedto.OAuthAuthorizeConsent, *ucerror.UCError) {
 	// validate input params and get client and scopes
-	client, scopes, ucErr := uc.validateAuthorizeParams(ctx, req.OAuthAuthorizeContext)
+	client, scopes, ucErr := uc.validateAuthorizeParams(ctx, req.OAuthAuthorizeQueries)
 	if ucErr != nil {
 		return nil, ucErr
 	}
@@ -55,6 +55,10 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 		scopes = append(scopes, ScopeReadUserIsEmailVerified)
 	}
 
+	if scopes.IsOIDC() && !req.OIDCAgreedToShare {
+		return nil, ucerror.New(fmt.Errorf("user must agree to share info for OIDC scopes"), consts.ErrBadRequest)
+	}
+
 	code, err := utils.GenerateRandomBase64String(AuthorizationCodeSize)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authorization code: %w", err), consts.ErrInternalServer)
@@ -66,13 +70,21 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 		return nil, ucerror.New(fmt.Errorf("error generating authURL: %w", err), consts.ErrInternalServer)
 	}
 
-	expiry := time.Now().Add(uc.config.AuthzCodeExpiry).Unix()
-	err = uc.postgres.SaveOAuthAuthorizationCode(ctx, code, client.ID, userID, client.RedirectURI, scopes.Strings(), expiry)
+	data := gormModels.OAuthAuthorizationCode{
+		Code:        code,
+		ClientID:    client.ID,
+		UserID:      userID,
+		RedirectURI: client.RedirectURI,
+		Scopes:      scopes.String(),
+		Nonce:       req.Nonce,
+		ExpiresAt:   time.Now().Add(uc.config.AuthzCodeExpiry).Unix(),
+	}
+	err = uc.postgres.SaveOAuthAuthorizationCode(ctx, data)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error saving authorization code: %w", err), consts.ErrInternalServer)
 	}
 
-	return &responsedto.OAuthAuthorizeDecision{
+	return &responsedto.OAuthAuthorizeConsent{
 		RedirectURI: redirectURL,
 		Code:        code,
 	}, nil
@@ -93,11 +105,11 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 //   - MUST require and bind `nonce` for OIDC flows issuing ID tokens.
 //   - MUST validate PKCE (code_challenge) if present.
 func (uc *OAuthUsecase) validateAuthorizeParams(
-	ctx context.Context, req requestdto.OAuthAuthorizeContext,
+	ctx context.Context, req requestdto.OAuthAuthorizeQueries,
 ) (*gormModels.Client, Scopes, *ucerror.UCError) {
 	// 1. Validate response_type
 	if req.ResponseType != oauth.ResponseTypeCode {
-		return nil, nil, ucerror.New(fmt.Errorf("invalid response type: %s", req.ResponseType), consts.ErrBadRequest)
+		return nil, nil, ucerror.New(fmt.Errorf("unsupported response_type: %s", req.ResponseType), consts.ErrBadRequest)
 	}
 
 	// 2. Validate client_id and redirect_uri

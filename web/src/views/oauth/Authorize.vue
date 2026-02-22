@@ -6,7 +6,8 @@
 
     <div class="body">
       <h2 class="center">
-        Authorize <b>{{ clientName }}</b>
+        {{ isOIDC ? 'Sign in to' : 'Authorize' }}
+        <b>{{ clientName }}</b>
       </h2>
 
       <br/>
@@ -22,47 +23,32 @@
 
       <form method="POST" id="submit" @submit="submit">
         <input type="hidden" name="decision" value="allow"/>
+        <div v-if="isOIDC" style="display: flex; flex-direction: column; align-items: flex-start;">
+          <ConsentCheckbox label="Agree with all terms and conditions"
+                           v-model="agreed"></ConsentCheckbox>
+        </div>
 
-        <label
-          style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-          <input
-            type="checkbox"
+        <div v-if="!isOIDC" style="display: flex; flex-direction: column; align-items: flex-start;">
+          <ConsentCheckbox
             v-model="shareDisplayName"
-            style="margin-right: 5px;"
+            label="Share display name"
           />
-          <span style="font-size: 14px;">Share display name</span>
-        </label>
 
-        <label
-          style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-          <input
-            type="checkbox"
+          <ConsentCheckbox
             v-model="shareIsEmailVerified"
-            style="margin-right: 5px;"
+            label="Share email verification data"
           />
-          <span style="font-size: 14px;">Share email verification data</span>
-        </label>
 
-        <label
-          style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-          <input
-            type="checkbox"
+          <ConsentCheckbox
             v-model="shareColor"
-            style="margin-right: 5px;"
+            label="Share color"
           />
-          <span style="font-size: 14px;">Share color</span>
-        </label>
 
-        <label
-          style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-          <input
-            type="checkbox"
+          <ConsentCheckbox
             v-model="shareBio"
-            style="margin-right: 5px;"
+            label="Share bio"
           />
-          <span style="font-size: 14px;">Share bio</span>
-        </label>
-
+        </div>
         <input type="submit" value="Authorize"/>
       </form>
 
@@ -80,6 +66,7 @@
 import {onMounted, ref} from 'vue'
 import {getAPI, OAuthGetAuthorizeContextPath, OAuthPostAuthorizeDecisionPath} from "@/api/paths.js";
 import {useRoute, useRouter} from "vue-router";
+import ConsentCheckbox from "@/views/oauth/authorize/ConsentCheckbox.vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -91,6 +78,7 @@ console.log(params)
 
 const clientId = queries.client_id
 const scopeParam = queries.scope || ''
+const isOIDC = scopeParam.split(' ').includes('openid')
 
 const clientName = ref('')
 const scopes = ref([])
@@ -99,6 +87,7 @@ const shareDisplayName = ref(false)
 const shareIsEmailVerified = ref(false)
 const shareColor = ref(false)
 const shareBio = ref(false)
+const agreed = ref(false)
 
 const getDate = () => new Date().getFullYear()
 
@@ -134,6 +123,11 @@ const submit = async (e) => {
   e.preventDefault()
 
   try {
+    if (isOIDC && !agreed.value) {
+      alert('You must agree with all terms and conditions to continue.')
+      return
+    }
+
     const res = await fetch(getAPI(OAuthPostAuthorizeDecisionPath) + `${params}`,
       {
         method: 'POST',
@@ -143,13 +137,14 @@ const submit = async (e) => {
         body: JSON.stringify({
           client_id: clientId,
           scopes: scopeParam,
+          oidc_agreed: agreed.value,
           share: {
             display_name: shareDisplayName.value,
             is_email_verified: shareIsEmailVerified.value,
             color: shareColor.value,
             bio: shareBio.value,
           },
-          return_result: !!window.opener,
+          return_result: !!window.opener, // ??? what's this for?
         }),
       })
 

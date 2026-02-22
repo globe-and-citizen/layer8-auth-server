@@ -9,4 +9,6 @@ type OAuthConfig struct {
 	AuthzCodeExpiry   time.Duration `env:"OAUTH_AUTHZ_CODE_EXPIRY" default:"90s"`
 	AccessTokenSecret string        `env:"OAUTH_ACCESS_TOKEN_SECRET"`
 	AccessTokenExpiry time.Duration `env:"OAUTH_ACCESS_TOKEN_EXPIRY"`
+	IDTokenSecret     string        `env:"OAUTH_ID_TOKEN_SECRET"`
+	IDTokenExpiry     time.Duration `env:"OAUTH_ID_TOKEN_EXPIRY"`
 }

@@ -37,6 +37,14 @@ func (h OAuthHandler) RegisterAPIs() {
 	oauthGroup.GET("/authorize", h.AuthenticateOAuth, h.GetAuthorizeContext)
 	oauthGroup.POST("/authorize", h.AuthenticateOAuth, h.PostAuthorizeDecision)
 
-	oauthGroup.POST("/token", h.GetAccessToken)
+	// POST /token
+	// Content-Type: application/x-www-form-urlencoded
+	//
+	// grant_type=authorization_code&
+	// code=abc123&
+	// redirect_uri=https://client.com/callback&
+	// client_id=client1&
+	// client_secret=secret
+	oauthGroup.POST("/token", h.RequestToken)
 	oauthGroup.POST("/zk-metadata", h.AuthenticateClient, h.GetZkUserMetadata)
 }

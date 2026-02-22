@@ -7,7 +7,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
-	"strings"
 )
 
 func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OAuthZkMetadata) (*responsedto.OAuthZkMetadata, *ucerror.UCError) {
@@ -22,9 +21,9 @@ func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OA
 
 	var zkMetadata responsedto.OAuthZkMetadata
 
-	scopes := strings.Split(req.Scopes, ",")
+	scopes := parseScopes(req.Scopes)
 	for _, scope := range scopes {
-		switch Scope(scope) {
+		switch scope {
 		case ScopeReadUserBio:
 			zkMetadata.Bio = userMetadata.Bio
 		case ScopeReadUserColor:
