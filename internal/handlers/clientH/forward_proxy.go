@@ -17,11 +17,11 @@ func (h ClientHandler) GetNTorCertificate(c *gin.Context) {
 		return
 	}
 
-	response, ucerror := h.uc.GetNTorCertificate(c.Request.Context(), requestdto.ClientGetNTorCertificate{
+	response, ucerr := h.uc.GetNTorCertificate(c.Request.Context(), requestdto.ClientGetNTorCertificate{
 		BackendURI: backendDomain,
 	})
-	if ucerror != nil {
-		handlers.HandlerUCError(c, h.logger, "Failed to get client ntor certificate", ucerror)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to get client ntor certificate", ucerr)
 		return
 	}
 

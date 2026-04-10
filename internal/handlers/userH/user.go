@@ -4,7 +4,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,9 +15,9 @@ func (h UserHandler) PrecheckRegister(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	response, err := h.uc.PrecheckRegister(ctx, request, h.config.ScramIterationCount)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to register user", err)
+	response, ucerr := h.uc.PrecheckRegister(ctx, request, h.config.ScramIterationCount)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to register user", ucerr)
 		return
 	}
 
@@ -32,9 +31,9 @@ func (h UserHandler) Register(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.uc.Register(ctx, request)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to register user", err)
+	ucerr := h.uc.Register(ctx, request)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to register user", ucerr)
 		return
 	}
 
@@ -49,7 +48,7 @@ func (h UserHandler) PrecheckLogin(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	response, ucerr := h.uc.PrecheckLogin(ctx, request)
-	if err != nil {
+	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Failed to precheck", ucerr)
 		return
 	}
@@ -65,7 +64,7 @@ func (h UserHandler) Login(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	response, ucerr := h.uc.Login(ctx, request)
-	if err != nil {
+	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Failed to login", ucerr)
 		return
 	}
@@ -110,7 +109,7 @@ func (h UserHandler) ResetPassword(c *gin.Context) {
 	}
 
 	ucerr := h.uc.ResetPassword(c.Request.Context(), request)
-	if err != nil {
+	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Failed to reset password", ucerr)
 		return
 	}

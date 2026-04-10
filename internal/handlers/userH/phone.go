@@ -17,7 +17,7 @@ func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
 	}
 
 	ucerr := h.uc.VerifyPhoneNumber(c.Request.Context(), userID)
-	if err != nil {
+	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Verify phone number failed", ucerr)
 		return
 	}
@@ -37,7 +37,7 @@ func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
 	}
 
 	ucerr := h.uc.CheckPhoneNumberVerificationCode(c.Request.Context(), userID, request)
-	if err != nil {
+	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Check phone number verification code failed", ucerr)
 		return
 	}
@@ -52,7 +52,7 @@ func (h UserHandler) GenerateTelegramSessionID(c *gin.Context) {
 	}
 
 	sessionID, ucerr := h.uc.GenerateAndSaveTelegramSessionIDHash(c.Request.Context(), userID)
-	if err != nil {
+	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Generate telegram session ID failed", ucerr)
 		return
 	}

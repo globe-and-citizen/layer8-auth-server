@@ -4,7 +4,6 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/handlers"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,9 +20,9 @@ func (h UserHandler) VerifyEmail(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.uc.VerifyEmail(ctx, userID, request.Email)
-	if err != nil {
-		ginUtils.HandleError(c, h.logger, http.StatusBadRequest, "Failed to verify email", err)
+	ucerr := h.uc.VerifyEmail(ctx, userID, request.Email)
+	if ucerr != nil {
+		handlers.HandlerUCError(c, h.logger, "Failed to verify email", ucerr)
 		return
 	}
 
