@@ -117,7 +117,7 @@
 
             <a
               class="text-sm text-[#414141] font-normal text-start block cursor-pointer"
-              href="/client-login-page"
+              href="/client-login"
             >
               Already have an account? <span class="font-bold">Login</span>
             </a>

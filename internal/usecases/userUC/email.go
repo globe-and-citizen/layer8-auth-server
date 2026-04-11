@@ -40,7 +40,11 @@ func (uc *UserUsecase) VerifyEmail(ctx context.Context, userID uint, userEmail s
 			ExpiresAt:        time.Now().Add(uc.email.GetVerificationCodeExpiry()).UTC(),
 		},
 	)
-	return ucerror.New(fmt.Errorf("failed to save verification email: %w", err), consts.ErrInternalServer)
+	if err != nil {
+		return ucerror.New(fmt.Errorf("failed to save verification email: %w", err), consts.ErrInternalServer)
+	}
+
+	return nil
 }
 
 func (uc *UserUsecase) CheckEmailVerificationCode(ctx context.Context, userId uint, code string) *ucerror.UCError {
@@ -50,7 +54,11 @@ func (uc *UserUsecase) CheckEmailVerificationCode(ctx context.Context, userId ui
 	}
 
 	err = uc.email.VerifyCode(verificationData, code)
-	return ucerror.New(fmt.Errorf("error verify verification code: %w", err), consts.ErrInternalServer)
+	if err != nil {
+		return ucerror.New(fmt.Errorf("verification code is invalid: %w", err), consts.ErrInvalidField)
+	}
+
+	return nil
 }
 
 func (uc *UserUsecase) SaveProofOfEmailVerification(

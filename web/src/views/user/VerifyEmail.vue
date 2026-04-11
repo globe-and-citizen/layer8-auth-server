@@ -71,6 +71,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import {getAPI, UserCheckEmailVerificationCodePath, UserVerifyEmailPath} from "@/api/paths.ts";
+import router from "@/router";
 
 type Step = "email" | "code";
 
@@ -92,7 +94,7 @@ const getVerificationCode = async () => {
 
   try {
     const response = await fetch(
-      "[[ .ProxyURL ]]/api/v1/verify-email",
+      getAPI(UserVerifyEmailPath),
       {
         method: "POST",
         headers: {
@@ -129,7 +131,7 @@ const checkEmailVerificationCode = async () => {
   const email = localStorage.getItem("email");
 
   const response = await fetch(
-    "[[ .ProxyURL ]]/api/v1/check-email-verification-code",
+    getAPI(UserCheckEmailVerificationCodePath),
     {
       method: "POST",
       headers: {
@@ -148,6 +150,6 @@ const checkEmailVerificationCode = async () => {
   localStorage.removeItem("email");
 
   alert(result.message);
-  window.location.href = "[[ .ProxyURL ]]/user";
+  await router.push("/user/profile");
 };
 </script>

@@ -8,6 +8,11 @@ const UserResetPasswordPrecheckPath = '/user-reset-password-precheck';
 const UserResetPasswordPath = '/user-reset-password';
 const UserProfilePath = '/user/profile';
 const UserUpdateMetadataPath = "/user/update-metadata"
+const UserVerifyEmailPath = '/user/verify-email';
+const UserCheckEmailVerificationCodePath = '/user/check-email-verification-code';
+const UserGetTelegramSessionPath = '/user/generate-telegram-session-id';
+const UserVerifyPhonePath = '/user/verify-phone-number-via-bot';
+const UserCheckPhoneVerificationCode = '/user/check-phone-number-verification-code';
 
 const ClientCheckBackendURIPath = '/check-backend-uri';
 const ClientRegisterPrecheckPath = '/client-register-precheck';
@@ -37,6 +42,11 @@ export {
   UserResetPasswordPath,
   UserProfilePath,
   UserUpdateMetadataPath,
+  UserVerifyEmailPath,
+  UserCheckEmailVerificationCodePath,
+  UserGetTelegramSessionPath,
+  UserVerifyPhonePath,
+  UserCheckPhoneVerificationCode,
 
   ClientCheckBackendURIPath,
   ClientRegisterPrecheckPath,

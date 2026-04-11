@@ -5,6 +5,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
 
+// fixme: Email and Phone verification codes are currently identical and persistent for each user!!!
 type ICodeGeneratorRepository interface {
 	GenerateEmailVerificationCode(salt string, userEmail string) (string, error)
 	GeneratePhoneVerificationCode(salt string, phoneNumber string) (string, error)

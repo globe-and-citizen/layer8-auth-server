@@ -24,6 +24,8 @@
 
 <script setup>
 import { ref } from "vue";
+import {getAPI, UserCheckPhoneVerificationCode} from "@/api/paths.js";
+import router from "@/router";
 
 const verificationCode = ref("");
 const token = ref(localStorage.getItem("token"));
@@ -35,7 +37,7 @@ const submitCode = async () => {
   }
 
   const response = await fetch(
-    "[[ .ProxyURL ]]/api/v1/check-phone-number-verification-code",
+    getAPI(UserCheckPhoneVerificationCode),
     {
       method: "POST",
       headers: {
@@ -51,6 +53,6 @@ const submitCode = async () => {
   const result = await response.json();
   alert(result.message);
 
-  window.location.href = "[[ .ProxyURL ]]/user";
+  await router.push("/user/profile");
 };
 </script>

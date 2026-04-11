@@ -18,6 +18,7 @@
 
 <script setup>
 import { ref } from "vue";
+import {getAPI, UserGetTelegramSessionPath, UserVerifyPhonePath} from "@/api/paths.js";
 
 const emit = defineEmits(["verified-via-telegram"]);
 
@@ -29,9 +30,9 @@ const verifyPhoneNumber = async () => {
 
   try {
     const sessionRes = await fetch(
-      "[[ .ProxyURL ]]/api/v1/generate-telegram-session-id",
+      getAPI(UserGetTelegramSessionPath),
       {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token.value}`,
@@ -54,7 +55,7 @@ const verifyPhoneNumber = async () => {
     );
 
     const response = await fetch(
-      "[[ .ProxyURL ]]/api/v1/verify-phone-number-via-bot",
+      getAPI(UserVerifyPhonePath),
       {
         method: "POST",
         headers: {
