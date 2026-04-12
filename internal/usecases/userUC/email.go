@@ -8,6 +8,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
 
 	"gorm.io/gorm"
@@ -22,7 +23,9 @@ func (uc *UserUsecase) VerifyEmail(ctx context.Context, userID uint, userEmail s
 		return ucerror.New(fmt.Errorf("failed to get user to verify email: %w", err), consts.ErrInternalServer)
 	}
 
-	verificationCode, err := uc.code.GenerateEmailVerificationCode(user.ScramSalt, userEmail)
+	salt := utils.GenerateRandomSalt(consts.SaltSize)
+
+	verificationCode, err := uc.code.GenerateEmailVerificationCode(salt, userEmail)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to generate verification code: %w", err), consts.ErrInternalServer)
 	}
@@ -36,6 +39,8 @@ func (uc *UserUsecase) VerifyEmail(ctx context.Context, userID uint, userEmail s
 		ctx,
 		gormModels.EmailVerificationData{
 			UserId:           user.ID,
+			Salt:             salt,
+			Email:            userEmail,
 			VerificationCode: verificationCode,
 			ExpiresAt:        time.Now().Add(uc.email.GetVerificationCodeExpiry()).UTC(),
 		},
@@ -47,36 +52,33 @@ func (uc *UserUsecase) VerifyEmail(ctx context.Context, userID uint, userEmail s
 	return nil
 }
 
-func (uc *UserUsecase) CheckEmailVerificationCode(ctx context.Context, userId uint, code string) *ucerror.UCError {
+func (uc *UserUsecase) CheckEmailVerificationCode(ctx context.Context, userId uint, req requestdto.UserCheckEmailVerificationCode) *ucerror.UCError {
 	verificationData, err := uc.postgres.GetEmailVerificationData(ctx, userId)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to get verification data: %w", err), consts.ErrInternalServer)
 	}
 
-	err = uc.email.VerifyCode(verificationData, code)
+	err = uc.email.VerifyCode(verificationData, req.Code)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("verification code is invalid: %w", err), consts.ErrInvalidField)
 	}
 
-	return nil
+	return uc.saveProofOfEmailVerification(ctx, userId, verificationData.Salt, verificationData.Email, req.Code)
 }
 
-func (uc *UserUsecase) SaveProofOfEmailVerification(
+func (uc *UserUsecase) saveProofOfEmailVerification(
 	ctx context.Context,
 	userID uint,
-	req requestdto.UserCheckEmailVerificationCode,
+	salt string,
+	email string,
+	verificationCode string,
 ) *ucerror.UCError {
-	user, err := uc.postgres.GetUserByID(ctx, userID)
-	if err != nil { // userID must be valid because it should've been checked in the authentication middleware
-		return ucerror.New(fmt.Errorf("failed to get user by id: %w", err), consts.ErrInternalServer)
-	}
-
-	zkProof, zkKeyPairId, err := uc.zk.GenerateProof(user.ScramSalt, req.Email, req.Code)
+	zkProof, zkKeyPairId, err := uc.zk.GenerateProof(salt, email, verificationCode)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to generate zkproof of email verification: %w", err), consts.ErrInternalServer)
 	}
 
-	err = uc.postgres.SaveProofOfEmailVerification(ctx, userID, req.Code, zkProof, zkKeyPairId)
+	err = uc.postgres.SaveProofOfEmailVerification(ctx, userID, salt, verificationCode, zkProof, zkKeyPairId)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to save verification zkproof: %w", err), consts.ErrInternalServer)
 	}

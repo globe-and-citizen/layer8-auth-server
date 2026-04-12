@@ -8,16 +8,17 @@ import (
 )
 
 func (r *PostgresRepository) SaveProofOfEmailVerification(
-	ctx context.Context, userId uint, verificationCode string, emailProof []byte, zkKeyPairId uint,
+	ctx context.Context, userId uint, salt string, verificationCode string, emailProof []byte, zkKeyPairId uint,
 ) error {
 	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Model(&gormModels.User{}).
 		Where("id = ?", userId).
 		Updates(map[string]interface{}{
-			"verification_code": verificationCode,
-			"email_proof":       emailProof,
-			"zk_key_pair_id":    zkKeyPairId,
+			"email_salt":              salt,
+			"email_verification_code": verificationCode,
+			"email_zk_proof":          emailProof,
+			"email_zk_id":             zkKeyPairId,
 		}).Error
 
 	if err != nil {
@@ -107,18 +108,20 @@ func (r *PostgresRepository) GetPhoneNumberVerificationData(
 func (r *PostgresRepository) SaveProofOfPhoneNumberVerification(
 	ctx context.Context,
 	userID uint,
-	phoneNumberVerificationCode string,
-	phoneNumberZkProof []byte,
-	phoneNumberZkPairID uint,
+	salt string,
+	verificationCode string,
+	zkProof []byte,
+	zkPairID uint,
 ) error {
 	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelReadCommitted})
 
 	err := tx.Model(&gormModels.User{}).
 		Where("id = ?", userID).
 		Updates(map[string]interface{}{
-			"phone_number_verification_code": phoneNumberVerificationCode,
-			"phone_number_zk_proof":          phoneNumberZkProof,
-			"phone_number_zk_pair_id":        phoneNumberZkPairID,
+			"phone_salt":              salt,
+			"phone_verification_code": verificationCode,
+			"phone_zk_proof":          zkProof,
+			"phone_zk_id":             zkPairID,
 		}).Error
 	if err != nil {
 		tx.Rollback()

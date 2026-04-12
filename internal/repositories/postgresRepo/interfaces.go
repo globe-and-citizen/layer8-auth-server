@@ -72,6 +72,7 @@ type IPhoneNumberVerificationRepository interface {
 	SaveProofOfPhoneNumberVerification(
 		ctx context.Context,
 		userID uint,
+		salt string,
 		phoneNumberVerificationCode string,
 		phoneNumberZkProof []byte,
 		phoneNumberZkPairID uint,
@@ -82,7 +83,7 @@ type IEmailVerificationRepository interface {
 	SaveEmailVerificationData(ctx context.Context, data gormModels.EmailVerificationData) error
 	GetEmailVerificationData(ctx context.Context, userId uint) (*gormModels.EmailVerificationData, error)
 	SaveProofOfEmailVerification(
-		ctx context.Context, userId uint, verificationCode string, emailProof []byte, zkKeyPairId uint,
+		ctx context.Context, userId uint, salt string, verificationCode string, emailProof []byte, zkKeyPairId uint,
 	) error
 	SaveTelegramSessionIDHash(ctx context.Context, userID uint, sessionID []byte) error
 }

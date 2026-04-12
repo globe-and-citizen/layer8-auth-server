@@ -40,14 +40,7 @@ func (h UserHandler) CheckEmailVerificationCode(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	ucerr := h.uc.CheckEmailVerificationCode(ctx, userID, request.Code)
-	if ucerr != nil {
-		handlers.HandlerUCError(c, h.logger, "Failed to verify code", ucerr)
-		return
-	}
-
-	ucerr = h.uc.SaveProofOfEmailVerification(ctx, userID, request)
+	ucerr := h.uc.CheckEmailVerificationCode(c.Request.Context(), userID, request)
 	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Failed to verify code", ucerr)
 		return

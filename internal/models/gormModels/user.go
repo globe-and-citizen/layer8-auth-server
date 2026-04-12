@@ -4,13 +4,15 @@ type User struct {
 	ID       uint   `gorm:"column:id; primaryKey; unique; autoIncrement; not null"`
 	Username string `gorm:"column:username; unique; not null"`
 
-	EmailVerificationCode string `gorm:"column:verification_code"`
-	EmailZkProof          []byte `gorm:"column:email_proof"`
-	EmailZkKeyPairId      uint   `gorm:"column:zk_key_pair_id"`
+	EmailZkSalt           string `gorm:"column:email_salt"`
+	EmailVerificationCode string `gorm:"column:email_verification_code"`
+	EmailZkProof          []byte `gorm:"column:email_zk_proof"`
+	EmailZkKeyPairID      uint   `gorm:"column:email_zk_id"`
 
-	PhoneNumberVerificationCode string `gorm:"column:phone_number_verification_code"`
-	PhoneNumberZkProof          []byte `gorm:"column:phone_number_zk_proof"`
-	PhoneNumberZkPairID         uint   `gorm:"column:phone_number_zk_pair_id"`
+	PhoneZkSalt           string `gorm:"column:phone_salt"`
+	PhoneVerificationCode string `gorm:"column:phone_verification_code"`
+	PhoneZkProof          []byte `gorm:"column:phone_zk_proof"`
+	PhoneZkKeyPairID      uint   `gorm:"column:phone_zk_id"`
 
 	PublicKey []byte `gorm:"column:public_key"`
 

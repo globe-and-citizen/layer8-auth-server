@@ -28,7 +28,8 @@ func (uc *UserUsecase) VerifyPhoneNumber(ctx context.Context, userID uint) *ucer
 		return ucerror.New(fmt.Errorf("failed to get phone number: %w", err), consts.ErrInternalServer)
 	}
 
-	verificationCode, err := uc.code.GeneratePhoneVerificationCode(user.ScramSalt, phoneNumber)
+	salt := utils.GenerateRandomSalt(consts.SaltSize)
+	verificationCode, err := uc.code.GeneratePhoneVerificationCode(salt, phoneNumber)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to generate verification code: %w", err), consts.ErrInternalServer)
 	}
@@ -38,17 +39,12 @@ func (uc *UserUsecase) VerifyPhoneNumber(ctx context.Context, userID uint) *ucer
 		return ucerror.New(fmt.Errorf("failed to send verification code: %w", err), consts.ErrInternalServer)
 	}
 
-	zkProof, zkPairID, err := uc.zk.GenerateProof(user.ScramSalt, phoneNumber, verificationCode)
-	if err != nil {
-		return ucerror.New(fmt.Errorf("failed to generate zkproof of phone number verification: %w", err), consts.ErrInternalServer)
-	}
-
 	verificationData := gormModels.PhoneNumberVerificationData{
 		UserId:           userID,
+		Salt:             salt,
+		PhoneNumber:      phoneNumber,
 		VerificationCode: verificationCode,
 		ExpiresAt:        time.Now().UTC().Add(uc.phone.GetVerificationCodeExiry()),
-		ZkProof:          zkProof,
-		ZkPairID:         zkPairID,
 	}
 
 	err = uc.postgres.SavePhoneNumberVerificationData(ctx, verificationData)
@@ -80,12 +76,18 @@ func (uc *UserUsecase) CheckPhoneNumberVerificationCode(
 		return ucerror.New(fmt.Errorf("phone number verification expired"), fmt.Errorf("%w: verification code is expired", consts.ErrBadRequest))
 	}
 
+	zkProof, zkPairID, err := uc.zk.GenerateProof(verificationData.Salt, verificationData.PhoneNumber, req.VerificationCode)
+	if err != nil {
+		return ucerror.New(fmt.Errorf("failed to generate zkproof of phone number verification: %w", err), consts.ErrInternalServer)
+	}
+
 	err = uc.postgres.SaveProofOfPhoneNumberVerification(
 		ctx,
 		verificationData.UserId,
+		verificationData.Salt,
 		verificationData.VerificationCode,
-		verificationData.ZkProof,
-		verificationData.ZkPairID,
+		zkProof,
+		zkPairID,
 	)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to save proof of phone number verification: %w", err), consts.ErrInternalServer)

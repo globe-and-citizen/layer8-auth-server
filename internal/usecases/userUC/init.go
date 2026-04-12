@@ -21,8 +21,7 @@ type IUserUsecase interface {
 	GetProfile(ctx context.Context, userID uint) (*responsedto.UserProfile, *ucerror.UCError)
 	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) *ucerror.UCError
 	VerifyEmail(ctx context.Context, userID uint, userEmail string) *ucerror.UCError
-	CheckEmailVerificationCode(ctx context.Context, userId uint, code string) *ucerror.UCError
-	SaveProofOfEmailVerification(ctx context.Context, userID uint, req requestdto.UserCheckEmailVerificationCode) *ucerror.UCError
+	CheckEmailVerificationCode(ctx context.Context, userId uint, req requestdto.UserCheckEmailVerificationCode) *ucerror.UCError
 	VerifyPhoneNumber(ctx context.Context, userID uint) *ucerror.UCError
 	CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) *ucerror.UCError
 	GenerateAndSaveTelegramSessionIDHash(ctx context.Context, userID uint) (sessionID []byte, ucError *ucerror.UCError)
