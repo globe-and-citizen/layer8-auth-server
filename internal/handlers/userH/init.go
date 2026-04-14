@@ -41,6 +41,6 @@ func (h UserHandler) RegisterAPIs() {
 	authenticatedGroup.POST("/verify-email", h.VerifyEmail)
 	authenticatedGroup.POST("/check-email-verification-code", h.CheckEmailVerificationCode)
 	authenticatedGroup.POST("/verify-phone-number-via-bot", h.VerifyPhoneNumber)
-	authenticatedGroup.POST("/check-phone-number-verification-code", h.CheckPhoneNumberVerificationCode)
+	authenticatedGroup.POST("/check-phone-number-verification-code", h.CheckPhoneVerificationCode)
 	authenticatedGroup.GET("/generate-telegram-session-id", h.GenerateTelegramSessionID) // this api was originally POST, but I think GET is more suitable
 }

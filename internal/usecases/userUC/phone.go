@@ -39,15 +39,15 @@ func (uc *UserUsecase) VerifyPhoneNumber(ctx context.Context, userID uint) *ucer
 		return ucerror.New(fmt.Errorf("failed to send verification code: %w", err), consts.ErrInternalServer)
 	}
 
-	verificationData := gormModels.PhoneNumberVerificationData{
+	verificationData := gormModels.PhoneVerificationData{
 		UserId:           userID,
 		Salt:             salt,
 		PhoneNumber:      phoneNumber,
 		VerificationCode: verificationCode,
-		ExpiresAt:        time.Now().UTC().Add(uc.phone.GetVerificationCodeExiry()),
+		ExpiresAt:        time.Now().UTC().Add(uc.phone.GetVerificationCodeExpiry()),
 	}
 
-	err = uc.postgres.SavePhoneNumberVerificationData(ctx, verificationData)
+	err = uc.postgres.SavePhoneVerificationData(ctx, verificationData)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to save zkproof of phone number verification: %w", err), consts.ErrInternalServer)
 	}
@@ -55,12 +55,12 @@ func (uc *UserUsecase) VerifyPhoneNumber(ctx context.Context, userID uint) *ucer
 	return nil
 }
 
-func (uc *UserUsecase) CheckPhoneNumberVerificationCode(
+func (uc *UserUsecase) CheckPhoneVerificationCode(
 	ctx context.Context,
 	userID uint,
-	req requestdto.UserCheckPhoneNumberVerificationCode,
+	req requestdto.UserCheckPhoneVerificationCode,
 ) *ucerror.UCError {
-	verificationData, err := uc.postgres.GetPhoneNumberVerificationData(ctx, userID)
+	verificationData, err := uc.postgres.GetPhoneVerificationData(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ucerror.New(fmt.Errorf("phone number verification data not found: %w", err), consts.ErrNotFound)
@@ -68,7 +68,7 @@ func (uc *UserUsecase) CheckPhoneNumberVerificationCode(
 		return ucerror.New(fmt.Errorf("failed to get phone number verification data: %w", err), consts.ErrInternalServer)
 	}
 
-	if req.VerificationCode != verificationData.VerificationCode {
+	if req.Code != verificationData.VerificationCode {
 		return ucerror.New(fmt.Errorf("phone number verification code does not match"), consts.ErrBadRequest)
 	}
 
@@ -76,12 +76,12 @@ func (uc *UserUsecase) CheckPhoneNumberVerificationCode(
 		return ucerror.New(fmt.Errorf("phone number verification expired"), fmt.Errorf("%w: verification code is expired", consts.ErrBadRequest))
 	}
 
-	zkProof, zkPairID, err := uc.zk.GenerateProof(verificationData.Salt, verificationData.PhoneNumber, req.VerificationCode)
+	zkProof, zkPairID, err := uc.zk.GenerateProof(verificationData.Salt, verificationData.PhoneNumber, req.Code)
 	if err != nil {
 		return ucerror.New(fmt.Errorf("failed to generate zkproof of phone number verification: %w", err), consts.ErrInternalServer)
 	}
 
-	err = uc.postgres.SaveProofOfPhoneNumberVerification(
+	err = uc.postgres.SaveProofOfPhoneVerification(
 		ctx,
 		verificationData.UserId,
 		verificationData.Salt,

@@ -15,7 +15,7 @@ func (EmailVerificationData) TableName() string {
 	return "email_verification_data"
 }
 
-type PhoneNumberVerificationData struct {
+type PhoneVerificationData struct {
 	ID               uint      `gorm:"primaryKey; autoIncrement; not null" json:"id"`
 	UserId           uint      `gorm:"column:user_id; unique; not null" json:"user_id"`
 	Salt             string    `gorm:"column:salt; not null" json:"salt"`
@@ -24,6 +24,6 @@ type PhoneNumberVerificationData struct {
 	ExpiresAt        time.Time `gorm:"column:expires_at; not null" json:"expires_at"`
 }
 
-func (PhoneNumberVerificationData) TableName() string {
+func (PhoneVerificationData) TableName() string {
 	return "phone_number_verification_data"
 }

@@ -25,18 +25,18 @@ func (h UserHandler) VerifyPhoneNumber(c *gin.Context) {
 	ginUtils.ReturnOK(c, "Phone number has been verified!", nil)
 }
 
-func (h UserHandler) CheckPhoneNumberVerificationCode(c *gin.Context) {
+func (h UserHandler) CheckPhoneVerificationCode(c *gin.Context) {
 	userID, err := h.getAuthenticatedUserID(c)
 	if err != nil {
 		return
 	}
 
-	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserCheckPhoneNumberVerificationCode](c, h.logger)
+	request, err := ginUtils.DecodeJSONFromRequest[requestdto.UserCheckPhoneVerificationCode](c, h.logger)
 	if err != nil {
 		return
 	}
 
-	ucerr := h.uc.CheckPhoneNumberVerificationCode(c.Request.Context(), userID, request)
+	ucerr := h.uc.CheckPhoneVerificationCode(c.Request.Context(), userID, request)
 	if ucerr != nil {
 		handlers.HandlerUCError(c, h.logger, "Check phone number verification code failed", ucerr)
 		return

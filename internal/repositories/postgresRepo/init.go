@@ -25,7 +25,7 @@ func (r *PostgresRepository) Migrate() {
 		&gormModels.ClientBalance{},
 		&gormModels.ClientPaymentReceipt{},
 		&gormModels.EmailVerificationData{},
-		&gormModels.PhoneNumberVerificationData{},
+		&gormModels.PhoneVerificationData{},
 		&gormModels.ZkSnarksKeyPair{},
 		&gormModels.OAuthAuthorizationCode{},
 	)

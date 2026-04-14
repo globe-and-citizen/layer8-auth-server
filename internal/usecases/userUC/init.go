@@ -23,7 +23,7 @@ type IUserUsecase interface {
 	VerifyEmail(ctx context.Context, userID uint, userEmail string) *ucerror.UCError
 	CheckEmailVerificationCode(ctx context.Context, userId uint, req requestdto.UserCheckEmailVerificationCode) *ucerror.UCError
 	VerifyPhoneNumber(ctx context.Context, userID uint) *ucerror.UCError
-	CheckPhoneNumberVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneNumberVerificationCode) *ucerror.UCError
+	CheckPhoneVerificationCode(ctx context.Context, userID uint, req requestdto.UserCheckPhoneVerificationCode) *ucerror.UCError
 	GenerateAndSaveTelegramSessionIDHash(ctx context.Context, userID uint) (sessionID []byte, ucError *ucerror.UCError)
 	PrecheckResetPassword(ctx context.Context, req requestdto.UserResetPasswordPrecheck) (*responsedto.UserResetPasswordPrecheck, *ucerror.UCError)
 	ResetPassword(ctx context.Context, request requestdto.UserResetPassword) *ucerror.UCError

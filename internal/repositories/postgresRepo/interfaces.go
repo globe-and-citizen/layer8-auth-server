@@ -17,7 +17,7 @@ type IPostgresRepository interface {
 type IUserRepositories interface {
 	IUserRepository
 	IUserMetadataRepository
-	IPhoneNumberVerificationRepository
+	IPhoneVerificationRepository
 	IEmailVerificationRepository
 	IZKSnarksKeyRepository
 }
@@ -66,16 +66,16 @@ type IUserMetadataRepository interface {
 	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error
 }
 
-type IPhoneNumberVerificationRepository interface {
-	SavePhoneNumberVerificationData(ctx context.Context, data gormModels.PhoneNumberVerificationData) error
-	GetPhoneNumberVerificationData(ctx context.Context, userID uint) (*gormModels.PhoneNumberVerificationData, error)
-	SaveProofOfPhoneNumberVerification(
+type IPhoneVerificationRepository interface {
+	SavePhoneVerificationData(ctx context.Context, data gormModels.PhoneVerificationData) error
+	GetPhoneVerificationData(ctx context.Context, userID uint) (*gormModels.PhoneVerificationData, error)
+	SaveProofOfPhoneVerification(
 		ctx context.Context,
 		userID uint,
 		salt string,
-		phoneNumberVerificationCode string,
-		phoneNumberZkProof []byte,
-		phoneNumberZkPairID uint,
+		verificationCode string,
+		zkProof []byte,
+		zkKeyPairID uint,
 	) error
 }
 

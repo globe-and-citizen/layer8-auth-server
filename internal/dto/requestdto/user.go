@@ -45,6 +45,6 @@ type UserCheckEmailVerificationCode struct {
 	Code string `json:"code" validate:"required"`
 }
 
-type UserCheckPhoneNumberVerificationCode struct {
-	VerificationCode string `json:"verification_code"`
+type UserCheckPhoneVerificationCode struct {
+	Code string `json:"code" validate:"required"`
 }

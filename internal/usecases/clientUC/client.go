@@ -73,7 +73,11 @@ func (uc *ClientUsecase) Register(ctx context.Context, req requestdto.ClientRegi
 	}
 
 	err = uc.postgres.UpdateClient(ctx, newClient)
-	return ucerror.New(err, consts.ErrInternalServer) // todo handle error properly
+	if err != nil {
+		return ucerror.New(err, consts.ErrInternalServer) // todo handle error properly
+	}
+
+	return nil
 }
 
 func (uc *ClientUsecase) PrecheckLogin(

@@ -12,7 +12,7 @@ import (
 type IPhoneRepository interface {
 	GetPhoneNumberViaTelegramBot(telegramSessionIDHash []byte) (phoneNumber string, chatID int64, err error)
 	SendVerificationCode(chatID int64, verificationCode string) error
-	GetVerificationCodeExiry() time.Duration
+	GetVerificationCodeExpiry() time.Duration
 }
 
 type PhoneRepository struct {
@@ -46,6 +46,6 @@ func (r *PhoneRepository) SendVerificationCode(chatID int64, verificationCode st
 	return utils.StackError(r.telegramBot.SendVerificationCode(chatID, verificationCode))
 }
 
-func (r *PhoneRepository) GetVerificationCodeExiry() time.Duration {
+func (r *PhoneRepository) GetVerificationCodeExpiry() time.Duration {
 	return r.verificationCodeExpiry
 }

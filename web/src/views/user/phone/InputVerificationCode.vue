@@ -45,7 +45,7 @@ const submitCode = async () => {
         Authorization: `Bearer ${token.value}`,
       },
       body: JSON.stringify({
-        verification_code: verificationCode.value,
+        code: verificationCode.value,
       }),
     }
   );
