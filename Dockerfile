@@ -16,7 +16,7 @@ RUN npm install
 
 # Copy frontend source
 COPY web .
-RUN rm .env
+RUN rm -f .env
 
 # Build SPA
 RUN npm run build
