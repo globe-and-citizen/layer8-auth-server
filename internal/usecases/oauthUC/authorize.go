@@ -126,7 +126,7 @@ func (uc *OAuthUsecase) validateAuthorizeParams(
 	if req.RedirectURI != "" && req.RedirectURI != client.RedirectURI {
 		return nil, nil,
 			ucerror.New(
-				fmt.Errorf("%s does not match registered URI:%s", req.ClientID, client.RedirectURI),
+				fmt.Errorf("request does not match registered URI:%s", client.RedirectURI),
 				consts.ErrBadRequest,
 			)
 	}

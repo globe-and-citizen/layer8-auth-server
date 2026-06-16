@@ -20,7 +20,7 @@ func (t TokenRepository) GenerateOAuthJWTToken(user gormModels.User, expiry time
 
 func (t TokenRepository) VerifyOAuthJWTToken(tokenString string) (*models.OAuthAuthenticationClaims, error) {
 	claims := &models.OAuthAuthenticationClaims{}
-	err := t.verifyJWTToken(tokenString, t.clientJWTSecret, claims)
+	err := t.verifyJWTToken(tokenString, t.oauthJWTSecret, claims)
 	return claims, err
 }
 
