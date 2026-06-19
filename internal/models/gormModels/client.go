@@ -5,7 +5,7 @@ type Client struct {
 	Secret              string `gorm:"column:secret" json:"secret"`
 	Name                string `gorm:"column:name" json:"name"`
 	RedirectURI         string `gorm:"column:redirect_uri" json:"redirect_uri"`
-	BackendURI          string `gorm:"column:backend_uri" json:"backend_uri"`
+	BackendURI          string `gorm:"column:backend_uri; unique" json:"backend_uri"`
 	Username            string `gorm:"column:username; unique; not null" json:"username"`
 	ScramSalt           string `gorm:"column:salt; not null" json:"salt"`
 	ScramIterationCount int    `gorm:"column:iteration_count" json:"iteration_count"`

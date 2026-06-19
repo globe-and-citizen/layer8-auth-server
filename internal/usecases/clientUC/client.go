@@ -16,7 +16,14 @@ import (
 )
 
 func (uc *ClientUsecase) CheckBackendURI(ctx context.Context, req requestdto.ClientCheckBackendURI) (bool, *ucerror.UCError) {
-	response, err := uc.postgres.IsBackendURIExists(ctx, req.BackendURI)
+	backendURI, err := utils.GetURLHostPort(req.BackendURI)
+	if err != nil {
+		return false, ucerror.New(
+			fmt.Errorf("errors extract banckend uri: %w", err),
+			fmt.Errorf("%w: invalid backendURI", consts.ErrBadRequest),
+		)
+	}
+	response, err := uc.postgres.IsBackendURIExists(ctx, backendURI)
 	if err != nil {
 		return false, ucerror.New(fmt.Errorf("failed to check backendURI: %w", err), consts.ErrInternalServer)
 	}
