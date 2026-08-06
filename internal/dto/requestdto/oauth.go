@@ -26,6 +26,7 @@ type OAuthAuthorizeConsent struct {
 		Color           bool `json:"color" default:"false"`
 		DisplayName     bool `json:"display_name" default:"false"`
 		IsEmailVerified bool `json:"is_email_verified" default:"false"`
+		Location        bool `json:"location" default:"false"`
 	}
 }
 

@@ -48,6 +48,11 @@
             v-model="shareBio"
             label="Share bio"
           />
+
+          <ConsentCheckbox
+            v-model="shareLocation"
+            label="Share location"
+          />
         </div>
         <input type="submit" value="Authorize"/>
       </form>
@@ -87,6 +92,7 @@ const shareDisplayName = ref(false)
 const shareIsEmailVerified = ref(false)
 const shareColor = ref(false)
 const shareBio = ref(false)
+const shareLocation = ref(false)
 const agreed = ref(false)
 
 const getDate = () => new Date().getFullYear()
@@ -143,6 +149,7 @@ const submit = async (e) => {
             is_email_verified: shareIsEmailVerified.value,
             color: shareColor.value,
             bio: shareBio.value,
+            location: shareLocation.value
           },
           return_result: !!window.opener, // ??? what's this for?
         }),

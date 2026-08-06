@@ -54,6 +54,9 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 	if req.Share.IsEmailVerified {
 		scopes = append(scopes, ScopeReadUserIsEmailVerified)
 	}
+	if req.Share.Location {
+		scopes = append(scopes, ScopeReadUserLocation)
+	}
 
 	if scopes.IsOIDC() && !req.OIDCAgreedToShare {
 		return nil, ucerror.New(fmt.Errorf("user must agree to share info for OIDC scopes"), consts.ErrBadRequest)

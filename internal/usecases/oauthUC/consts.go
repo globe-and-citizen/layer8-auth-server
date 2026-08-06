@@ -17,6 +17,7 @@ const (
 	ScopeReadUserColor           Scope = "read:user:color"
 	ScopeReadUserBio             Scope = "read:user:bio"
 	ScopeReadUserIsEmailVerified Scope = "read:user:is_email_verified"
+	ScopeReadUserLocation        Scope = "read:user:location"
 
 	// OIDC scopes are standardized, we can define custom ones for our implementation but don't redefine standard scopes
 	OIDCScopeOpenID  Scope = "openid"
@@ -41,7 +42,8 @@ func isAPIScope(s Scope) bool {
 		ScopeReadUserDisplayName,
 		ScopeReadUserColor,
 		ScopeReadUserBio,
-		ScopeReadUserIsEmailVerified:
+		ScopeReadUserIsEmailVerified,
+		ScopeReadUserLocation:
 		return true
 	default:
 		return false
