@@ -1,12 +1,13 @@
 <template>
   <div class="container">
     <img src="@/assets/images/logo.png" alt="logo" class="logo" />
+
     <h1 class="heading">Layer8</h1>
+
     <div class="line"></div>
 
     <div class="body">
       <h2 class="center">Oops! We encountered some errors</h2>
-      <br />
 
       <div class="box">
         <div
@@ -17,8 +18,6 @@
           <span>{{ err }}</span>
         </div>
       </div>
-
-      <br />
 
       <div class="footer">
         <a class="cursor-pointer" @click="logout">Logout</a>
@@ -46,6 +45,7 @@ const errorMap: Record<string, string> = {
   server_error: "An error occurred on the server.",
   redirect_uri_mismatch:
     "The redirect uri does not match the client's redirect uri.",
+  bad_request: "Some error occurred during the request.",
 }
 
 const errors = computed(() => {
@@ -80,10 +80,11 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: #333;
+
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+
   min-height: 100vh;
 }
 
@@ -96,18 +97,73 @@ a:hover {
   color: #333;
 }
 
+.container {
+  width: 600px;
+  max-width: 600px;
+  min-width: 600px;
+
+  padding: 30px;
+
+  border: 5px solid #0000001f;
+  border-radius: 20px;
+
+  background: #fff;
+}
+
+.logo {
+  display: block;
+
+  width: 150px;
+
+  margin: -110px auto 0;
+
+  background: #fff;
+  padding: 20px;
+}
+
 .heading {
   text-align: center;
-  font: bold;
+  font-weight: bold;
   color: #484848;
+  font-size: 2rem;
 }
 
 .center {
   text-align: center;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin-bottom: 24px;
 }
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.line {
+  width: 100%;
+  height: 2px;
+  background-color: #0000001f;
+  margin: 20px 0 30px;
+}
+
+.box {
+  width: 100%;
+  border: 1px solid #0000001f;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.box-item {
+  padding: 16px;
+  border-bottom: 1px solid #0000001f;
+
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.box-item:last-child {
+  border-bottom: none;
 }
 
 .footer {
@@ -116,80 +172,59 @@ a:hover {
   color: #0000006e;
 }
 
-.line {
-  width: 100%;
-  height: 2px;
-  background-color: #0000001f;
-  margin: 20px 0;
+.footer a {
+  color: inherit;
 }
 
-.container {
-  max-width: 600px;
-  min-width: 600px;
-  padding: 30px;
-  border: 5px solid #0000001f;
-  border-radius: 20px;
-}
-
-@media (max-width: 600px) {
+/* Tablet */
+@media (max-width: 768px) {
   .container {
-    width: 100%;
+    padding: 24px;
+  }
+
+  .heading {
+    font-size: 1.75rem;
+  }
+
+  .center {
+    font-size: 1.25rem;
   }
 }
 
-.logo {
-  width: 150px;
-  margin-left: 50%;
-  transform: translateX(-50%);
-  margin-top: -110px;
-  background-color: #fff;
-  padding: 20px;
-}
+/* Mobile */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
 
-form {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
+  .container {
+    padding: 20px;
+    border-width: 2px;
+    margin-top: 60px;
+  }
 
-input {
-  width: 100%;
-  padding: 15px;
-  margin: 10px 0;
-  border: 1px solid #0000001f;
-  outline: none;
-}
+  .logo {
+    width: 120px;
+    margin-top: -80px;
+    padding: 12px;
+  }
 
-input:focus {
-  border: 1px solid #000000;
-}
+  .heading {
+    font-size: 1.5rem;
+  }
 
-input[type="submit"] {
-  background-color: #000000;
-  color: #fff;
-  cursor: pointer;
-}
+  .center {
+    font-size: 1.125rem;
+  }
 
-.box {
-  width: 100%;
-  border: 1px solid #0000001f;
-  margin: 10px 0;
-}
+  .box-item {
+    padding: 14px;
+    font-size: 14px;
+  }
 
-.box-item {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #0000001f;
-}
-
-.box-item:last-child {
-  border-bottom: none;
-}
-
-.box-item span:first-child {
-  margin-right: 10px;
+  .footer {
+    text-align: center;
+    line-height: 1.8;
+  }
 }
 </style>
-

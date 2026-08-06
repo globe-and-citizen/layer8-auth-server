@@ -1,15 +1,17 @@
 <template>
-  <label class="consent-label">
-    <input
-      type="checkbox"
-      :checked="modelValue"
-      @change="updateValue"
-      class="consent-checkbox"
-    />
-    <span class="consent-text">
+  <div>
+    <label class="consent-label">
+      <input
+        type="checkbox"
+        :checked="modelValue"
+        @change="updateValue"
+        class="consent-checkbox"
+      />
+      <span class="consent-text">
       {{ label }}
     </span>
-  </label>
+    </label>
+  </div>
 </template>
 
 <script setup>
@@ -33,13 +35,24 @@ const updateValue = (e) => {
 
 <style scoped>
 .consent-label {
-  display: flex;
-  white-space: nowrap;
-  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .consent-checkbox {
-  margin-right: 5px;
+  appearance: auto;
+
+  width: 18px !important;
+  height: 18px !important;
+
+  min-width: 18px;
+  min-height: 18px;
+
+  margin: 0;
+  padding: 0;
+
+  flex-shrink: 0;
 }
 
 .consent-text {

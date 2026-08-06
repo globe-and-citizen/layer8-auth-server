@@ -20,6 +20,8 @@ var (
 	ErrDuplicateKey             = errors.New("duplicate key")
 	ErrRequestCanceled          = errors.New("request canceled")
 	ErrRequestTimeout           = errors.New("request timeout")
+	ErrRedirectURIMismatch      = errors.New("redirectURI mismatch")
+	ErrInvalidOAuthScope        = errors.New("invalid OAuth scope")
 )
 
 func MapErrorToStatusCode(err error) int {
@@ -28,6 +30,10 @@ func MapErrorToStatusCode(err error) int {
 		return http.StatusInternalServerError
 	case errors.Is(err, ErrUnauthorized):
 		return http.StatusUnauthorized
+	case errors.Is(err, ErrRedirectURIMismatch):
+		return http.StatusBadRequest
+	case errors.Is(err, ErrInvalidOAuthScope):
+		return http.StatusBadRequest
 	default:
 		return http.StatusBadRequest
 	}

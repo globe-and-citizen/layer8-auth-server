@@ -130,14 +130,14 @@ func (uc *OAuthUsecase) validateAuthorizeParams(
 		return nil, nil,
 			ucerror.New(
 				fmt.Errorf("request does not match registered URI:%s", client.RedirectURI),
-				consts.ErrBadRequest,
+				consts.ErrRedirectURIMismatch,
 			)
 	}
 
 	// 3. Validate scopes
 	scopes, _, err := ValidateScopeStr(req.Scopes)
 	if err != nil {
-		return nil, nil, ucerror.New(fmt.Errorf("invalid scope: %w", err), consts.ErrBadRequest)
+		return nil, nil, ucerror.New(fmt.Errorf("invalid scope: %w", err), consts.ErrInvalidOAuthScope)
 	}
 
 	return client, scopes, nil
