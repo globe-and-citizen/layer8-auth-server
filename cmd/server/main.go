@@ -68,7 +68,7 @@ func main() {
 	})
 
 	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.PostgresConfig)
-	postgresRepository.Migrate()
+	//postgresRepository.Migrate()
 	tokenRepository := tokenRepo.NewTokenRepository(
 		appConfig.ServerDNS,
 		[]byte(appConfig.UserConfig.JWTSecret),
