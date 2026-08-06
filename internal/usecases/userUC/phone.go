@@ -81,11 +81,17 @@ func (uc *UserUsecase) CheckPhoneVerificationCode(
 		return ucerror.New(fmt.Errorf("failed to generate zkproof of phone number verification: %w", err), consts.ErrInternalServer)
 	}
 
+	country, err := utils.GetPhoneCountry(verificationData.PhoneNumber)
+	if err != nil {
+		return ucerror.New(fmt.Errorf("failed to get phone country: %w", err), consts.ErrInternalServer)
+	}
+
 	err = uc.postgres.SaveProofOfPhoneVerification(
 		ctx,
 		verificationData.UserId,
 		verificationData.Salt,
 		verificationData.VerificationCode,
+		country,
 		zkProof,
 		zkPairID,
 	)

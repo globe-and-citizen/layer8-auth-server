@@ -74,6 +74,7 @@ type IPhoneVerificationRepository interface {
 		userID uint,
 		salt string,
 		verificationCode string,
+		location string,
 		zkProof []byte,
 		zkKeyPairID uint,
 	) error

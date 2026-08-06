@@ -168,13 +168,21 @@
                 </div>
               </div>
 
-              <!-- Right side - Bio section -->
+              <!-- Right side - Bio section and Phone Location -->
               <div style="flex: none; width: 60%;">
                 <div>
                   <label class="font-normal text-black text-sm text-start mb-2 block">Bio</label>
                   <textarea
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none"
                     rows="4" v-model="user.bio" placeholder="Bio"></textarea>
+                </div>
+                <div v-if="user.phone_location" style="margin-top: 1rem;">
+                  <label class="font-normal text-black text-sm text-start mb-2 block">Phone
+                    Location</label>
+                  <input
+                    readonly
+                    class="border border-[#BDC3CA] rounded-lg bg-[#ECF4FD] px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
+                    type="text" :value="getCountryName(user.phone_location)"/>
                 </div>
               </div>
             </div>
@@ -230,6 +238,7 @@ const user = ref({
   display_name: "",
   color: "",
   bio: "",
+  phone_location: "",
   email_verified: false,
   phone_number_verified: false,
 })
@@ -278,6 +287,17 @@ const updateUserMetadata = async () => {
   } catch (err) {
     console.error(err)
   }
+}
+
+function getCountryName(
+  countryCode: string,
+  locale = navigator.language
+): string {
+  const displayNames = new Intl.DisplayNames([locale], {
+    type: 'region',
+  });
+
+  return displayNames.of(countryCode.toUpperCase()) ?? countryCode;
 }
 
 const logoutUser = () => {

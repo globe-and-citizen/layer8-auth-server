@@ -110,6 +110,7 @@ func (r *PostgresRepository) SaveProofOfPhoneVerification(
 	userID uint,
 	salt string,
 	verificationCode string,
+	location string,
 	zkProof []byte,
 	zkPairID uint,
 ) error {
@@ -139,6 +140,7 @@ func (r *PostgresRepository) SaveProofOfPhoneVerification(
 	err = tx.Model(&gormModels.UserMetadata{}).
 		Where("id = ?", userID).
 		Update("is_phone_number_verified", true).
+		Update("location", location).
 		Error
 	if err != nil {
 		tx.Rollback()
