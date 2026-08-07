@@ -36,4 +36,5 @@ type OAuthZkMetadata struct {
 	DisplayName     string `json:"display_name"`
 	Color           string `json:"color"`
 	Bio             string `json:"bio"`
+	Location        string `json:"location"`
 }

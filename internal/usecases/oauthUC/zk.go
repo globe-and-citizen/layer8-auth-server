@@ -32,6 +32,8 @@ func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OA
 			zkMetadata.DisplayName = userMetadata.DisplayName
 		case ScopeReadUserIsEmailVerified:
 			zkMetadata.IsEmailVerified = userMetadata.IsEmailVerified
+		case ScopeReadUserLocation:
+			zkMetadata.Location = userMetadata.Location
 		default:
 			continue
 		}

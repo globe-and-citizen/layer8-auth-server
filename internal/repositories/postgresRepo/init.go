@@ -16,6 +16,8 @@ func NewPostgresRepository(config utils.PostgresConfig) IPostgresRepository {
 	return &PostgresRepository{db: utils.ConnectDB(config)}
 }
 
+// Deprecated: Use golang-migrate for database migrations instead.
+// This method is kept for backward compatibility but should not be used.
 func (r *PostgresRepository) Migrate() {
 	// Auto migrate tables
 	err := r.db.AutoMigrate(

@@ -1,16 +1,17 @@
 <template>
   <div class="container">
-    <img src="@/assets/images/logo.png" alt="logo" class="logo"/>
+    <img src="@/assets/images/logo.png" alt="logo" class="logo" />
+
     <h1 class="heading">Layer8</h1>
+
     <div class="line"></div>
 
     <div class="body">
       <h2 class="center">Login</h2>
-      <br/>
 
       <form @submit.prevent="submitLogin">
         <!-- keep next for backend compatibility -->
-        <input type="hidden" name="next" :value="next"/>
+        <input type="hidden" name="next" :value="next" />
 
         <input
           aria-required="true"
@@ -32,32 +33,44 @@
           required
         />
 
-        <input aria-required="true" type="submit" value="Login"/>
+        <input
+          aria-required="true"
+          type="submit"
+          value="Login"
+        />
 
         <small v-if="error" class="error">{{ error }}</small>
       </form>
 
-      <a href="/user-register">Don't have an account? Register</a>
-      <br/>
+      <a href="/user-register" class="register-link">
+        Don't have an account? Register
+      </a>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from "vue"
-import {useRoute, useRouter} from "vue-router"
-import {getAPI, OAuthUserLoginPath, OAuthUserPrecheckLoginPath} from "@/api/paths.ts";
+import { ref } from "vue";
+import { useRoute } from "vue-router";
+import {
+  getAPI,
+  OAuthUserLoginPath,
+  OAuthUserPrecheckLoginPath,
+} from "@/api/paths.ts";
 import scram from "@/utils/scram.ts";
+import router from "@/router";
 
-const route = useRoute()
+const route = useRoute();
 
-const username = ref("")
-const password = ref("")
-const error = ref("")
-const cNonce = ref("")
+const username = ref("");
+const password = ref("");
+const error = ref("");
+const cNonce = ref("");
 
 // equivalent of {{ .Next }}
-const next = (route.query.next as string) || `/oauth/authorize${window.location.search}`
+const next =
+  (route.query.next as string) ||
+  `/oauth/authorize${window.location.search}`;
 
 const submitLogin = async () => {
   try {
@@ -69,17 +82,16 @@ const submitLogin = async () => {
     crypto.getRandomValues(cNonceBytes);
     cNonce.value = btoa(String.fromCharCode(...cNonceBytes));
 
-    const precheckRes = await fetch(
-      getAPI(OAuthUserPrecheckLoginPath),
-      {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          username: username.value,
-          c_nonce: cNonce.value,
-        }),
-      }
-    );
+    const precheckRes = await fetch(getAPI(OAuthUserPrecheckLoginPath), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: username.value,
+        c_nonce: cNonce.value,
+      }),
+    });
 
     if (precheckRes.status !== 200) {
       return;
@@ -87,7 +99,7 @@ const submitLogin = async () => {
 
     const precheckBody = await precheckRes.json();
 
-    const {data} = scram.keysHMAC(
+    const { data } = scram.keysHMAC(
       password.value,
       precheckBody.data.salt,
       precheckBody.data.iteration_count
@@ -97,7 +109,11 @@ const submitLogin = async () => {
 
     const authMessage = `[n=${username.value},r=${cNonce.value},s=${precheckBody.data.salt},i=${precheckBody.data.iteration_count},r=${precheckBody.data.nonce}]`;
 
-    const clientSignature = scram.signatureHMAC(authMessage, data.storedKey);
+    const clientSignature = scram.signatureHMAC(
+      authMessage,
+      data.storedKey
+    );
+
     const clientProof = scram.bytesToHexString(
       scram.xorBytes(
         clientKeyBytes,
@@ -106,10 +122,12 @@ const submitLogin = async () => {
     );
 
     const loginRes = await fetch(
-      getAPI(OAuthUserLoginPath + `${window.location.search}`),
+      getAPI(OAuthUserLoginPath + window.location.search),
       {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           username: username.value,
           nonce: precheckBody.data.nonce,
@@ -119,23 +137,32 @@ const submitLogin = async () => {
       }
     );
 
+    if (loginRes.status >= 500) {
+      await router.push("/oauth/error?opt=server_error");
+      return;
+    }
+
     const loginJSON = await loginRes.json();
 
     if (loginJSON.data?.verifier) {
-      const serverCheck = scram.signatureHMAC(authMessage, data.serverKey);
+      const serverCheck = scram.signatureHMAC(
+        authMessage,
+        data.serverKey
+      );
+
       if (serverCheck === loginJSON.data.verifier) {
         if (loginJSON.data?.redirect) {
-          window.location.href = loginJSON.data.redirect
+          window.location.href = loginJSON.data.redirect;
         } else {
-          window.location.href = next
+          window.location.href = next;
         }
       }
     } else {
-      error.value = loginJSON.data?.error || "Login failed"
+      error.value = loginJSON.data?.error || "Login failed";
     }
   } catch (err) {
     console.error(err);
-    error.value = "Network error";
+    error.value = "Network error" + err;
   }
 };
 </script>
@@ -153,10 +180,11 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: #333;
+
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+
   min-height: 100vh;
 }
 
@@ -169,13 +197,88 @@ a:hover {
   color: #333;
 }
 
+.container {
+  width: 600px;
+  max-width: 600px;
+  min-width: 600px;
+
+  padding: 30px;
+
+  border: 5px solid #0000001f;
+  border-radius: 20px;
+
+  background: #fff;
+}
+
+.logo {
+  display: block;
+
+  width: 150px;
+
+  margin: -110px auto 0;
+
+  background: #fff;
+  padding: 20px;
+}
+
 .heading {
   text-align: center;
-  font: bold;
+  font-weight: bold;
   color: #484848;
 }
 
 .center {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.line {
+  width: 100%;
+  height: 2px;
+  background-color: #0000001f;
+  margin: 20px 0;
+}
+
+.body {
+  width: 100%;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input {
+  width: 100%;
+
+  padding: 15px;
+  margin: 10px 0;
+
+  font-size: 16px; /* prevents iOS zoom */
+
+  border: 1px solid #0000001f;
+  outline: none;
+}
+
+input:focus {
+  border-color: #000;
+}
+
+input[type="submit"] {
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+.register-link {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.error {
+  color: #ff0000b9;
   text-align: center;
 }
 
@@ -193,72 +296,13 @@ a:hover {
   color: #0000006e;
 }
 
-.error {
-  color: #ff0000b9;
-}
-
-.line {
-  width: 100%;
-  height: 2px;
-  background-color: #0000001f;
-  margin: 20px 0;
-}
-
-.container {
-  max-width: 600px;
-  min-width: 600px;
-  padding: 30px;
-  border: 5px solid #0000001f;
-  border-radius: 20px;
-}
-
-@media (max-width: 600px) {
-  .container {
-    width: 100%;
-  }
-}
-
-.logo {
-  width: 150px;
-  margin-left: 50%;
-  transform: translateX(-50%);
-  margin-top: -110px;
-  background-color: #fff;
-  padding: 20px;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-input {
-  width: 100%;
-  padding: 15px;
-  margin: 10px 0;
-  border: 1px solid #0000001f;
-  outline: none;
-}
-
 .btn-primary {
   width: 100%;
   padding: 15px;
   margin: 10px 0;
   border: 1px solid #0000001f;
   outline: none;
-  background-color: #000000;
-  color: #fff;
-  cursor: pointer;
-}
-
-input:focus {
-  border: 1px solid #000000;
-}
-
-input[type="submit"] {
-  background-color: #000000;
+  background: #000;
   color: #fff;
   cursor: pointer;
 }
@@ -284,4 +328,39 @@ input[type="submit"] {
   margin-right: 10px;
 }
 
+/* Mobile */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .container {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+
+    padding: 20px;
+    border-width: 2px;
+    margin-top: 60px;
+  }
+
+  .logo {
+    width: 120px;
+    margin-top: -80px;
+    padding: 12px;
+  }
+
+  .heading {
+    font-size: 1.75rem;
+  }
+
+  .center {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+  }
+
+  input {
+    padding: 12px 14px;
+  }
+}
 </style>

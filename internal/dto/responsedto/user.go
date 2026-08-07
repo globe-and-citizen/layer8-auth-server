@@ -28,6 +28,7 @@ type UserProfile struct {
 	Color               string `json:"color"`
 	EmailVerified       bool   `json:"email_verified"`
 	PhoneNumberVerified bool   `json:"phone_number_verified"`
+	PhoneLocation       string `json:"phone_location"`
 }
 
 type UserGetTelegramSessionID struct {
