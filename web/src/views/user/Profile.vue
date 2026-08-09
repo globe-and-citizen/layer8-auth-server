@@ -6,7 +6,8 @@
       @click="showSidebar(false)"
       class="absolute block md:hidden lg:hidden top-0 left-0 h-dvh w-full bg-opacity-50 backdrop-blur-lg text-black"
     >
-      <div class="w-[70%] h-dvh md:col-span-1 bg-white rounded-r-2xl p-3">
+      <!-- Prevent clicks inside the white panel from closing the overlay -->
+      <div @click.stop class="w-[70%] h-dvh md:col-span-1 bg-white rounded-r-2xl p-3">
         <div class="h-dvh block md:hidden lg:hidden">
           <span class="flex justify-end cursor-pointer" @click="showSidebar(false)">&#x2715;</span>
           <div class="bg-white px-2 py-4">
@@ -193,21 +194,19 @@
                 v-if="!user.phone_number_verified">not</span> verified.
               </div>
               <button
-                v-if="!user.phone_number_verified"
                 @click="verifyPhoneNumber"
                 class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 md:py-3 lg:py-4 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
               >
-                Verify Phone Number
+                {{ !user.phone_number_verified ? "Verify Phone Number" : "Verify New Phone Number" }}
               </button>
               <div class="self-center text-base md:text-xl">Email is <span
                 v-if="!user.email_verified">not</span> verified.
               </div>
               <button
-                v-if="!user.email_verified"
                 @click="verifyEmail"
                 class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 md:py-3 lg:py-4 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
               >
-                Verify Email
+                {{ !user.email_verified ? "Verify Email" : "Verify New Email"}}
               </button>
             </div>
             <div class="block md:hidden lg:hidden">
@@ -247,6 +246,12 @@ const isUserPortalSidebar = ref(false)
 
 const getUserDetails = async () => {
   try {
+    if (!token.value) {
+      // No token — redirect to home/login
+      window.location.href = "/user-login"
+      return
+    }
+
     const resp = await fetch(getAPI(UserProfilePath), {
       headers: {
         "Content-Type": "application/json",
@@ -254,8 +259,15 @@ const getUserDetails = async () => {
       },
     })
 
+    if (!resp.ok) {
+      console.error("Failed to fetch user profile", resp.status)
+      return
+    }
+
     const data = await resp.json()
-    user.value = data.data
+    if (data && data.data) {
+      user.value = data.data
+    }
   } catch (err) {
     console.error(err)
   }
