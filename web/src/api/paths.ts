@@ -26,6 +26,7 @@ const ClientUnpaidAmountPath = '/client/unpaid-amount'
 
 const OAuthUserPrecheckLoginPath = '/oauth-login-precheck';
 const OAuthUserLoginPath = '/oauth-login';
+const OAuthUserLogoutPath = '/oauth-logout';
 const OAuthGetAuthorizeContextPath = "/oauth/authorize";
 const OAuthPostAuthorizeDecisionPath = "/oauth/authorize";
 
@@ -60,6 +61,7 @@ export {
 
   OAuthUserPrecheckLoginPath,
   OAuthUserLoginPath,
+  OAuthUserLogoutPath,
   OAuthGetAuthorizeContextPath,
   OAuthPostAuthorizeDecisionPath,
 

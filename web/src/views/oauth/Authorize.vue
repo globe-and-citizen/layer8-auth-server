@@ -70,7 +70,12 @@
 
 <script setup>
 import {onMounted, ref} from 'vue'
-import {getAPI, OAuthGetAuthorizeContextPath, OAuthPostAuthorizeDecisionPath} from "@/api/paths.js";
+import {
+  getAPI,
+  OAuthGetAuthorizeContextPath,
+  OAuthPostAuthorizeDecisionPath,
+  OAuthUserLoginPath, OAuthUserLogoutPath
+} from "@/api/paths.js";
 import {useRoute, useRouter} from "vue-router";
 import ConsentCheckbox from "@/views/oauth/authorize/ConsentCheckbox.vue";
 
@@ -97,9 +102,22 @@ const agreed = ref(false)
 
 const getDate = () => new Date().getFullYear()
 
-const logout = () => {
-  document.cookie = 'token=; Max-Age=0; path=/'
-  router.push('/oauth-login' + params)
+const logout = async () => {
+  const logoutRes = await fetch(
+    getAPI(OAuthUserLogoutPath),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  )
+
+  if (!logoutRes.ok) {
+    alert(`Logout failed: ${logoutRes.status} ${logoutRes.statusText}`)
+  }
+
+  await router.push('/oauth-login' + params)
 }
 
 onMounted(async () => {
@@ -112,8 +130,8 @@ onMounted(async () => {
       }
     )
 
-    if (res.status >= 500) {
-      await router.push("/oauth/error?opt=server_error");
+    if (!res.ok) {
+      await router.push('/oauth-login' + params)
       return
     }
 

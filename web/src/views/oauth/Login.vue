@@ -94,6 +94,12 @@ const submitLogin = async () => {
     });
 
     if (precheckRes.status !== 200) {
+      if (precheckRes.status >= 500) {
+        error.value = "Internal Server Error";
+        return
+      }
+
+      error.value = "Login failed. Please check your username and password.";
       return;
     }
 
