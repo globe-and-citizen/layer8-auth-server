@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"time"
 )
 
 func (r *PostgresRepository) SaveProofOfEmailVerification(
@@ -37,6 +38,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	err = tx.Model(&gormModels.UserMetadata{}).
 		Where("id = ?", userId).
 		Update("is_email_verified", true).
+		Update("last_email_verified_at", time.Now()).
 		Error
 	if err != nil {
 		tx.Rollback()
@@ -141,6 +143,7 @@ func (r *PostgresRepository) SaveProofOfPhoneVerification(
 		Where("id = ?", userID).
 		Update("is_phone_number_verified", true).
 		Update("location", location).
+		Update("last_phone_verified_at", time.Now()).
 		Error
 	if err != nil {
 		tx.Rollback()

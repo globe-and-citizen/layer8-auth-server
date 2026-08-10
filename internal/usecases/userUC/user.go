@@ -117,7 +117,9 @@ func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (*responsedt
 		Bio:                 metadata.Bio,
 		Color:               metadata.Color,
 		EmailVerified:       metadata.IsEmailVerified,
+		LastEmailVerifiedAt: metadata.LastEmailVerifiedAt,
 		PhoneNumberVerified: metadata.IsPhoneNumberVerified,
+		LastPhoneVerifiedAt: metadata.LastPhoneVerifiedAt,
 		PhoneLocation:       metadata.Location,
 	}, nil
 }

@@ -177,38 +177,37 @@
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none"
                     rows="4" v-model="user.bio" placeholder="Bio"></textarea>
                 </div>
-                <div v-if="user.phone_location" style="margin-top: 1rem;">
-                  <label class="font-normal text-black text-sm text-start mb-2 block">Phone
-                    Location</label>
-                  <input
-                    readonly
-                    class="border border-[#BDC3CA] rounded-lg bg-[#ECF4FD] px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
-                    type="text" :value="getCountryName(user.phone_location)"/>
-                </div>
               </div>
             </div>
 
             <!-- Verification section -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-              <div class="self-center text-base md:text-xl">Phone number is <span
-                v-if="!user.phone_number_verified">not</span> verified.
-              </div>
-              <button
-                @click="verifyPhoneNumber"
-                class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 md:py-3 lg:py-4 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
-              >
-                {{ !user.phone_number_verified ? "Verify Phone Number" : "Verify New Phone Number" }}
-              </button>
-              <div class="self-center text-base md:text-xl">Email is <span
-                v-if="!user.email_verified">not</span> verified.
-              </div>
-              <button
-                @click="verifyEmail"
-                class="w-full bg-white border-2 border-[#4F80E1] rounded-lg py-2 md:py-3 lg:py-4 font-medium text-[#4F80E1] hover:text-white hover:bg-[#4F80E1] hover:border-none"
-              >
-                {{ !user.email_verified ? "Verify Email" : "Verify New Email"}}
-              </button>
+            <div class="flex flex-col gap-4 md:gap-6 mb-6">
+              <ZkVerificationCard
+                label="Phone number"
+                :verified="user.phone_number_verified"
+                :last-verified-at="user.last_phone_verified_at"
+                :location="getCountryName(user.phone_location)"
+                :verify-label="
+                  user.phone_number_verified
+                  ? 'Verify New Phone Number'
+                  : 'Verify Phone Number'
+                "
+                @verify="verifyPhoneNumber"
+              />
+
+              <ZkVerificationCard
+                label="Email"
+                :verified="user.email_verified"
+                :last-verified-at="user.last_email_verified_at"
+                :verify-label="
+                  user.email_verified
+                  ? 'Verify New Email'
+                   : 'Verify Email'
+                "
+                @verify="verifyEmail"
+              />
             </div>
+
             <div class="block md:hidden lg:hidden">
               <div class="flex justify-between items-center">
                 <button
@@ -229,6 +228,8 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue"
 import {getAPI, UserProfilePath, UserUpdateMetadataPath} from "@/api/paths.ts";
+import ZkVerificationCard from "@/views/user/ZkVerificationCard.vue";
+import router from "@/router";
 
 const token = ref<string | null>(localStorage.getItem("token"))
 
@@ -240,6 +241,8 @@ const user = ref({
   phone_location: "",
   email_verified: false,
   phone_number_verified: false,
+  last_email_verified_at: null,
+  last_phone_verified_at: null,
 })
 
 const isUserPortalSidebar = ref(false)
@@ -248,7 +251,7 @@ const getUserDetails = async () => {
   try {
     if (!token.value) {
       // No token — redirect to home/login
-      window.location.href = "/user-login"
+      await router.push("/user-login")
       return
     }
 
@@ -261,6 +264,7 @@ const getUserDetails = async () => {
 
     if (!resp.ok) {
       console.error("Failed to fetch user profile", resp.status)
+      await router.push("/user-login")
       return
     }
 
@@ -305,6 +309,10 @@ function getCountryName(
   countryCode: string,
   locale = navigator.language
 ): string {
+  if (!countryCode) {
+    return ""
+  }
+
   const displayNames = new Intl.DisplayNames([locale], {
     type: 'region',
   });
