@@ -9,6 +9,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/dto/responsedto"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
 	"globe-and-citizen/layer8/auth-server/pkg/scram"
+	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -19,9 +20,9 @@ func (uc *OAuthUsecase) PrecheckUserLogin(
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ucerror.New(fmt.Errorf("user not found: %w", err), consts.ErrBadRequest)
+			return nil, ucerror.New(utils.StackError(fmt.Errorf("user not found: %w", err)), consts.ErrBadRequest)
 		}
-		return nil, ucerror.New(fmt.Errorf("failed to get user by username: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user by username: %w", err)), consts.ErrInternalServer)
 	}
 
 	loginPrecheckResp := responsedto.OAuthUserLoginPrecheck{
@@ -37,21 +38,21 @@ func (uc *OAuthUsecase) UserLogin(ctx context.Context, req requestdto.OAuthUserL
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ucerror.New(fmt.Errorf("user not found: %w", err), consts.ErrBadRequest)
+			return nil, ucerror.New(utils.StackError(fmt.Errorf("user not found: %w", err)), consts.ErrBadRequest)
 
 		}
-		return nil, ucerror.New(fmt.Errorf("failed to get user by username: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user by username: %w", err)), consts.ErrInternalServer)
 	}
 
 	tokenString, err := uc.token.GenerateOAuthJWTToken(*user, consts.OAuthLoginTokenExpiry)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("error generating login token: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("error generating login token: %w", err)), consts.ErrInternalServer)
 	}
 
 	serverFinalMsg, err := scram.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce, user.ScramSalt,
 		user.ScramIterationCount, user.ScramStoredKey, user.ScramServerKey)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("error creating server final message: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("error creating server final message: %w", err)), consts.ErrInternalServer)
 	}
 
 	return &responsedto.OAuthUserLogin{

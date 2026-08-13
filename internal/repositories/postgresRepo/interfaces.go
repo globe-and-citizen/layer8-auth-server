@@ -36,6 +36,7 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, user gormModels.User) error
 	UpdateUserPassword(ctx context.Context, username string, storedKey string, serverKey string) error
 	IsUserIDExists(ctx context.Context, id uint) (bool, error)
+	DeleteUserByUsername(ctx context.Context, username string) error
 }
 
 type IClientRepository interface {

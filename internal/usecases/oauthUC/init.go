@@ -8,6 +8,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 )
 
 type IOAuthUsecase interface {
@@ -21,8 +22,9 @@ type IOAuthUsecase interface {
 	MdwVerifyClientAccessToken(ctx context.Context, tokenString string) (userID uint, scopes string, err *ucerror.UCError)
 }
 
-func NewOAuthUsecase(conf config.OAuthConfig, postgres postgresRepo.IPostgresRepository, token tokenRepo.ITokenRepository) IOAuthUsecase {
+func NewOAuthUsecase(logger log.ILogger, conf config.OAuthConfig, postgres postgresRepo.IPostgresRepository, token tokenRepo.ITokenRepository) IOAuthUsecase {
 	return &OAuthUsecase{
+		logger:   logger,
 		config:   conf,
 		postgres: postgres,
 		token:    token,
@@ -30,6 +32,7 @@ func NewOAuthUsecase(conf config.OAuthConfig, postgres postgresRepo.IPostgresRep
 }
 
 type OAuthUsecase struct {
+	logger   log.ILogger
 	config   config.OAuthConfig
 	postgres postgresRepo.IPostgresRepository
 	token    tokenRepo.ITokenRepository

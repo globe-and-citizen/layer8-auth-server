@@ -93,6 +93,7 @@ func main() {
 	ethRepository := ethRepo.NewEthereumRepository(logger, client, appConfig.Web3Config)
 
 	userUsecase := userUC.NewUserUsecase(
+		logger,
 		postgresRepository,
 		tokenRepository,
 		emailRepository,
@@ -101,11 +102,12 @@ func main() {
 		phoneRepository,
 	)
 	clientUsecase := clientUC.NewClientUsecase(
+		logger,
 		postgresRepository,
 		tokenRepository,
 		influxdbRepository,
 	)
-	oauthUsecase := oauthUC.NewOAuthUsecase(appConfig.OAuthConfig, postgresRepository, tokenRepository)
+	oauthUsecase := oauthUC.NewOAuthUsecase(logger, appConfig.OAuthConfig, postgresRepository, tokenRepository)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

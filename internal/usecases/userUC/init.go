@@ -11,6 +11,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/zkRepo"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 )
 
 type IUserUsecase interface {
@@ -31,6 +32,7 @@ type IUserUsecase interface {
 }
 
 type UserUsecase struct {
+	logger   log.ILogger
 	postgres postgresRepo.IUserRepositories
 	token    tokenRepo.ITokenRepository
 	email    emailRepo.IEmailRepository
@@ -40,6 +42,7 @@ type UserUsecase struct {
 }
 
 func NewUserUsecase(
+	logger log.ILogger,
 	postgres postgresRepo.IUserRepositories,
 	token tokenRepo.ITokenRepository,
 	email emailRepo.IEmailRepository,
@@ -48,6 +51,7 @@ func NewUserUsecase(
 	phone phoneRepo.IPhoneRepository,
 ) IUserUsecase {
 	return &UserUsecase{
+		logger:   logger,
 		postgres: postgres,
 		token:    token,
 		email:    email,

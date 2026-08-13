@@ -53,6 +53,10 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, updates gormModels.
 	return nil
 }
 
+func (r *PostgresRepository) DeleteUserByUsername(ctx context.Context, username string) error {
+	return utils.StackError(r.db.WithContext(ctx).Where("username = ?", username).Delete(&gormModels.User{}).Error)
+}
+
 func (r *PostgresRepository) GetUserByID(ctx context.Context, userId uint) (*gormModels.User, error) {
 	var user gormModels.User
 	e := r.db.WithContext(ctx).Where("id = ?", userId).First(&user).Error

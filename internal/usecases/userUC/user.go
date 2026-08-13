@@ -29,7 +29,7 @@ func (uc *UserUsecase) PrecheckRegister(
 
 	err := uc.postgres.CreateUser(ctx, user)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("failed to create user: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to create user: %w", err)), consts.ErrInternalServer)
 	}
 
 	return &responsedto.UserRegisterPrecheck{
@@ -47,15 +47,20 @@ func (uc *UserUsecase) Register(ctx context.Context, req requestdto.UserRegister
 
 	err := uc.postgres.UpdateUser(ctx, newUser)
 	if err != nil {
+		delErr := uc.postgres.DeleteUserByUsername(ctx, req.Username)
+		if delErr != nil {
+			uc.logger.Error("Failed to delete user after failed update", delErr)
+		}
+
 		if errors.Is(err, context.Canceled) {
-			return ucerror.New(fmt.Errorf("request was canceled: %w", err), consts.ErrRequestCanceled)
+			return ucerror.New(utils.StackError(fmt.Errorf("request was canceled: %w", err)), consts.ErrRequestCanceled)
 		}
 
 		if errors.Is(err, context.DeadlineExceeded) {
-			return ucerror.New(fmt.Errorf("request timeout: %w", err), consts.ErrRequestTimeout)
+			return ucerror.New(utils.StackError(fmt.Errorf("request timeout: %w", err)), consts.ErrRequestTimeout)
 		}
 
-		return ucerror.New(fmt.Errorf("failed to update user: %w", err), consts.ErrInternalServer)
+		return ucerror.New(utils.StackError(fmt.Errorf("failed to update user: %w", err)), consts.ErrInternalServer)
 	}
 
 	return nil
@@ -67,9 +72,9 @@ func (uc *UserUsecase) PrecheckLogin(
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+			return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user: %w", err)), consts.ErrNotFound)
 		}
-		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user: %w", err)), consts.ErrInternalServer)
 	}
 
 	loginPrecheckResp := responsedto.UserLoginPrecheck{
@@ -83,20 +88,20 @@ func (uc *UserUsecase) Login(ctx context.Context, req requestdto.UserLogin) (*re
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+			return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user: %w", err)), consts.ErrNotFound)
 		}
-		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user: %w", err)), consts.ErrInternalServer)
 	}
 
 	tokenString, err := uc.token.GenerateUserJWTToken(*user, consts.UserLoginTokenExpiry)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("error generating token: %v", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("error generating token: %v", err)), consts.ErrInternalServer)
 	}
 
 	serverFinalMsg, err := scram.CreateServerLoginFinalMessage(req.ClientLoginFinalMessage, req.CNonce, user.ScramSalt,
 		user.ScramIterationCount, user.ScramStoredKey, user.ScramServerKey)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("error creating server final message: %v", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("error creating server final message: %v", err)), consts.ErrInternalServer)
 	}
 
 	return &responsedto.UserLogin{
@@ -108,7 +113,7 @@ func (uc *UserUsecase) Login(ctx context.Context, req requestdto.UserLogin) (*re
 func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (*responsedto.UserProfile, *ucerror.UCError) {
 	user, metadata, err := uc.postgres.GetUserProfile(ctx, userID)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("failed to get user profile: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user profile: %w", err)), consts.ErrInternalServer)
 	}
 
 	return &responsedto.UserProfile{
@@ -129,7 +134,7 @@ func (uc *UserUsecase) PrecheckResetPassword(
 ) (*responsedto.UserResetPasswordPrecheck, *ucerror.UCError) {
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+		return nil, ucerror.New(utils.StackError(fmt.Errorf("failed to get user: %w", err)), consts.ErrNotFound)
 	}
 
 	return &responsedto.UserResetPasswordPrecheck{
@@ -142,17 +147,17 @@ func (uc *UserUsecase) PrecheckResetPassword(
 func (uc *UserUsecase) ResetPassword(ctx context.Context, req requestdto.UserResetPassword) *ucerror.UCError {
 	user, err := uc.postgres.GetUserByUsername(ctx, req.Username)
 	if err != nil {
-		return ucerror.New(fmt.Errorf("failed to get user: %w", err), consts.ErrNotFound)
+		return ucerror.New(utils.StackError(fmt.Errorf("failed to get user: %w", err)), consts.ErrNotFound)
 	}
 
 	err = utils.ValidateSignature("Sign-in with Layer8", req.Signature, user.PublicKey)
 	if err != nil {
-		return ucerror.New(fmt.Errorf("invalid signature: %w", err), fmt.Errorf("%w: signature is invalid", consts.ErrBadRequest))
+		return ucerror.New(utils.StackError(fmt.Errorf("invalid signature: %w", err)), fmt.Errorf("%w: signature is invalid", consts.ErrBadRequest))
 	}
 
 	err = uc.postgres.UpdateUserPassword(ctx, user.Username, req.StoredKey, req.ServerKey)
 	if err != nil {
-		return ucerror.New(fmt.Errorf("failed to update user: %w", err), consts.ErrInternalServer)
+		return ucerror.New(utils.StackError(fmt.Errorf("failed to update user: %w", err)), consts.ErrInternalServer)
 	}
 
 	return nil

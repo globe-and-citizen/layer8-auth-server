@@ -8,6 +8,7 @@ import (
 	"globe-and-citizen/layer8/auth-server/internal/repositories/postgresRepo"
 	"globe-and-citizen/layer8/auth-server/internal/repositories/tokenRepo"
 	"globe-and-citizen/layer8/auth-server/internal/usecases/ucerror"
+	"globe-and-citizen/layer8/auth-server/pkg/log"
 )
 
 type IClientUsecase interface {
@@ -25,17 +26,20 @@ type IClientUsecase interface {
 }
 
 type ClientUsecase struct {
+	logger   log.ILogger
 	postgres postgresRepo.IClientRepositories
 	token    tokenRepo.ITokenRepository
 	influxdb influxdbRepo.IInfluxdbRepository
 }
 
 func NewClientUsecase(
+	logger log.ILogger,
 	postgres postgresRepo.IClientRepositories,
 	token tokenRepo.ITokenRepository,
 	influxdb influxdbRepo.IInfluxdbRepository,
 ) IClientUsecase {
 	return &ClientUsecase{
+		logger:   logger,
 		postgres: postgres,
 		token:    token,
 		influxdb: influxdb,
