@@ -25,15 +25,20 @@ func (uc *OAuthUsecase) GetZkUserMetadata(ctx context.Context, req requestdto.OA
 	for _, scope := range scopes {
 		switch scope {
 		case ScopeReadUserBio:
-			zkMetadata.Bio = userMetadata.Bio
+			zkMetadata.Bio = &userMetadata.Bio
+			zkMetadata.BioUpdatedAt = userMetadata.BioUpdatedAt
 		case ScopeReadUserColor:
-			zkMetadata.Color = userMetadata.Color
+			zkMetadata.FavoriteColor = &userMetadata.Color
+			zkMetadata.FavoriteColorUpdatedAt = userMetadata.ColorUpdatedAt
 		case ScopeReadUserDisplayName:
-			zkMetadata.DisplayName = userMetadata.DisplayName
+			zkMetadata.DisplayName = &userMetadata.DisplayName
+			zkMetadata.DisplayNameUpdatedAt = userMetadata.DisplayNameUpdatedAt
 		case ScopeReadUserIsEmailVerified:
-			zkMetadata.IsEmailVerified = userMetadata.IsEmailVerified
+			zkMetadata.IsEmailVerified = &userMetadata.IsEmailVerified
+			zkMetadata.EmailVerifiedAt = userMetadata.EmailVerifiedAt
 		case ScopeReadUserLocation:
-			zkMetadata.Location = userMetadata.Location
+			zkMetadata.Location = &userMetadata.Location
+			zkMetadata.LocationUpdatedAt = userMetadata.PhoneVerifiedAt
 		default:
 			continue
 		}

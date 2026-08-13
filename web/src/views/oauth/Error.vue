@@ -63,7 +63,7 @@ const year = new Date().getFullYear()
 function logout() {
   // mirror original behavior
   document.cookie = "token=; Max-Age=0; path=/"
-  router.push("/login")
+  router.push("/oauth-login")
 }
 </script>
 

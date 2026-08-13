@@ -2,7 +2,6 @@ package postgresRepo
 
 import (
 	"context"
-	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"time"
 )
@@ -64,7 +63,7 @@ type IClientPaymentReceiptRepository interface {
 
 type IUserMetadataRepository interface {
 	GetMetadataByUserID(ctx context.Context, userID uint) (*gormModels.UserMetadata, error)
-	UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error
+	UpdateUserMetadata(ctx context.Context, userID uint, req gormModels.UserMetadata) error
 }
 
 type IPhoneVerificationRepository interface {

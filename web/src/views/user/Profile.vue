@@ -154,11 +154,21 @@
                     placeholder="Username" readonly :value="user.username"/>
                 </div>
                 <div>
-                  <label class="font-normal text-black text-sm text-start mb-2 block">Display
-                    Name</label>
+                  <label class="font-normal text-black text-sm text-start mb-2 block">
+                    Display Name
+                  </label>
+
                   <input
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
-                    type="text" v-model="user.display_name" placeholder="Display Name"/>
+                    type="text"
+                    v-model="user.display_name"
+                    placeholder="Display Name"
+                  />
+
+                  <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                    Last updated:
+                    {{ formatVerifiedAt(user.display_name_updated_at) || "never" }}
+                  </div>
                 </div>
                 <div>
                   <label class="font-normal text-black text-sm text-start mb-2 block">Favourite
@@ -166,6 +176,9 @@
                   <input
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full"
                     type="text" v-model="user.color" placeholder="Favourite Color"/>
+                  <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                    Last updated: {{ formatVerifiedAt(user.color_updated_at) || "never" }}
+                  </div>
                 </div>
               </div>
 
@@ -176,6 +189,9 @@
                   <textarea
                     class="border border-[#BDC3CA] rounded-lg px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full resize-none"
                     rows="4" v-model="user.bio" placeholder="Bio"></textarea>
+                  <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                    Last updated: {{ formatVerifiedAt(user.bio_updated_at) || "never" }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -185,7 +201,7 @@
               <ZkVerificationCard
                 label="Phone number"
                 :verified="user.phone_number_verified"
-                :last-verified-at="user.last_phone_verified_at"
+                :last-verified-at="formatVerifiedAt(user.phone_number_verified_at)"
                 :location="getCountryName(user.phone_location)"
                 :verify-label="
                   user.phone_number_verified
@@ -198,7 +214,7 @@
               <ZkVerificationCard
                 label="Email"
                 :verified="user.email_verified"
-                :last-verified-at="user.last_email_verified_at"
+                :last-verified-at="user.email_verified_at"
                 :verify-label="
                   user.email_verified
                   ? 'Verify New Email'
@@ -236,13 +252,18 @@ const token = ref<string | null>(localStorage.getItem("token"))
 const user = ref({
   username: "",
   display_name: "",
+  display_name_updated_at: null,
   color: "",
+  color_updated_at: null,
   bio: "",
+  bio_updated_at: null,
   phone_location: "",
   email_verified: false,
   phone_number_verified: false,
-  last_email_verified_at: null,
-  last_phone_verified_at: null,
+  email_verified_at: null,
+  phone_number_verified_at: null,
+  created_at: null,
+  updated_at: null,
 })
 
 const isUserPortalSidebar = ref(false)
@@ -339,6 +360,22 @@ const showSidebar = (value: boolean) => {
 }
 
 onMounted(getUserDetails)
+
+const formatVerifiedAt = (timestamp?: string | null) => {
+  if (!timestamp) return ''
+
+  const date = new Date(timestamp)
+
+  const pad = (value: number, digits = 2) =>
+    String(value).padStart(digits, '0')
+
+  const offsetMinutes = -date.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60)
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} at ` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} GMT${sign}${offsetHours}`
+}
 </script>
 
 

@@ -30,7 +30,7 @@
         </div>
 
         <p v-if="verified && lastVerifiedAt" class="last-verified">
-          Last verified {{ formatVerifiedAt(lastVerifiedAt) }}
+          Last verified {{ lastVerifiedAt }}
         </p>
       </div>
 
@@ -56,23 +56,6 @@ defineProps<{
 defineEmits<{
   verify: []
 }>()
-
-const formatVerifiedAt = (timestamp?: string | null) => {
-  if (!timestamp) return ''
-
-  const date = new Date(timestamp)
-
-  const pad = (value: number, digits = 2) =>
-    String(value).padStart(digits, '0')
-
-  const offsetMinutes = -date.getTimezoneOffset()
-  const sign = offsetMinutes >= 0 ? '+' : '-'
-  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60)
-
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} at ` +
-    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.` +
-    `${pad(date.getMilliseconds(), 3)} GMT${sign}${offsetHours}`
-}
 </script>
 
 <style scoped>

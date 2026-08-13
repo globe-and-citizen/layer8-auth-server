@@ -2,7 +2,6 @@ package postgresRepo
 
 import (
 	"context"
-	"globe-and-citizen/layer8/auth-server/internal/dto/requestdto"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 )
@@ -15,13 +14,9 @@ func (r *PostgresRepository) GetMetadataByUserID(ctx context.Context, userID uin
 	return &userMetadata, nil
 }
 
-func (r *PostgresRepository) UpdateUserMetadata(ctx context.Context, userID uint, req requestdto.UserMetadataUpdate) error {
+func (r *PostgresRepository) UpdateUserMetadata(ctx context.Context, userID uint, metadata gormModels.UserMetadata) error {
 	return utils.StackError(r.db.WithContext(ctx).
 		Model(&gormModels.UserMetadata{}).
 		Where("id = ?", userID).
-		Updates(gormModels.UserMetadata{
-			DisplayName: req.DisplayName,
-			Color:       req.Color,
-			Bio:         req.Bio,
-		}).Error)
+		Updates(&metadata).Error)
 }

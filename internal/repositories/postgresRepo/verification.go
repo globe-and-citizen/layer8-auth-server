@@ -38,7 +38,7 @@ func (r *PostgresRepository) SaveProofOfEmailVerification(
 	err = tx.Model(&gormModels.UserMetadata{}).
 		Where("id = ?", userId).
 		Update("is_email_verified", true).
-		Update("last_email_verified_at", time.Now()).
+		Update("email_verified_at", time.Now()).
 		Error
 	if err != nil {
 		tx.Rollback()
@@ -143,7 +143,7 @@ func (r *PostgresRepository) SaveProofOfPhoneVerification(
 		Where("id = ?", userID).
 		Update("is_phone_number_verified", true).
 		Update("location", location).
-		Update("last_phone_verified_at", time.Now()).
+		Update("phone_number_verified_at", time.Now()).
 		Error
 	if err != nil {
 		tx.Rollback()

@@ -117,15 +117,18 @@ func (uc *UserUsecase) GetProfile(ctx context.Context, userID uint) (*responsedt
 	}
 
 	return &responsedto.UserProfile{
-		Username:            user.Username,
-		DisplayName:         metadata.DisplayName,
-		Bio:                 metadata.Bio,
-		Color:               metadata.Color,
-		EmailVerified:       metadata.IsEmailVerified,
-		LastEmailVerifiedAt: metadata.LastEmailVerifiedAt,
-		PhoneNumberVerified: metadata.IsPhoneNumberVerified,
-		LastPhoneVerifiedAt: metadata.LastPhoneVerifiedAt,
-		PhoneLocation:       metadata.Location,
+		Username:              user.Username,
+		DisplayName:           metadata.DisplayName,
+		DisplayNameUpdatedAt:  metadata.DisplayNameUpdatedAt,
+		Bio:                   metadata.Bio,
+		BioUpdatedAt:          metadata.BioUpdatedAt,
+		Color:                 metadata.Color,
+		ColorUpdatedAt:        metadata.ColorUpdatedAt,
+		EmailVerified:         metadata.IsEmailVerified,
+		EmailVerifiedAt:       metadata.EmailVerifiedAt,
+		PhoneNumberVerified:   metadata.IsPhoneNumberVerified,
+		PhoneNumberVerifiedAt: metadata.PhoneVerifiedAt,
+		PhoneLocation:         metadata.Location,
 	}, nil
 }
 

@@ -23,15 +23,18 @@ type UserResetPasswordPrecheck struct {
 }
 
 type UserProfile struct {
-	Username            string    `json:"username"`
-	DisplayName         string    `json:"display_name"`
-	Bio                 string    `json:"bio"`
-	Color               string    `json:"color"`
-	EmailVerified       bool      `json:"email_verified"`
-	LastEmailVerifiedAt time.Time `json:"last_email_verified_at"`
-	PhoneNumberVerified bool      `json:"phone_number_verified"`
-	LastPhoneVerifiedAt time.Time `json:"last_phone_verified_at"`
-	PhoneLocation       string    `json:"phone_location"`
+	Username              string     `json:"username"`
+	DisplayName           string     `json:"display_name"`
+	DisplayNameUpdatedAt  *time.Time `json:"display_name_updated_at"`
+	Bio                   string     `json:"bio"`
+	BioUpdatedAt          *time.Time `json:"bio_updated_at"`
+	Color                 string     `json:"color"`
+	ColorUpdatedAt        *time.Time `json:"color_updated_at"`
+	EmailVerified         bool       `json:"email_verified"`
+	EmailVerifiedAt       *time.Time `json:"email_verified_at"`
+	PhoneNumberVerified   bool       `json:"phone_number_verified"`
+	PhoneNumberVerifiedAt *time.Time `json:"phone_number_verified_at"`
+	PhoneLocation         string     `json:"phone_location"`
 }
 
 type UserGetTelegramSessionID struct {

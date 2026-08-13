@@ -1,5 +1,7 @@
 package responsedto
 
+import "time"
+
 type OAuthUserLoginPrecheck struct {
 	UserLoginPrecheck `json:",inline"`
 }
@@ -32,9 +34,14 @@ type OAuthTokenRequest struct {
 }
 
 type OAuthZkMetadata struct {
-	IsEmailVerified bool   `json:"is_email_verified"`
-	DisplayName     string `json:"display_name"`
-	Color           string `json:"color"`
-	Bio             string `json:"bio"`
-	Location        string `json:"location"`
+	IsEmailVerified        *bool      `json:"is_email_verified,omitempty"`
+	EmailVerifiedAt        *time.Time `json:"email_verified_at,omitempty"`
+	DisplayName            *string    `json:"display_name,omitempty"`
+	DisplayNameUpdatedAt   *time.Time `json:"display_name_updated_at,omitempty"`
+	FavoriteColor          *string    `json:"favorite_color,omitempty"`
+	FavoriteColorUpdatedAt *time.Time `json:"favorite_color_updated_at,omitempty"`
+	Bio                    *string    `json:"bio,omitempty"`
+	BioUpdatedAt           *time.Time `json:"bio_updated_at,omitempty"`
+	Location               *string    `json:"location,omitempty"`
+	LocationUpdatedAt      *time.Time `json:"location_updated_at,omitempty"`
 }

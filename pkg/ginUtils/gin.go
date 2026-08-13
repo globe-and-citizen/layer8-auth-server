@@ -2,7 +2,6 @@ package ginUtils
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/auth-server/internal/consts"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"net/http"
 	"strings"
@@ -56,9 +55,11 @@ func DecodeJSONFromRequest[T any](c *gin.Context, logger log.ILogger) (T, error)
 func GetBearerToken(c *gin.Context) (string, error) {
 	authHeader := c.GetHeader("Authorization")
 
-	if !strings.HasPrefix(authHeader, consts.TokenTypeBearer) {
+	token := strings.Split(authHeader, " ")
+
+	if len(token) != 2 || token[0] != "Bearer" || token[1] == "" {
 		return "", fmt.Errorf("invalid authorization header")
 	}
 
-	return authHeader[len(consts.TokenTypeBearer)+1:], nil
+	return token[1], nil
 }

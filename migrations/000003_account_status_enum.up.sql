@@ -5,13 +5,17 @@ CREATE TYPE account_status AS ENUM (
     'overpaid'
     );
 
+-- Remove the old default first
+ALTER TABLE client_balance
+    ALTER COLUMN status DROP DEFAULT;
+
 -- Convert the existing column
 ALTER TABLE client_balance
     ALTER COLUMN status
         TYPE account_status
         USING status::account_status;
 
--- Set the default
+-- Set the new default
 ALTER TABLE client_balance
     ALTER COLUMN status
-        SET DEFAULT 'zeroed';
+        SET DEFAULT 'zeroed'::account_status;

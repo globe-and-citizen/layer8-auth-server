@@ -1,13 +1,17 @@
--- Remove the default
+-- Remove the enum default
+ALTER TABLE client_balance
+    ALTER COLUMN status DROP DEFAULT;
+
+-- Convert the enum back to text
 ALTER TABLE client_balance
     ALTER COLUMN status
-        DROP DEFAULT;
+        TYPE VARCHAR
+        USING status::text;
 
--- Convert back to TEXT
+-- Restore the previous default
 ALTER TABLE client_balance
     ALTER COLUMN status
-        TYPE TEXT
-        USING status::TEXT;
+        SET DEFAULT 'zeroed';
 
--- Drop the enum type
+-- Remove the enum type
 DROP TYPE account_status;
