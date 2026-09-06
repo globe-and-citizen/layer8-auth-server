@@ -4,21 +4,18 @@ import (
 	"context"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
-	"net"
 	"net/url"
 	"strings"
-	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace/noop"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Config holds OpenTelemetry configuration
@@ -31,12 +28,22 @@ type Config struct {
 	SamplingRate float64 `env:"OTEL_SAMPLING_RATE" env-default:"1.0"`              // 0.0 to 1.0
 }
 
-// InitTracer initializes OpenTelemetry with configurable exporter
-// Supports: stdout (development) and OTLP (Jaeger, Datadog, generic OTLP collectors)
+// InitTracer initializes OpenTelemetry with configurable exporter.
+// Supports: stdout (development) and OTLP (Jaeger, Datadog, generic OTLP collectors).
 func InitTracer(serviceName string, cfg Config) (func(context.Context) error, error) {
 	if !cfg.Enabled {
 		return func(ctx context.Context) error { return nil }, nil
 	}
+
+	// Configure W3C Trace Context propagation.
+	// This is used to extract traceparent/tracestate from incoming requests
+	// and inject them into outgoing requests.
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		),
+	)
 
 	var exporter trace.SpanExporter
 	var err error
@@ -47,12 +54,13 @@ func InitTracer(serviceName string, cfg Config) (func(context.Context) error, er
 		if err != nil {
 			fmt.Printf("warning: failed to create stdout exporter: %v; tracing disabled\n", err)
 			otel.SetTracerProvider(noop.NewTracerProvider())
+
 			return func(ctx context.Context) error { return nil }, nil
 		}
 
 	case "otlp":
 		if cfg.Protocol == "" {
-			cfg.Protocol = "grpc" // Default to gRPC
+			cfg.Protocol = "grpc"
 		}
 
 		switch strings.ToLower(cfg.Protocol) {
@@ -63,28 +71,35 @@ func InitTracer(serviceName string, cfg Config) (func(context.Context) error, er
 		default:
 			fmt.Printf("warning: unknown OTLP protocol %q; tracing disabled\n", cfg.Protocol)
 			otel.SetTracerProvider(noop.NewTracerProvider())
+
 			return func(ctx context.Context) error { return nil }, nil
 		}
 
 		if err != nil {
 			fmt.Printf("warning: OTLP exporter initialization failed: %v; tracing disabled\n", err)
 			otel.SetTracerProvider(noop.NewTracerProvider())
+
 			return func(ctx context.Context) error { return nil }, nil
 		}
 
 	default:
 		fmt.Printf("warning: unknown exporter type %q; tracing disabled\n", cfg.ExporterType)
 		otel.SetTracerProvider(noop.NewTracerProvider())
+
 		return func(ctx context.Context) error { return nil }, nil
 	}
 
-	res, err := resource.New(context.Background(), resource.WithAttributes(
-		attribute.String("service.name", serviceName),
-		attribute.String("environment", utils.GetEnvironment()),
-	))
+	res, err := resource.New(
+		context.Background(),
+		resource.WithAttributes(
+			attribute.String("service.name", serviceName),
+			attribute.String("environment", utils.GetEnvironment()),
+		),
+	)
 	if err != nil {
 		fmt.Printf("warning: failed to create resource: %v; tracing disabled\n", err)
 		otel.SetTracerProvider(noop.NewTracerProvider())
+
 		return func(ctx context.Context) error { return nil }, nil
 	}
 
@@ -101,16 +116,21 @@ func InitTracer(serviceName string, cfg Config) (func(context.Context) error, er
 	return tp.Shutdown, nil
 }
 
-// initOTLPExporterHTTP creates an HTTP/JSON OTLP exporter
-func initOTLPExporterHTTP(endpoint string, authHeader string) (trace.SpanExporter, error) {
+// initOTLPExporterHTTP creates an HTTP/JSON OTLP exporter.
+//
+// The exporter is created without checking whether the collector is currently
+// reachable. Temporary collector outages should not prevent the application
+// from starting. The exporter will attempt to export when the collector is
+// available.
+func initOTLPExporterHTTP(
+	endpoint string,
+	authHeader string,
+) (trace.SpanExporter, error) {
 	if endpoint == "" {
 		endpoint = "http://localhost:4318"
 	}
 
 	endpoint = sanitizeEndpoint(endpoint)
-	if err := validateOTLPReachability("tcp", endpoint, 3*time.Second); err != nil {
-		return nil, fmt.Errorf("OTLP HTTP exporter unreachable at %s: %w", endpoint, err)
-	}
 
 	opts := []otlptracehttp.Option{
 		otlptracehttp.WithEndpoint(endpoint),
@@ -118,9 +138,11 @@ func initOTLPExporterHTTP(endpoint string, authHeader string) (trace.SpanExporte
 	}
 
 	if authHeader != "" {
-		opts = append(opts, otlptracehttp.WithHeaders(map[string]string{
-			"Authorization": authHeader,
-		}))
+		opts = append(opts, otlptracehttp.WithHeaders(
+			map[string]string{
+				"Authorization": authHeader,
+			},
+		))
 	}
 
 	exporter, err := otlptracehttp.New(context.Background(), opts...)
@@ -131,68 +153,81 @@ func initOTLPExporterHTTP(endpoint string, authHeader string) (trace.SpanExporte
 	return exporter, nil
 }
 
-// initOTLPExporterGRPC creates a gRPC OTLP exporter
-func initOTLPExporterGRPC(endpoint string, authHeader string) (trace.SpanExporter, error) {
+// initOTLPExporterGRPC creates a gRPC OTLP exporter.
+//
+// IMPORTANT:
+// Do not use grpc.WithBlock() here. The application should not block startup
+// waiting for the collector. gRPC ClientConn can reconnect when the remote
+// endpoint becomes available again.
+func initOTLPExporterGRPC(
+	endpoint string,
+	authHeader string,
+) (trace.SpanExporter, error) {
 	if endpoint == "" {
 		endpoint = "localhost:4317"
 	}
 
 	endpoint = sanitizeEndpoint(endpoint)
-	if err := validateOTLPReachability("tcp", endpoint, 3*time.Second); err != nil {
-		return nil, fmt.Errorf("OTLP gRPC exporter unreachable at %s: %w", endpoint, err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to %s: %w", endpoint, err)
-	}
 
 	opts := []otlptracegrpc.Option{
-		otlptracegrpc.WithGRPCConn(conn),
+		otlptracegrpc.WithEndpoint(endpoint),
+		otlptracegrpc.WithInsecure(),
 	}
 
-	exporter, err := otlptracegrpc.New(context.Background(), opts...)
+	// NOTE:
+	// otlptracegrpc does not accept an arbitrary Authorization header directly
+	// through WithHeaders in the same way as the HTTP exporter.
+	//
+	// If your collector requires Authorization, configure an appropriate
+	// gRPC credentials/per-RPC credentials mechanism here.
+
+	_ = authHeader
+
+	exporter, err := otlptracegrpc.New(
+		context.Background(),
+		opts...,
+	)
 	if err != nil {
-		conn.Close()
 		return nil, fmt.Errorf("failed to create OTLP gRPC exporter (endpoint: %s): %w", endpoint, err)
 	}
 
 	return exporter, nil
 }
 
-func validateOTLPReachability(network, address string, timeout time.Duration) error {
-	if address == "" {
-		return fmt.Errorf("empty OTLP endpoint")
-	}
-
-	conn, err := net.DialTimeout(network, address, timeout)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	return nil
-}
-
-// sanitizeEndpoint validates and cleans up the OTLP endpoint
-// Removes protocol, paths, and trailing slashes to get just host:port
+// sanitizeEndpoint validates and cleans up an OTLP endpoint.
+//
+// For gRPC this returns host:port.
+// For HTTP this returns host:port.
+//
+// Example:
+//
+//	localhost:4317
+//	http://localhost:4317
+//	https://collector.example.com:4317
+//
+// become:
+//
+//	localhost:4317
+//	collector.example.com:4317
+//	collector.example.com:4317
 func sanitizeEndpoint(endpoint string) string {
 	endpoint = strings.TrimSpace(endpoint)
 
-	// Parse URL to extract host:port
-	if !strings.Contains(endpoint, "://") {
-		// No scheme provided, assume http
-		endpoint = "http://" + endpoint
-	}
-
-	u, err := url.Parse(endpoint)
-	if err != nil {
-		// If parsing fails, return as-is and let the exporter handle the error
+	if endpoint == "" {
 		return endpoint
 	}
 
-	// Extract just host:port (remove path, query, fragment)
+	// Add a scheme temporarily so url.Parse can correctly identify the host.
+	parseEndpoint := endpoint
+	if !strings.Contains(parseEndpoint, "://") {
+		parseEndpoint = "http://" + parseEndpoint
+	}
+
+	u, err := url.Parse(parseEndpoint)
+	if err != nil {
+		return endpoint
+	}
+
 	if u.Host == "" {
 		return endpoint
 	}

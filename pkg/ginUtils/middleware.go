@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -123,32 +125,26 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 // OTel is a middleware that traces HTTP requests and measures latency using OpenTelemetry
 func OTel(tracer trace.Tracer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		if parentSpan := trace.SpanFromContext(ctx); parentSpan != nil && parentSpan.SpanContext().IsValid() {
-			ctx = trace.ContextWithSpan(ctx, parentSpan)
-		}
+		// Extract the remote parent from traceparent/tracestate.
+		ctx := otel.GetTextMapPropagator().Extract(
+			c.Request.Context(),
+			propagation.HeaderCarrier(c.Request.Header),
+		)
 
-		attrs := []attribute.KeyValue{
-			attribute.String("http.method", c.Request.Method),
-			attribute.String("http.url", c.Request.URL.String()),
-			attribute.String("http.target", c.Request.RequestURI),
-			attribute.String("http.host", c.Request.Host),
-			attribute.String("http.scheme", c.Request.URL.Scheme),
-			attribute.String("http.client_ip", c.ClientIP()),
-			attribute.String("http.user_agent", c.Request.UserAgent()),
-		}
-		if parentSpan := trace.SpanFromContext(ctx); parentSpan != nil && parentSpan.SpanContext().IsValid() {
-			attrs = append(attrs,
-				attribute.String("parent_span_id", parentSpan.SpanContext().SpanID().String()),
-				attribute.String("parent_trace_id", parentSpan.SpanContext().TraceID().String()),
-			)
-		}
-
+		// Create the server span as a child of the extracted context.
 		ctx, span := tracer.Start(
 			ctx,
 			fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path),
 			trace.WithSpanKind(trace.SpanKindServer),
-			trace.WithAttributes(attrs...),
+			trace.WithAttributes(
+				attribute.String("http.method", c.Request.Method),
+				attribute.String("http.url", c.Request.URL.String()),
+				attribute.String("http.target", c.Request.RequestURI),
+				attribute.String("http.host", c.Request.Host),
+				attribute.String("http.scheme", c.Request.URL.Scheme),
+				attribute.String("http.client_ip", c.ClientIP()),
+				attribute.String("http.user_agent", c.Request.UserAgent()),
+			),
 		)
 		defer span.End()
 
@@ -167,7 +163,10 @@ func OTel(tracer trace.Tracer) gin.HandlerFunc {
 
 		span.SetAttributes(
 			attribute.Int("http.status_code", statusCode),
-			attribute.Int64("http.response_content_length", int64(c.Writer.Size())),
+			attribute.Int64(
+				"http.response_content_length",
+				int64(c.Writer.Size()),
+			),
 		)
 
 		if statusCode >= 400 {
