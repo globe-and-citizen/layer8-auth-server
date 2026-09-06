@@ -25,10 +25,12 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/eth"
 	"globe-and-citizen/layer8/auth-server/pkg/ginUtils"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
+	"globe-and-citizen/layer8/auth-server/pkg/otel"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/pkg/zk"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -36,14 +38,34 @@ import (
 	"github.com/consensys/gnark/constraint"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	otelapi "go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
 	appConfig := config.LoadConfig()
 	logger := log.NewLogger(appConfig.LogConfig)
 
+	// Initialize OpenTelemetry tracer with config
+	shutdown, err := otel.InitTracer(appConfig.ServiceName, appConfig.OTelConfig)
+	if err != nil {
+		logger.Warnf("Failed to initialize OpenTelemetry tracer: %v", err)
+	}
+	defer func() {
+		if err := shutdown(context.Background()); err != nil {
+			logger.Error("failed to shutdown tracer provider", err)
+		}
+	}()
+
+	// Get tracer instance
+	tracer := otelapi.GetTracerProvider().Tracer("main").(trace.Tracer)
+
+	if strings.ToLower(appConfig.AppEnv) == "production" || strings.ToLower(appConfig.AppEnv) == "prod" || strings.ToLower(appConfig.AppEnv) == "test" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	app := gin.New()
-	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.AccessLog(logger))
+	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.OTel(tracer), ginUtils.AccessLog(logger))
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*.layer8proxy.net", "localhost:*"}, // Vue dev server
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -80,7 +102,7 @@ func main() {
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZkConfig))
 	phoneRepository := phoneRepo.NewPhoneRepository(appConfig.PhoneConfig)
 	influxdbRepository := influxdbRepo.NewInfluxdbRepository(appConfig.InfluxDB2Config)
-	err := influxdbRepository.IsConnected(&gin.Context{})
+	err = influxdbRepository.IsConnected(&gin.Context{})
 	if err != nil {
 		panic(err)
 	}

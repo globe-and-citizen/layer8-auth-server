@@ -2,6 +2,7 @@ package config
 
 import (
 	"globe-and-citizen/layer8/auth-server/pkg/log"
+	"globe-and-citizen/layer8/auth-server/pkg/otel"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"github.com/caarlos0/env/v11"
@@ -9,10 +10,11 @@ import (
 )
 
 type AppConfig struct {
-	AppEnv     string `env:"APP_ENV" required:"true"`
-	ServerHost string `env:"SERVER_HOST"`
-	ServerPort int    `env:"SERVER_PORT"`
-	ServerDNS  string `env:"SERVER_DNS"`
+	AppEnv      string `env:"APP_ENV" required:"true"`
+	ServerHost  string `env:"SERVER_HOST"`
+	ServerPort  int    `env:"SERVER_PORT"`
+	ServerDNS   string `env:"SERVER_DNS"`
+	ServiceName string `env:"SERVICE_NAME" env-default:"l8-auth-server"`
 	SPAConfig
 
 	LogConfig log.Config
@@ -24,6 +26,7 @@ type AppConfig struct {
 	UserConfig
 	ClientConfig
 	OAuthConfig
+	OTelConfig otel.Config
 }
 
 type SPAConfig struct {
