@@ -65,6 +65,7 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 		start := time.Now()
 		path := c.Request.URL.Path
 		raw := c.Request.URL.RawQuery
+		const accessLogMsg = "access_log"
 
 		c.Next() // handle request
 
@@ -74,6 +75,10 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 		}
 
 		latency := time.Since(start)
+		if latency > time.Minute {
+			latency = latency.Truncate(time.Second)
+		}
+
 		status := c.Writer.Status()
 		if raw != "" {
 			path = path + "?" + raw
@@ -105,9 +110,11 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 
 			// Log error details
 			if len(c.Errors) > 0 {
-				l.Error("http request failed", c.Errors.Last(), fields...)
+				log.F("error_msg", "http request failed")
+				l.Error(accessLogMsg, c.Errors.Last(), fields...)
 			} else {
-				l.Warn("http request error", fields...)
+				log.F("warning_msg", "http request error")
+				l.Warn(accessLogMsg, fields...)
 			}
 			return
 		}
@@ -116,8 +123,11 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 			fields = append(fields,
 				log.F("ip", c.ClientIP()),
 				log.F("response_size", c.Writer.Size()),
+				log.F("warning_msg", "http request slow"),
 			)
-			l.Warn("http request slow", fields...)
+			l.Warn(accessLogMsg, fields...)
+		} else {
+			l.Info(accessLogMsg, fields...)
 		}
 	}
 }
