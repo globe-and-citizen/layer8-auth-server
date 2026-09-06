@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "encoding/hex"
+	"errors"
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/config"
 	"globe-and-citizen/layer8/auth-server/internal/handlers/clientH"
@@ -28,9 +29,11 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/otel"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"globe-and-citizen/layer8/auth-server/pkg/zk"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -39,7 +42,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	otelapi "go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
@@ -47,25 +49,31 @@ func main() {
 	logger := log.NewLogger(appConfig.LogConfig)
 
 	// Initialize OpenTelemetry tracer with config
-	shutdown, err := otel.InitTracer(appConfig.ServiceName, appConfig.OTelConfig)
+	shutdownTracer, err := otel.InitTracer(appConfig.ServiceName, appConfig.OTelConfig)
 	if err != nil {
 		logger.Warnf("Failed to initialize OpenTelemetry tracer: %v", err)
 	}
+
 	defer func() {
-		if err := shutdown(context.Background()); err != nil {
+		ctx, cancel := context.WithTimeout(
+			context.Background(),
+			5*time.Second,
+		)
+		defer cancel()
+
+		if err := shutdownTracer(ctx); err != nil {
 			logger.Error("failed to shutdown tracer provider", err)
 		}
 	}()
-
 	// Get tracer instance
-	tracer := otelapi.GetTracerProvider().Tracer("main").(trace.Tracer)
+	oTelTracer := otelapi.GetTracerProvider().Tracer("main")
 
 	if strings.ToLower(appConfig.AppEnv) == "production" || strings.ToLower(appConfig.AppEnv) == "prod" || strings.ToLower(appConfig.AppEnv) == "test" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	app := gin.New()
-	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.OTel(tracer), ginUtils.AccessLog(logger))
+	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.OTel(oTelTracer), ginUtils.AccessLog(logger))
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*.layer8proxy.net", "localhost:*"}, // Vue dev server
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -102,17 +110,10 @@ func main() {
 	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZkConfig))
 	phoneRepository := phoneRepo.NewPhoneRepository(appConfig.PhoneConfig)
 	influxdbRepository := influxdbRepo.NewInfluxdbRepository(appConfig.InfluxDB2Config)
-	err = influxdbRepository.IsConnected(&gin.Context{})
+	err = influxdbRepository.IsConnected(context.Background())
 	if err != nil {
 		panic(err)
 	}
-
-	client, err := eth.ConnectToEthereum(appConfig.Web3Config.WebsocketRPCURL)
-	if err != nil {
-		panic(fmt.Errorf("failed to connect to %s: %w", appConfig.Web3Config.WebsocketRPCURL, err))
-	}
-	defer eth.CloseEthereumConnection(client)
-	ethRepository := ethRepo.NewEthereumRepository(logger, client, appConfig.Web3Config)
 
 	userUsecase := userUC.NewUserUsecase(
 		logger,
@@ -131,23 +132,6 @@ func main() {
 	)
 	oauthUsecase := oauthUC.NewOAuthUsecase(logger, appConfig.OAuthConfig, postgresRepository, tokenRepository)
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-	workerUsecase := workerUC.NewWorkerUsecase(logger, ctx, postgresRepository, influxdbRepository, ethRepository)
-
-	go func() {
-		ticker := time.NewTicker(appConfig.UpdateUsageInterval)
-
-		for currTime := range ticker.C {
-			logger.Info(fmt.Sprintf("Update usage balance with interval: %s", appConfig.UpdateUsageInterval))
-			err = workerUsecase.UpdateUsageBalance(appConfig.BillingRatePerByte, currTime)
-			if err != nil {
-				logger.Error("Error while updating usage balance", err)
-			}
-		}
-	}()
-	go workerUsecase.ListenToEthereumEvents()
-
 	apiGroup := app.Group("/api/v1")
 	userHandler := userH.NewUserHandler(logger, apiGroup, userUsecase, appConfig.UserConfig)
 	userHandler.RegisterAPIs()
@@ -156,12 +140,69 @@ func main() {
 	oauthHandler := oauthH.NewOAuthHandler(logger, apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
 	oauthHandler.RegisterAPIs()
 
-	gin.SetMode(gin.ReleaseMode)
-	addr := fmt.Sprintf("%s:%d", appConfig.ServerHost, appConfig.ServerPort)
-	logger.Info("Server start at: http://" + addr)
-	err = app.Run(addr)
+	client, err := eth.ConnectToEthereum(appConfig.Web3Config.WebsocketRPCURL)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to connect to %s: %w", appConfig.Web3Config.WebsocketRPCURL, err))
+	}
+	defer eth.CloseEthereumConnection(client)
+	ethRepository := ethRepo.NewEthereumRepository(logger, client, appConfig.Web3Config)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	workerUsecase := workerUC.NewWorkerUsecase(logger, ctx, postgresRepository, influxdbRepository, ethRepository)
+
+	go func() {
+		ticker := time.NewTicker(appConfig.UpdateUsageInterval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				logger.Info("usage update worker stopped")
+				return
+
+			case currTime := <-ticker.C:
+				logger.Info(fmt.Sprintf(
+					"Update usage balance with interval: %s",
+					appConfig.UpdateUsageInterval,
+				))
+
+				if err := workerUsecase.UpdateUsageBalance(
+					appConfig.BillingRatePerByte,
+					currTime,
+				); err != nil {
+					logger.Error("Error while updating usage balance", err)
+				}
+			}
+		}
+	}()
+	go workerUsecase.ListenToEthereumEvents()
+
+	addr := fmt.Sprintf("%s:%d", appConfig.ServerHost, appConfig.ServerPort)
+
+	server := &http.Server{Addr: addr, Handler: app}
+	go func() {
+		logger.Info("Server start at: http://" + addr)
+
+		if err := server.ListenAndServe(); err != nil &&
+			!errors.Is(err, http.ErrServerClosed) {
+			logger.Error("HTTP server failed", err)
+			stop()
+		}
+	}()
+
+	<-ctx.Done()
+
+	logger.Info("Shutdown signal received")
+
+	shutdownCtx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Error("failed to shutdown HTTP server", err)
 	}
 }
 

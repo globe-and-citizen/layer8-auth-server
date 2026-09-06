@@ -31,8 +31,13 @@ type Config struct {
 // InitTracer initializes OpenTelemetry with configurable exporter.
 // Supports: stdout (development) and OTLP (Jaeger, Datadog, generic OTLP collectors).
 func InitTracer(serviceName string, cfg Config) (func(context.Context) error, error) {
+	noopShutdown := func(context.Context) error {
+		return nil
+	}
+
 	if !cfg.Enabled {
-		return func(ctx context.Context) error { return nil }, nil
+		otel.SetTracerProvider(noop.NewTracerProvider())
+		return noopShutdown, nil
 	}
 
 	// Configure W3C Trace Context propagation.
@@ -45,18 +50,14 @@ func InitTracer(serviceName string, cfg Config) (func(context.Context) error, er
 		),
 	)
 
-	var exporter trace.SpanExporter
-	var err error
+	var (
+		exporter trace.SpanExporter
+		err      error
+	)
 
 	switch strings.ToLower(cfg.ExporterType) {
 	case "stdout":
 		exporter, err = stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			fmt.Printf("warning: failed to create stdout exporter: %v; tracing disabled\n", err)
-			otel.SetTracerProvider(noop.NewTracerProvider())
-
-			return func(ctx context.Context) error { return nil }, nil
-		}
 
 	case "otlp":
 		if cfg.Protocol == "" {
@@ -69,24 +70,19 @@ func InitTracer(serviceName string, cfg Config) (func(context.Context) error, er
 		case "grpc":
 			exporter, err = initOTLPExporterGRPC(cfg.Endpoint, cfg.AuthHeader)
 		default:
-			fmt.Printf("warning: unknown OTLP protocol %q; tracing disabled\n", cfg.Protocol)
-			otel.SetTracerProvider(noop.NewTracerProvider())
-
-			return func(ctx context.Context) error { return nil }, nil
-		}
-
-		if err != nil {
-			fmt.Printf("warning: OTLP exporter initialization failed: %v; tracing disabled\n", err)
-			otel.SetTracerProvider(noop.NewTracerProvider())
-
-			return func(ctx context.Context) error { return nil }, nil
+			return noopShutdown, fmt.Errorf("unknown OTLP protocol %q", cfg.Protocol)
 		}
 
 	default:
-		fmt.Printf("warning: unknown exporter type %q; tracing disabled\n", cfg.ExporterType)
-		otel.SetTracerProvider(noop.NewTracerProvider())
+		return noopShutdown, fmt.Errorf("unknown exporter type %q", cfg.ExporterType)
+	}
 
-		return func(ctx context.Context) error { return nil }, nil
+	if err != nil {
+		return noopShutdown, fmt.Errorf(
+			"failed to initialize %s exporter: %w",
+			cfg.ExporterType,
+			err,
+		)
 	}
 
 	res, err := resource.New(
@@ -97,18 +93,15 @@ func InitTracer(serviceName string, cfg Config) (func(context.Context) error, er
 		),
 	)
 	if err != nil {
-		fmt.Printf("warning: failed to create resource: %v; tracing disabled\n", err)
-		otel.SetTracerProvider(noop.NewTracerProvider())
-
-		return func(ctx context.Context) error { return nil }, nil
+		return noopShutdown, fmt.Errorf("failed to create OTel resource: %w", err)
 	}
-
-	sampler := trace.TraceIDRatioBased(cfg.SamplingRate)
 
 	tp := trace.NewTracerProvider(
 		trace.WithBatcher(exporter),
 		trace.WithResource(res),
-		trace.WithSampler(sampler),
+		trace.WithSampler(
+			trace.TraceIDRatioBased(cfg.SamplingRate),
+		),
 	)
 
 	otel.SetTracerProvider(tp)
