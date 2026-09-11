@@ -49,7 +49,7 @@ func main() {
 	logger := log.NewLogger(appConfig.LogConfig)
 
 	// Initialize OpenTelemetry tracer with config
-	shutdownTracer, err := otel.InitTracer(appConfig.ServiceName, appConfig.OTelConfig)
+	shutdownTracer, err := otel.InitTracer(appConfig.LogConfig.Service, appConfig.OTelConfig)
 	if err != nil {
 		logger.Warnf("Failed to initialize OpenTelemetry tracer: %v", err)
 	}

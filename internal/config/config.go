@@ -10,11 +10,10 @@ import (
 )
 
 type AppConfig struct {
-	AppEnv      string `env:"APP_ENV" required:"true"`
-	ServerHost  string `env:"SERVER_HOST"`
-	ServerPort  int    `env:"SERVER_PORT"`
-	ServerDNS   string `env:"SERVER_DNS"`
-	ServiceName string `env:"SERVICE_NAME" env-default:"l8-auth-server"`
+	AppEnv     string `env:"APP_ENV" required:"true"`
+	ServerHost string `env:"SERVER_HOST"`
+	ServerPort int    `env:"SERVER_PORT"`
+	ServerDNS  string `env:"SERVER_DNS"`
 	SPAConfig
 
 	LogConfig log.Config
