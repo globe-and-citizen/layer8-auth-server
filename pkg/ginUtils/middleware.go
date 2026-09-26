@@ -110,10 +110,10 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 
 			// Log error details
 			if len(c.Errors) > 0 {
-				log.F("error_msg", "http request failed")
+				fields = append(fields, log.F("error_msg", "http request failed"))
 				l.Error(accessLogMsg, c.Errors.Last(), fields...)
 			} else {
-				log.F("warning_msg", "http request error")
+				fields = append(fields, log.F("warning_msg", "http request error"))
 				l.Warn(accessLogMsg, fields...)
 			}
 			return
