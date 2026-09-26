@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/google/uuid"
@@ -71,4 +72,12 @@ func GetURLHostPort(raw string) (string, error) {
 	}
 
 	return host, nil
+}
+
+func GetEnvironment() string {
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "development"
+	}
+	return env
 }

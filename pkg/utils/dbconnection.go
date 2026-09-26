@@ -7,7 +7,9 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+
+	gormLogger "gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 type PostgresConfig struct {
@@ -34,7 +36,7 @@ func ConnectDB(postgresConfig PostgresConfig) *gorm.DB {
 
 	gormConfig := gorm.Config{
 		DisableNestedTransaction: true,
-		Logger:                   logger.Default.LogMode(logger.Silent),
+		Logger:                   gormLogger.Default.LogMode(gormLogger.Silent),
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gormConfig)
@@ -42,13 +44,18 @@ func ConnectDB(postgresConfig PostgresConfig) *gorm.DB {
 		log.Fatalf("Connect to PostgreSQL server failed: %v", err)
 	}
 
+	if err := db.Use(tracing.NewPlugin()); err != nil {
+		log.Fatalf("Enable OpenTelemetry GORM tracing failed: %v", err)
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("Cannot config PostgreSQL connection: %v", err)
+		log.Fatalf("Cannot configure PostgreSQL connection: %v", err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
+
 	return db
 }

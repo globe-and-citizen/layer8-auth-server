@@ -2,6 +2,7 @@ package config
 
 import (
 	"globe-and-citizen/layer8/auth-server/pkg/log"
+	"globe-and-citizen/layer8/auth-server/pkg/otel"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 
 	"github.com/caarlos0/env/v11"
@@ -24,6 +25,7 @@ type AppConfig struct {
 	UserConfig
 	ClientConfig
 	OAuthConfig
+	OTelConfig otel.Config
 }
 
 type SPAConfig struct {
