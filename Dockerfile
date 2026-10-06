@@ -4,7 +4,6 @@
 FROM node:20-alpine AS web-builder
 
 WORKDIR /smart-contract
-
 # Copy smart contracts (for ABI serving)
 COPY smart-contract/abi ./abi
 
@@ -14,22 +13,18 @@ WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm install
 
-# Copy frontend source
+# Copy frontend source and build SPA
 COPY web .
-RUN rm -f .env
-
-# Build SPA
-RUN npm run build
+RUN rm -f .env && npm run build
 
 
 # =========================
 # 2) Build backend (Go)
 # =========================
-FROM golang:1.25.0-alpine AS go-builder
+# Use --platform=$BUILDPLATFORM to run Go compiler natively on the host architecture
+FROM --platform=$BUILDPLATFORM golang:1.25.0-alpine AS go-builder
 
 WORKDIR /app
-
-#RUN apk add --no-cache git
 
 # Cache Go deps
 COPY go.mod go.sum ./
@@ -43,8 +38,11 @@ COPY pkg ./pkg
 # Copy smart contracts (for ABI serving)
 COPY smart-contract/abi ./smart-contract/abi
 
-# Build binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./cmd/server
+# Use Docker Buildx target variables ($TARGETOS, $TARGETARCH) for automatic multi-arch cross-compilation
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-w -s" -o server ./cmd/server
+
 
 # =========================
 # 3) Runtime image
@@ -62,9 +60,8 @@ COPY --from=go-builder /app/server /app/server
 # Smart contract artifacts
 COPY --from=go-builder /app/smart-contract/abi /app/smart-contract/abi
 
-# Runtime envs (read by main.go)
+# Runtime envs
 ENV GIN_MODE=release
-#ENV PORT=5001
 
 EXPOSE 5001
 
