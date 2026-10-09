@@ -15,12 +15,10 @@ type ClientConfig struct {
 }
 
 type InfluxDB2Config struct {
-	Url      string `env:"INFLUXDB_URL" default:"http://localhost:8086"`
-	Username string `env:"INFLUXDB_USERNAME" default:"admin"`
-	Password string `env:"INFLUXDB_PASSWORD" default:"somethingthatyoudontknow"`
-	Org      string `env:"INFLUXDB_ORG" default:"layer8"`
-	Bucket   string `env:"INFLUXDB_BUCKET" default:"layer8"`
-	Token    string `env:"INFLUXDB_TOKEN" default:"DEFAULT_TOKEN_FOR_TESTING"`
+	Url    string `env:"INFLUXDB_URL" default:"http://localhost:8086"`
+	Org    string `env:"INFLUXDB_ORG" default:"layer8org"`
+	Bucket string `env:"INFLUXDB_BUCKET" default:"layer8bucket"`
+	Token  string `env:"INFLUXDB_TOKEN" default:"default_token"`
 }
 
 type ExternalConfig struct {
