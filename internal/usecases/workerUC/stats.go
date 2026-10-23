@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByteWei big.Int, currTime time.Time) error {
+func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByte big.Int, currTime time.Time) error {
 	allBalances, err := uc.postgres.GetAllClientBalances(uc.ctx)
 	if err != nil {
 		return err
@@ -27,12 +27,12 @@ func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByteWei big.Int, currTime tim
 			continue
 		}
 
-		curBalance, err := utils.DBWeiToBigInt(balance.BalanceWei)
+		curBalance, err := utils.DBAmountToBigInt(balance.BalanceBaseUnits)
 		if err != nil {
 			return err
 		}
 
-		newBilled := ratePerByteWei
+		newBilled := ratePerByte
 		newBilled.Mul(&newBilled, big.NewInt(int64(consumedBytesFloat)))
 		curBalance.Add(curBalance, &newBilled)
 
@@ -40,7 +40,8 @@ func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByteWei big.Int, currTime tim
 		err = uc.postgres.UpdateClientBalance(
 			uc.ctx,
 			balance.ClientID,
-			utils.BigIntToDBWei(curBalance),
+			utils.BigIntToDBAmount(curBalance),
+			gormModels.Currency(uc.config.Payment.Currency),
 			status.GetStatus(curBalance),
 			timestamp,
 		)

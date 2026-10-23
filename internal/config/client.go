@@ -1,16 +1,10 @@
 package config
 
-import (
-	"math/big"
-	"time"
-)
-
 type ClientConfig struct {
-	JWTSecret           string        `env:"CLIENT_JWT_SECRET"`
-	UpdateUsageInterval time.Duration `env:"UPDATE_USAGE_INTERVAL" default:"15m"`
-	BillingRatePerByte  big.Int       `env:"BILLING_RATE_PER_BYTE" default:"1"`
+	JWTSecret string `env:"CLIENT_JWT_SECRET"`
+	Payment   PaymentConfig
 	InfluxDB2Config
-	Web3Config
+	Web3Config  Web3Config
 	ScramConfig // todo remove
 }
 
@@ -26,8 +20,16 @@ type ExternalConfig struct {
 }
 
 type Web3Config struct {
-	WebsocketRPCURL     string `env:"WEB3_WS_RPC_URL" required:"true"`
+	WebsocketRPCURL string `env:"WEB3_WS_RPC_URL" required:"true"`
+
+	TrafficPaidEnabled  bool   `env:"WEB3_TRAFFIC_PAID_ENABLED" default:"false"`
 	PaymentContractAddr string `env:"WEB3_PAYMENT_CONTRACT_ADDRESS" required:"true"`
 	PaymentContractABI  string `env:"WEB3_PAYMENT_CONTRACT_ABI" required:"true"`
+
+	// CNC payment
+	CNCPaymentEnabled bool   `env:"WEB3_CNC_PAYMENT_ENABLED" default:"false"`
+	CNCContractAddr   string `env:"WEB3_CNC_CONTRACT_ADDRESS" required:"true"`
+	CNCEventABI       string `env:"WEB3_CNC_EVENT_ABI" required:"true"`
+
 	// other contracts addr and abi
 }

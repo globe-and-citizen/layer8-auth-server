@@ -28,6 +28,7 @@ func CloseEthereumConnection(client *ethclient.Client) {
 
 // EventListener - Per event listener
 type EventListener[T any] struct {
+	Enabled         bool
 	EventABI        *abi.ABI
 	ContractAddress common.Address
 	EventName       string
@@ -37,18 +38,20 @@ type EventListener[T any] struct {
 }
 
 func NewEventListener[T any](
-	contractABI *abi.ABI,
+	eventABI *abi.ABI,
 	contractAddr common.Address,
 	eventName string,
 	fetchTxInput bool,
+	enabled bool,
 ) EventListener[T] {
-	event, ok := contractABI.Events[eventName]
+	event, ok := eventABI.Events[eventName]
 	if !ok {
 		panic("event not found in ABI")
 	}
 
 	return EventListener[T]{
-		EventABI:        contractABI,
+		Enabled:         enabled,
+		EventABI:        eventABI,
 		ContractAddress: contractAddr,
 		EventName:       eventName,
 		EventID:         event.ID,
