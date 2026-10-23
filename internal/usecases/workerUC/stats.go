@@ -27,23 +27,14 @@ func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByte big.Int, currTime time.T
 			continue
 		}
 
-		curBalance, err := utils.DBAmountToBigInt(balance.BalanceBaseUnits)
-		if err != nil {
-			return err
-		}
-
 		newBilled := ratePerByte
 		newBilled.Mul(&newBilled, big.NewInt(int64(consumedBytesFloat)))
-		curBalance.Add(curBalance, &newBilled)
-
-		var status gormModels.AccountStatus
-		err = uc.postgres.UpdateClientBalance(
+		err = uc.postgres.AddClientBalanceDelta(
 			uc.ctx,
 			balance.ClientID,
-			utils.BigIntToDBAmount(curBalance),
+			utils.BigIntToDBAmount(&newBilled),
 			gormModels.Currency(uc.config.Payment.Currency),
-			status.GetStatus(curBalance),
-			timestamp,
+			&timestamp,
 		)
 		if err != nil {
 			return err

@@ -53,7 +53,7 @@ type IClientRepository interface {
 
 type IClientBalanceRepository interface {
 	GetClientBalance(ctx context.Context, clientId string) (*gormModels.ClientBalance, error)
-	UpdateClientBalance(ctx context.Context, clientId string, newBalance string, currency gormModels.Currency, status gormModels.AccountStatus, lastUsageUpdated time.Time) error
+	AddClientBalanceDelta(ctx context.Context, clientId string, delta string, currency gormModels.Currency, lastUsageUpdated *time.Time) error
 	GetAllClientBalances(ctx context.Context) ([]gormModels.ClientBalance, error)
 }
 

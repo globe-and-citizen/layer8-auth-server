@@ -23,34 +23,8 @@ func (uc *WorkerUsecase) ListenToEthereumEvents() {
 func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.TrafficPaidEvent]) error {
 	uc.logger.Infof("Handling traffic paid event: %+v", event)
 
-	balance, err := uc.postgres.GetClientBalance(uc.ctx, event.Data.ClientID)
-	if err != nil {
-		uc.logger.Error("failed to get client balance", err)
-		return err
-	}
-
-	curBalance, err := utils.DBAmountToBigInt(balance.BalanceBaseUnits)
-	if err != nil {
-		uc.logger.Error("failed to convert unpaid amount", err)
-		return err
-	}
-	curBalance = curBalance.Sub(curBalance, event.Data.Amount)
-
-	var status gormModels.AccountStatus
-	err = uc.postgres.UpdateClientBalance(
-		uc.ctx,
-		event.Data.ClientID,
-		utils.BigIntToDBAmount(curBalance),
-		gormModels.POL,
-		status.GetStatus(curBalance),
-		balance.LastUsageUpdatedAt,
-	)
-	if err != nil {
-		return err
-	}
-
 	amount := utils.BigIntToDBAmount(event.Data.Amount)
-	err = uc.postgres.AddClientPaymentReceipt(
+	err := uc.postgres.AddClientPaymentReceipt(
 		uc.ctx,
 		event.Data.ClientID,
 		amount,
@@ -86,32 +60,6 @@ func (uc *WorkerUsecase) handleCNCTokenDeposited(event eth.EventData[models.CNCT
 	)
 
 	// TODO: Validate invoice and update payment status.
-	balance, err := uc.postgres.GetClientBalance(uc.ctx, factureID)
-	if err != nil {
-		uc.logger.Error("failed to get client balance", err)
-		return err
-	}
-
-	curBalance, err := utils.DBAmountToBigInt(balance.BalanceBaseUnits)
-	if err != nil {
-		uc.logger.Error("failed to convert unpaid amount", err)
-		return err
-	}
-	curBalance = curBalance.Sub(curBalance, event.Data.Amount)
-
-	var status gormModels.AccountStatus
-	err = uc.postgres.UpdateClientBalance(
-		uc.ctx,
-		factureID,
-		utils.BigIntToDBAmount(curBalance),
-		gormModels.Currency(uc.config.Payment.Currency),
-		status.GetStatus(curBalance),
-		balance.LastUsageUpdatedAt,
-	)
-	if err != nil {
-		return err
-	}
-
 	amount := utils.BigIntToDBAmount(event.Data.Amount)
 	err = uc.postgres.AddClientPaymentReceipt(
 		uc.ctx,
