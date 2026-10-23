@@ -12,25 +12,24 @@ import (
 )
 
 type AppConfig struct {
-	AppEnv      string   `env:"APP_ENV" required:"true"`
-	ServerHost  string   `env:"SERVER_HOST"`
-	ServerPort  int      `env:"SERVER_PORT"`
-	ServerDNS   string   `env:"SERVER_DNS"`
-	CORSOrigins []string `env:"CORS_ORIGINS" envSeparator:";"`
-	SPAConfig
+	AppEnv       string   `env:"APP_ENV" required:"true"`
+	ServerHost   string   `env:"SERVER_HOST"`
+	ServerPort   int      `env:"SERVER_PORT"`
+	TokensIssuer string   `env:"TOKENS_ISSUER"`
+	CORSOrigins  []string `env:"CORS_ORIGINS" envSeparator:";"`
 
+	Frontend  SPAConfig
 	LogConfig log.Config
+	Postgres  utils.PostgresConfig
+	Scram     ScramConfig
+	ZK        ZkConfig
+	Payment   PaymentConfig
+	OTel      otel.Config
 
-	utils.PostgresConfig
-	ScramConfig
-	ZkConfig
-	PaymentConfig PaymentConfig
-
-	User       UserConfig
-	Client     ClientConfig
-	OAuth      OAuthConfig
-	Worker     WorkerConfig
-	OTelConfig otel.Config
+	User   UserConfig
+	Client ClientConfig
+	OAuth  OAuthConfig
+	Worker WorkerConfig
 }
 
 type SPAConfig struct {

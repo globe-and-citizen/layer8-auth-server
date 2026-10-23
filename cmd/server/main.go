@@ -49,7 +49,7 @@ func main() {
 	logger := log.NewLogger(appConfig.LogConfig)
 
 	// Initialize OpenTelemetry tracer with config
-	shutdownTracer, err := otel.InitTracer(appConfig.LogConfig.Service, appConfig.OTelConfig)
+	shutdownTracer, err := otel.InitTracer(appConfig.LogConfig.Service, appConfig.OTel)
 	if err != nil {
 		logger.Warnf("Failed to initialize OpenTelemetry tracer: %v", err)
 	}
@@ -89,25 +89,25 @@ func main() {
 		})
 	})
 
-	app.GET("/config.js", serveFrontendConfig(appConfig.SPAConfig))
+	app.GET("/config.js", serveFrontendConfig(appConfig.Frontend))
 	// Serve static assets
-	app.Static("/assets", appConfig.StaticAssetsPath)
+	app.Static("/assets", appConfig.Frontend.StaticAssetsPath)
 	// Serve SPA index.html for all other routes (to support client-side routing)
 	app.NoRoute(func(c *gin.Context) {
-		c.File(appConfig.SPAIndexPath)
+		c.File(appConfig.Frontend.SPAIndexPath)
 	})
 
-	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.PostgresConfig)
+	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.Postgres)
 	//postgresRepository.Migrate()
 	tokenRepository := tokenRepo.NewTokenRepository(
-		appConfig.ServerDNS,
+		appConfig.TokensIssuer,
 		[]byte(appConfig.User.JWTSecret),
 		[]byte(appConfig.Client.JWTSecret),
 		[]byte(appConfig.OAuth.JWTSecret),
 	)
 	emailRepository := emailRepo.NewEmailRepository(appConfig.User.EmailConfig)
 	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
-	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZkConfig))
+	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZK))
 	phoneRepository := phoneRepo.NewPhoneRepository(appConfig.User.PhoneConfig)
 	influxdbRepository := influxdbRepo.NewInfluxdbRepository(appConfig.Client.InfluxDB2Config)
 	err = influxdbRepository.IsConnected(context.Background())

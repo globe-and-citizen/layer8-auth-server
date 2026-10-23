@@ -24,7 +24,7 @@
               min="0.000001"
               step="any"
               :value="paymentAmount"
-              @input="$emit('update:paymentAmount', $event.target.value)"
+              @input="onPaymentAmountInput"
             />
           </td>
         </tr>
@@ -60,9 +60,17 @@ defineProps<{
   userID: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'cancel'): void
   (e: 'pay'): void
   (e: 'update:paymentAmount', value: string): void
 }>()
+
+function onPaymentAmountInput(event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) {
+    return
+  }
+  emit('update:paymentAmount', target.value)
+}
 </script>

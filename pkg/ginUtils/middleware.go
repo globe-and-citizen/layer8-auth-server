@@ -69,8 +69,8 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 
 		c.Next() // handle request
 
-		// Skip logging for internal/health endpoints
-		if path == "/health" || path == "/config.js" || strings.HasPrefix(path, "/assets") {
+		// Only log backend requests; exclude frontend/static/SPA routes.
+		if path != "/health" && !strings.HasPrefix(path, "/api/") {
 			return
 		}
 
@@ -90,6 +90,8 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 			log.F("path", path),
 			log.F("latency_ms", latency.Milliseconds()),
 			log.F("request_id", c.GetString(RequestIDKey)),
+			log.F("client_ip", c.ClientIP()),
+			log.F("user_agent", c.Request.UserAgent()),
 		}
 
 		// Log errors and slow requests; skip successful fast requests
@@ -97,10 +99,6 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 		isSlow := latency > 500*time.Millisecond
 
 		if isError {
-			fields = append(fields,
-				log.F("ip", c.ClientIP()),
-				log.F("user_agent", c.Request.UserAgent()),
-			)
 			if ct := c.GetHeader("Content-Type"); ct != "" {
 				fields = append(fields, log.F("content_type", ct))
 			}
@@ -121,7 +119,6 @@ func AccessLog(l log.ILogger) gin.HandlerFunc {
 
 		if isSlow {
 			fields = append(fields,
-				log.F("ip", c.ClientIP()),
 				log.F("response_size", c.Writer.Size()),
 				log.F("warning_msg", "http request slow"),
 			)

@@ -1,4 +1,3 @@
-
 <template>
   <div v-if="active" class="cnc-pay-popup" @click.self="closePopup">
     <div class="cnc-pay-popup__content">
@@ -15,7 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import {nextTick, onMounted, onUnmounted, ref, watch} from 'vue'
+import {config} from '@/config'
 
 const props = defineProps<{
   active: boolean
@@ -51,7 +51,7 @@ function loadWidgetScript(): HTMLScriptElement {
   const script = document.createElement('script')
   script.id = 'cnc-pay-widget'
   script.src = 'https://payment-gate-widget-staging.up.railway.app/widget.js'
-  script.setAttribute('data-bank', '0xae40833AFEa9c37E5dF0fC69dC7dC6750EfD6D49')
+  script.setAttribute('data-bank', config.CONTRACT_ADDRESS)
   script.setAttribute('data-token', 'USDC')
   script.async = true
 
@@ -115,7 +115,7 @@ watch(
       void openCheckout()
     }
   },
-  { immediate: true }
+  {immediate: true}
 )
 </script>
 
