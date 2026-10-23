@@ -20,12 +20,12 @@ import (
 
 // Config holds OpenTelemetry configuration
 type Config struct {
-	Enabled      bool    `env:"OTEL_ENABLED" env-default:"true"`         // Enable tracing
-	ExporterType string  `env:"OTEL_EXPORTER_TYPE" env-default:"stdout"` // "stdout" or "otlp"
-	Protocol     string  `env:"OTEL_PROTOCOL" env-default:"grpc"`        // "http" or "grpc" (for otlp)
-	Endpoint     string  `env:"OTEL_ENDPOINT"`                           // Derived from protocol when omitted
-	AuthHeader   string  `env:"OTEL_AUTH_HEADER" env-default:""`         // Optional auth header
-	SamplingRate float64 `env:"OTEL_SAMPLING_RATE" env-default:"1.0"`    // 0.0 to 1.0
+	Enabled      bool    `env:"OTEL_ENABLED" envDefault:"true"`         // Enable tracing
+	ExporterType string  `env:"OTEL_EXPORTER_TYPE" envDefault:"stdout"` // "stdout" or "otlp"
+	Protocol     string  `env:"OTEL_PROTOCOL" envDefault:"grpc"`        // "http" or "grpc" (for otlp)
+	Endpoint     string  `env:"OTEL_ENDPOINT"`                          // Derived from protocol when omitted
+	AuthHeader   string  `env:"OTEL_AUTH_HEADER" envDefault:""`         // Optional auth header
+	SamplingRate float64 `env:"OTEL_SAMPLING_RATE" envDefault:"1.0"`    // 0.0 to 1.0
 }
 
 // InitTracer initializes OpenTelemetry with configurable exporter.

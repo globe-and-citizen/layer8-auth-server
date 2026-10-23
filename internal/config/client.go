@@ -9,10 +9,10 @@ type ClientConfig struct {
 }
 
 type InfluxDB2Config struct {
-	Url    string `env:"INFLUXDB_URL" default:"http://localhost:8086"`
-	Org    string `env:"INFLUXDB_ORG" default:"layer8org"`
-	Bucket string `env:"INFLUXDB_BUCKET" default:"layer8bucket"`
-	Token  string `env:"INFLUXDB_TOKEN" default:"default_token"`
+	Url    string `env:"INFLUXDB_URL" envDefault:"http://localhost:8086"`
+	Org    string `env:"INFLUXDB_ORG" envDefault:"layer8org"`
+	Bucket string `env:"INFLUXDB_BUCKET" envDefault:"layer8bucket"`
+	Token  string `env:"INFLUXDB_TOKEN" envDefault:"default_token"`
 }
 
 type ExternalConfig struct {
@@ -22,12 +22,12 @@ type ExternalConfig struct {
 type Web3Config struct {
 	WebsocketRPCURL string `env:"WEB3_WS_RPC_URL" required:"true"`
 
-	TrafficPaidEnabled  bool   `env:"WEB3_TRAFFIC_PAID_ENABLED" default:"false"`
+	TrafficPaidEnabled  bool   `env:"WEB3_TRAFFIC_PAID_ENABLED" envDefault:"false"`
 	PaymentContractAddr string `env:"WEB3_PAYMENT_CONTRACT_ADDRESS" required:"true"`
 	PaymentContractABI  string `env:"WEB3_PAYMENT_CONTRACT_ABI" required:"true"`
 
 	// CNC payment
-	CNCPaymentEnabled bool   `env:"WEB3_CNC_PAYMENT_ENABLED" default:"false"`
+	CNCPaymentEnabled bool   `env:"WEB3_CNC_PAYMENT_ENABLED" envDefault:"false"`
 	CNCContractAddr   string `env:"WEB3_CNC_CONTRACT_ADDRESS" required:"true"`
 	CNCEventABI       string `env:"WEB3_CNC_EVENT_ABI" required:"true"`
 
