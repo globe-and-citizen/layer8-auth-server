@@ -28,6 +28,7 @@ func (r *PostgresRepository) UpdateClientBalance(
 	ctx context.Context,
 	clientId string,
 	newBalance string,
+	currency gormModels.Currency,
 	status gormModels.AccountStatus,
 	lastUsageUpdatedAt time.Time,
 ) error {
@@ -36,7 +37,8 @@ func (r *PostgresRepository) UpdateClientBalance(
 	err := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
 		Where("client_id = ?", clientId).
 		Updates(map[string]interface{}{
-			"balance_wei":           newBalance,
+			"balance_base_units":    newBalance,
+			"currency":              currency,
 			"status":                status,
 			"last_usage_updated_at": lastUsageUpdatedAt,
 		}).Error
@@ -66,14 +68,18 @@ func (r *PostgresRepository) AddClientPaymentReceipt(
 	ctx context.Context,
 	clientId string,
 	amount string,
+	currency gormModels.Currency,
+	senderWalletAddress string,
 	timestamp time.Time,
 	txHash string,
 ) error {
 	paymentReceipt := gormModels.ClientPaymentReceipt{
-		ClientID:      clientId,
-		PaidAmountWei: amount,
-		PaidAt:        timestamp,
-		TxID:          txHash,
+		ClientID:            clientId,
+		PaidAmount:          amount,
+		Currency:            currency,
+		SenderWalletAddress: senderWalletAddress,
+		PaidAt:              timestamp,
+		TxID:                txHash,
 	}
 
 	e := r.db.WithContext(ctx).Create(&paymentReceipt).Error

@@ -11,7 +11,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
-const blockFile = "./ethereum_blocks.txt"
+const TrafficPaidEventBlock = "./traffic_paid_last_block.txt"
+const CNCTokenDepositedEventBlock = "./cnc_token_deposited_last_block.txt"
 
 func MustLoadABI(path string) abi.ABI {
 	data, err := os.ReadFile(path)
@@ -19,15 +20,17 @@ func MustLoadABI(path string) abi.ABI {
 		log.Fatal("abi read error:", err)
 	}
 
+	// Support Hardhat artifacts containing an "abi" field.
 	var artifact struct {
 		ABI json.RawMessage `json:"abi"`
 	}
 
-	if err := json.Unmarshal(data, &artifact); err != nil {
-		log.Fatal("artifact unmarshal error:", err)
+	if err := json.Unmarshal(data, &artifact); err == nil &&
+		len(artifact.ABI) > 0 {
+		data = artifact.ABI
 	}
 
-	parsed, err := abi.JSON(bytes.NewReader(artifact.ABI))
+	parsed, err := abi.JSON(bytes.NewReader(data))
 	if err != nil {
 		log.Fatal("abi parse error:", err)
 	}
@@ -35,7 +38,7 @@ func MustLoadABI(path string) abi.ABI {
 	return parsed
 }
 
-func LoadLastBlock() uint64 {
+func LoadLastBlock(blockFile string) uint64 {
 	data, err := os.ReadFile(blockFile)
 	if err != nil {
 		return 0
@@ -44,14 +47,27 @@ func LoadLastBlock() uint64 {
 	return n.Uint64()
 }
 
-func saveLastBlock(block uint64) {
+func saveLastBlock(eventName string, block uint64) {
+	blockFile := getBlockFile(eventName)
 	_ = os.WriteFile(blockFile, []byte(big.NewInt(int64(block)).String()), 0644)
+}
+
+func getBlockFile(eventName string) string {
+	switch eventName {
+	case "TrafficPaid":
+		return TrafficPaidEventBlock
+	case "TokenDeposited":
+		return CNCTokenDepositedEventBlock
+	default:
+		return eventName + "_last_block.txt"
+	}
 }
 
 type EventHandlerFunc[T any] func(eventData EventData[T]) error
 
 type EventData[T any] struct {
 	Data        T
-	TxTimestamp time.Time
 	TxID        string
+	TxTimestamp time.Time
+	TxInput     []byte
 }

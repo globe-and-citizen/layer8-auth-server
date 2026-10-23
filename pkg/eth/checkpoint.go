@@ -18,7 +18,7 @@ func Backfill[T any](
 	sub EventListener[T],
 	start uint64,
 ) {
-	event := sub.ContractABI.Events[sub.EventName]
+	event := sub.EventABI.Events[sub.EventName]
 
 	query := ethereum.FilterQuery{
 		FromBlock: big.NewInt(int64(start)),
@@ -37,6 +37,6 @@ func Backfill[T any](
 		if err != nil {
 			logger.Error("Backfill handle event error", errors.WithStack(err))
 		}
-		saveLastBlock(vLog.BlockNumber)
+		saveLastBlock(sub.EventName, vLog.BlockNumber)
 	}
 }

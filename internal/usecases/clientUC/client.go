@@ -150,13 +150,13 @@ func (uc *ClientUsecase) GetUnpaidAmount(ctx context.Context, clientID string) (
 		return nil, ucerror.New(fmt.Errorf("failed to get client balance: %w", err), consts.ErrInternalServer) // todo
 	}
 
-	balanceWei, err := utils.DBWeiToBigInt(stats.BalanceWei)
+	balanceBaseUnits, err := utils.DBAmountToBigInt(stats.BalanceBaseUnits)
 	if err != nil {
-		return nil, ucerror.New(fmt.Errorf("failed to convert balance wei: %w", err), consts.ErrInternalServer)
+		return nil, ucerror.New(fmt.Errorf("failed to convert balance base units: %w", err), consts.ErrInternalServer)
 	}
 
 	return &responsedto.ClientGetBalance{
-		Balance: utils.WeiToEthString(balanceWei, 18),
+		Balance: utils.BaseUnitsToCurrency(balanceBaseUnits, string(stats.Currency)),
 	}, nil
 }
 

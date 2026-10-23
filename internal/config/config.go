@@ -4,16 +4,19 @@ import (
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/otel"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
+	"math/big"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
 type AppConfig struct {
-	AppEnv     string `env:"APP_ENV" required:"true"`
-	ServerHost string `env:"SERVER_HOST"`
-	ServerPort int    `env:"SERVER_PORT"`
-	ServerDNS  string `env:"SERVER_DNS"`
+	AppEnv      string   `env:"APP_ENV" required:"true"`
+	ServerHost  string   `env:"SERVER_HOST"`
+	ServerPort  int      `env:"SERVER_PORT"`
+	ServerDNS   string   `env:"SERVER_DNS"`
+	CORSOrigins []string `env:"CORS_ORIGINS" envSeparator:";"`
 	SPAConfig
 
 	LogConfig log.Config
@@ -21,10 +24,12 @@ type AppConfig struct {
 	utils.PostgresConfig
 	ScramConfig
 	ZkConfig
+	PaymentConfig PaymentConfig
 
-	UserConfig
-	ClientConfig
-	OAuthConfig
+	User       UserConfig
+	Client     ClientConfig
+	OAuth      OAuthConfig
+	Worker     WorkerConfig
 	OTelConfig otel.Config
 }
 
@@ -42,6 +47,16 @@ type ZkConfig struct {
 
 type ScramConfig struct {
 	ScramIterationCount int `env:"SCRAM_ITERATION_COUNT" env-default:"4096"`
+}
+
+type PaymentConfig struct {
+	Currency           string  `env:"PAYMENT_CURRENCY" required:"true" env-default:"usdc"`
+	BillingRatePerByte big.Int `env:"BILLING_RATE_PER_BYTE" default:"1"`
+}
+
+type WorkerConfig struct {
+	UpdateUsageInterval time.Duration `env:"UPDATE_USAGE_INTERVAL" env-default:"15m"`
+	Payment             PaymentConfig
 }
 
 func LoadConfig() AppConfig {

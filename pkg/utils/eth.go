@@ -16,17 +16,69 @@ func WeiToEth(wei *big.Int) *big.Float {
 	return eth
 }
 
-func DBWeiToBigInt(dbValue string) (*big.Int, error) {
-	if dbValue == "" {
+func DBAmountToBigInt(dbValue string) (*big.Int, error) {
+	if dbValue == "" || dbValue == "0" {
 		return big.NewInt(0), nil
 	}
 
-	wei := new(big.Int)
-	if _, ok := wei.SetString(dbValue, 10); !ok {
-		return nil, fmt.Errorf("invalid wei value in DB")
+	amount := new(big.Int)
+	if _, ok := amount.SetString(dbValue, 10); !ok {
+		return nil, fmt.Errorf("cannot convert %s to big int", dbValue)
 	}
 
-	return wei, nil
+	return amount, nil
+}
+
+// BaseUnitsToCurrency Convert base units amount of a currency to its string representation in that currency.
+func BaseUnitsToCurrency(baseUnits *big.Int, currency string) string {
+	if baseUnits == nil {
+		return "0"
+	}
+
+	decimals := 18
+	switch strings.ToUpper(strings.TrimSpace(currency)) {
+	case "WEI":
+		decimals = 0
+	case "GWEI":
+		decimals = 9
+	case "USDC", "USDT":
+		decimals = 6
+	case "ETH", "WETH", "MATIC", "POL", "BNB":
+		decimals = 18
+	}
+
+	v := new(big.Int).Set(baseUnits)
+	negative := v.Sign() < 0
+	if negative {
+		v.Abs(v)
+	}
+
+	s := v.String()
+	if decimals == 0 {
+		if negative {
+			return "-" + s
+		}
+		return s
+	}
+
+	if len(s) <= decimals {
+		s = strings.Repeat("0", decimals-len(s)+1) + s
+	}
+
+	split := len(s) - decimals
+	intPart := s[:split]
+	fracPart := strings.TrimRight(s[split:], "0")
+
+	result := intPart
+	if fracPart != "" {
+		result += "." + fracPart
+	}
+
+	if negative {
+		return "-" + result
+	}
+
+	return result
 }
 
 func WeiToEthString(wei *big.Int, decimals int) string {
@@ -64,9 +116,9 @@ func EthStringToWei(eth string) (*big.Int, error) {
 	return wei, nil
 }
 
-func BigIntToDBWei(wei *big.Int) string {
-	if wei == nil {
+func BigIntToDBAmount(amount *big.Int) string {
+	if amount == nil {
 		return "0"
 	}
-	return wei.String()
+	return amount.String()
 }

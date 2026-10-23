@@ -658,9 +658,12 @@ perform periodic and event-driven tasks:
 |-------------------------|------------------------|---------:|-------------------------|
 | `id`                    | uint                   |      Yes | Primary key             |
 | `client_id`             | string                 |      Yes | Unique client reference |
-| `balance_wei`           | string / numeric(78,0) |       No | Balance in wei          |
+| `balance_base_units`    | string / numeric(78,0) |       No | Balance in base units   |
+| `currency`              | string                 |      Yes | Currency code (e.g. USDC) |
 | `status`                | enum string            |       No | Account balance status  |
 | `last_usage_updated_at` | datetime               |       No | Last usage update time  |
+
+All monetary values are stored in integer base units (`numeric(78,0)`), and `currency` identifies the asset.
 
 **Allowed values for `status`:**
 
@@ -675,9 +678,13 @@ perform periodic and event-driven tasks:
 |-------------------|------------------------|---------:|---------------------------|
 | `id`              | uint                   |      Yes | Primary key               |
 | `client_id`       | string                 |      Yes | Client reference          |
-| `paid_amount_wei` | string / numeric(78,0) |       No | Paid amount in wei        |
+| `paid_amount`     | string / numeric(78,0) |       No | Paid amount in base units |
+| `currency`        | string                 |      Yes | Currency code (e.g. USDC) |
+| `sender_wallet_address` | string            |       No | Sender wallet address     |
 | `paid_at`         | datetime               |       No | Payment timestamp         |
 | `tx_id`           | string                 |       No | Blockchain transaction ID |
+
+`sender_wallet_address` is captured from the event payer address for on-chain attribution.
 <br>
 
 #### `user_metadata`

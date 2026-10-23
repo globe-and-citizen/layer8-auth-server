@@ -46,7 +46,7 @@ func (r *PostgresRepository) UpdateClient(ctx context.Context, newClient gormMod
 
 	balance := gormModels.ClientBalance{
 		ClientID:           newClient.ID,
-		BalanceWei:         "0",
+		BalanceBaseUnits:   "0",
 		Status:             gormModels.AccountZeroed,
 		LastUsageUpdatedAt: time.Now().UTC(),
 	}

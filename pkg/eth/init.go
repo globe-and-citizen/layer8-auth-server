@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"math/big"
 	"time"
@@ -27,10 +28,11 @@ func CloseEthereumConnection(client *ethclient.Client) {
 
 // EventListener - Per event listener
 type EventListener[T any] struct {
-	ContractABI     *abi.ABI
+	EventABI        *abi.ABI
 	ContractAddress common.Address
 	EventName       string
 	EventID         common.Hash
+	FetchTxInput    bool
 	handler         EventHandlerFunc[T]
 }
 
@@ -38,6 +40,7 @@ func NewEventListener[T any](
 	contractABI *abi.ABI,
 	contractAddr common.Address,
 	eventName string,
+	fetchTxInput bool,
 ) EventListener[T] {
 	event, ok := contractABI.Events[eventName]
 	if !ok {
@@ -45,10 +48,11 @@ func NewEventListener[T any](
 	}
 
 	return EventListener[T]{
-		ContractABI:     contractABI,
+		EventABI:        contractABI,
 		ContractAddress: contractAddr,
 		EventName:       eventName,
 		EventID:         event.ID,
+		FetchTxInput:    fetchTxInput,
 	}
 }
 
@@ -93,7 +97,7 @@ func (e *EventListener[T]) Start(ctx context.Context, logger log.ILogger, client
 					logger.Errorf(err, "Error handling ethereum event %s", e.EventName)
 					// todo what to do on handler error?
 				}
-				saveLastBlock(vLog.BlockNumber)
+				saveLastBlock(e.EventName, vLog.BlockNumber)
 			}
 		}
 	RESUBSCRIBE:
@@ -104,22 +108,65 @@ func (e *EventListener[T]) Start(ctx context.Context, logger log.ILogger, client
 func (e *EventListener[T]) handleEvent(ctx context.Context, client *ethclient.Client, vLog types.Log) error {
 	var eventData EventData[T]
 
-	err := e.ContractABI.UnpackIntoInterface(&eventData.Data, e.EventName, vLog.Data)
-	if err != nil {
-		return err
+	event, ok := e.EventABI.Events[e.EventName]
+	if !ok {
+		return fmt.Errorf("event %q not found in ABI", e.EventName)
+	}
+
+	if len(vLog.Topics) == 0 || vLog.Topics[0] != event.ID {
+		return fmt.Errorf("unexpected event signature")
+	}
+
+	// Decode non-indexed parameters from log.Data.
+	if err := e.EventABI.UnpackIntoInterface(
+		&eventData.Data,
+		e.EventName,
+		vLog.Data,
+	); err != nil {
+		return fmt.Errorf("unpack event data: %w", err)
+	}
+
+	// Decode indexed parameters from log.Topics.
+	indexed := make(abi.Arguments, 0)
+	for _, input := range event.Inputs {
+		if input.Indexed {
+			indexed = append(indexed, input)
+		}
+	}
+
+	if len(vLog.Topics) != len(indexed)+1 {
+		return fmt.Errorf("unexpected number of event topics")
+	}
+
+	// ParseTopics writes decoded values into matching struct fields.
+	if err := abi.ParseTopics(
+		&eventData.Data,
+		indexed,
+		vLog.Topics[1:],
+	); err != nil {
+		return fmt.Errorf("unpack indexed topics: %w", err)
 	}
 
 	eventData.TxID = vLog.TxHash.Hex()
 	// Fetch block header to get the block timestamp (seconds since epoch)
 	header, err := client.HeaderByNumber(ctx, new(big.Int).SetUint64(vLog.BlockNumber))
 	if err != nil {
-		return err
+		return fmt.Errorf("fetch block header: %w", err)
 	}
+
 	eventData.TxTimestamp = time.Unix(int64(header.Time), 0)
 
-	err = e.handler(eventData)
-	if err != nil {
-		return err
+	if e.FetchTxInput {
+		tx, _, err := client.TransactionByHash(ctx, vLog.TxHash)
+		if err != nil {
+			return fmt.Errorf("fetch transaction: %w", err)
+		}
+
+		eventData.TxInput = tx.Data()
+	}
+
+	if err := e.handler(eventData); err != nil {
+		return fmt.Errorf("handle event: %w", err)
 	}
 
 	return nil
