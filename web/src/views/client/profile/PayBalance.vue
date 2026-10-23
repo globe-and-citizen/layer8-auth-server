@@ -39,8 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { ClientUnpaidAmountPath, getAPI } from '@/api/paths.ts'
+import {onMounted, ref} from 'vue'
+import {ClientUnpaidAmountPath, getAPI} from '@/api/paths.ts'
 import PayWithCryptoModal from '@/views/client/profile/PayWithCryptoModal.vue'
 import CncPayCheckout from '@/views/client/profile/CncPayCheckout.vue'
 
@@ -93,8 +93,12 @@ function cancelModal() {
 function payWithCrypto() {
   const amount = Number(paymentAmount.value)
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    alert('Please enter a valid payment amount')
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    !/^(?:\d+(?:\.\d{1,6})?|\.\d{1,6})$/.test(paymentAmount.value)
+  ) {
+    alert('Please enter a positive USDC amount with at most 6 decimal places')
     return
   }
 

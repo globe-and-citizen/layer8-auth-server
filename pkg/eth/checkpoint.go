@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const backfillMaxBlockRange uint64 = 10
+
 func Backfill[T any](
 	logger log.ILogger,
 	ctx context.Context,
@@ -18,25 +20,58 @@ func Backfill[T any](
 	sub EventListener[T],
 	start uint64,
 ) {
-	event := sub.EventABI.Events[sub.EventName]
-
-	query := ethereum.FilterQuery{
-		FromBlock: big.NewInt(int64(start)),
-		Addresses: []common.Address{sub.ContractAddress},
-		Topics:    [][]common.Hash{{event.ID}},
+	if sub.handler == nil {
+		logger.Errorf(nil, "Handler for %s is nil", sub.EventName)
+		return
 	}
 
-	logs, err := client.FilterLogs(ctx, query)
+	fromBlock := start
+	if start > 0 {
+		// start stores the last successfully processed block.
+		// Resume from the next block to avoid duplicate processing.
+		fromBlock = start + 1
+	}
+
+	event := sub.EventABI.Events[sub.EventName]
+	latestBlock, err := client.BlockNumber(ctx)
 	if err != nil {
 		logger.Error("Backfill error", errors.WithStack(err))
 		return
 	}
 
-	for _, vLog := range logs {
-		err = sub.handleEvent(ctx, client, vLog)
-		if err != nil {
-			logger.Error("Backfill handle event error", errors.WithStack(err))
+	if fromBlock > latestBlock {
+		return
+	}
+
+	for chunkStart := fromBlock; chunkStart <= latestBlock; chunkStart += backfillMaxBlockRange {
+		chunkEnd := chunkStart + backfillMaxBlockRange - 1
+		if chunkEnd > latestBlock {
+			chunkEnd = latestBlock
 		}
-		saveLastBlock(sub.EventName, vLog.BlockNumber)
+
+		query := ethereum.FilterQuery{
+			FromBlock: new(big.Int).SetUint64(chunkStart),
+			ToBlock:   new(big.Int).SetUint64(chunkEnd),
+			Addresses: []common.Address{sub.ContractAddress},
+			Topics:    [][]common.Hash{{event.ID}},
+		}
+
+		logs, filterErr := client.FilterLogs(ctx, query)
+		if filterErr != nil {
+			logger.Error("Backfill error", errors.WithStack(filterErr))
+			return
+		}
+
+		for _, vLog := range logs {
+			err = sub.handleEvent(ctx, client, vLog)
+			if err != nil {
+				logger.Error("Backfill handle event error", errors.WithStack(err))
+				return
+			}
+			saveLastBlock(sub.EventName, vLog.BlockNumber)
+		}
+
+		// Mark chunk as processed even when no matching logs are found.
+		saveLastBlock(sub.EventName, chunkEnd)
 	}
 }

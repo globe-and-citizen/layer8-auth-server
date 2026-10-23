@@ -99,6 +99,7 @@ func (e *EventListener[T]) Start(ctx context.Context, logger log.ILogger, client
 				if err != nil {
 					logger.Errorf(err, "Error handling ethereum event %s", e.EventName)
 					// todo what to do on handler error?
+					continue
 				}
 				saveLastBlock(e.EventName, vLog.BlockNumber)
 			}

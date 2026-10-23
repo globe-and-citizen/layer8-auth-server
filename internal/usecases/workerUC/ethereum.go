@@ -52,14 +52,13 @@ func (uc *WorkerUsecase) handleCNCTokenDeposited(event eth.EventData[models.CNCT
 	}
 
 	uc.logger.Infof(
-		"FactureID: %s, Depositor: %s, Token: %s, Amount: %s",
+		"New payment received with ClientID: %s, Depositor: %s, Token: %s, Amount: %s",
 		factureID,
 		event.Data.Depositor.Hex(),
 		event.Data.Token.Hex(),
 		event.Data.Amount.String(),
 	)
 
-	// TODO: Validate invoice and update payment status.
 	amount := utils.BigIntToDBAmount(event.Data.Amount)
 	err = uc.postgres.AddClientPaymentReceipt(
 		uc.ctx,

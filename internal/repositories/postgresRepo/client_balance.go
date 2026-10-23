@@ -37,9 +37,9 @@ func (r *PostgresRepository) AddClientBalanceDelta(
 		"currency":           currency,
 		"status": gorm.Expr(
 			`CASE
-				WHEN balance_base_units + (?::numeric) < 0 THEN ?
-				WHEN balance_base_units + (?::numeric) > 0 THEN ?
-				ELSE ?
+				WHEN balance_base_units + (?::numeric) < 0 THEN ?::account_status
+				WHEN balance_base_units + (?::numeric) > 0 THEN ?::account_status
+				ELSE ?::account_status
 			END`,
 			delta, gormModels.AccountOverpaid,
 			delta, gormModels.AccountOwing,
@@ -87,6 +87,7 @@ func (r *PostgresRepository) AddClientPaymentReceipt(
 		return utils.StackError(tx.Error)
 	}
 
+	// todo convert old balance to new currency if needed
 	updateResult := tx.Model(&gormModels.ClientBalance{}).
 		Where("client_id = ?", clientId).
 		Updates(map[string]interface{}{
@@ -94,9 +95,9 @@ func (r *PostgresRepository) AddClientPaymentReceipt(
 			"currency":           currency,
 			"status": gorm.Expr(
 				`CASE
-					WHEN balance_base_units - (?::numeric) < 0 THEN ?
-					WHEN balance_base_units - (?::numeric) > 0 THEN ?
-					ELSE ?
+					WHEN balance_base_units - (?::numeric) < 0 THEN ?::account_status
+					WHEN balance_base_units - (?::numeric) > 0 THEN ?::account_status
+					ELSE ?::account_status
 				END`,
 				amount, gormModels.AccountOverpaid,
 				amount, gormModels.AccountOwing,

@@ -38,8 +38,8 @@ func MustLoadABI(path string) abi.ABI {
 	return parsed
 }
 
-func LoadLastBlock(blockFile string) uint64 {
-	data, err := os.ReadFile(blockFile)
+func LoadLastBlock(eventName string) uint64 {
+	data, err := os.ReadFile(getBlockFile(eventName))
 	if err != nil {
 		return 0
 	}
