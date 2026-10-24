@@ -26,11 +26,9 @@ func Backfill[T any](
 	}
 
 	fromBlock := start
-	if start > 0 {
-		// start stores the last successfully processed block.
-		// Resume from the next block to avoid duplicate processing.
-		fromBlock = start + 1
-	}
+	// Resume from the checkpoint block itself. If the process stopped after
+	// committing some events in that block but before persisting checkpoint,
+	// replaying the block relies on idempotent receipt handling.
 
 	event := sub.EventABI.Events[sub.EventName]
 	latestBlock, err := client.BlockNumber(ctx)

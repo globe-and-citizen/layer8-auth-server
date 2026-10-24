@@ -683,6 +683,7 @@ All monetary values are stored in integer base units (`numeric(78,0)`), and `cur
 | `sender_wallet_address` | string            |       No | Sender wallet address     |
 | `paid_at`         | datetime               |       No | Payment timestamp         |
 | `tx_id`           | string                 |       No | Blockchain transaction ID |
+| `log_index`       | uint                   |      Yes | Log index within transaction |
 
 `sender_wallet_address` is captured from the event payer address for on-chain attribution.
 <br>

@@ -58,7 +58,7 @@ type IClientBalanceRepository interface {
 }
 
 type IClientPaymentReceiptRepository interface {
-	AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, currency gormModels.Currency, senderWalletAddress string, timestamp time.Time, txHash string) error
+	AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, currency gormModels.Currency, senderWalletAddress string, timestamp time.Time, txHash string, logIndex uint) error
 }
 
 type IUserMetadataRepository interface {

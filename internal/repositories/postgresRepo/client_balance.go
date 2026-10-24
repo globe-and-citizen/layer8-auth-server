@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (r *PostgresRepository) GetClientBalance(ctx context.Context, clientId string) (*gormModels.ClientBalance, error) {
@@ -81,13 +82,40 @@ func (r *PostgresRepository) AddClientPaymentReceipt(
 	senderWalletAddress string,
 	timestamp time.Time,
 	txHash string,
+	logIndex uint,
 ) error {
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return utils.StackError(tx.Error)
 	}
 
-	// todo convert old balance to new currency if needed
+	// todo 1. convert old balance to new currency if needed
+	paymentReceipt := gormModels.ClientPaymentReceipt{
+		ClientID:            clientId,
+		PaidAmount:          amount,
+		Currency:            currency,
+		SenderWalletAddress: senderWalletAddress,
+		PaidAt:              timestamp,
+		TxID:                txHash,
+		LogIndex:            logIndex,
+	}
+
+	createResult := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "tx_id"},
+			{Name: "log_index"},
+		},
+		DoNothing: true,
+	}).Create(&paymentReceipt)
+	if createResult.Error != nil {
+		tx.Rollback()
+		return utils.StackError(createResult.Error)
+	}
+	if createResult.RowsAffected == 0 {
+		tx.Rollback()
+		return nil
+	}
+
 	updateResult := tx.Model(&gormModels.ClientBalance{}).
 		Where("client_id = ?", clientId).
 		Updates(map[string]interface{}{
@@ -111,21 +139,6 @@ func (r *PostgresRepository) AddClientPaymentReceipt(
 	if updateResult.RowsAffected == 0 {
 		tx.Rollback()
 		return utils.StackError(fmt.Errorf("no client balance found for client_id: %s", clientId))
-	}
-
-	paymentReceipt := gormModels.ClientPaymentReceipt{
-		ClientID:            clientId,
-		PaidAmount:          amount,
-		Currency:            currency,
-		SenderWalletAddress: senderWalletAddress,
-		PaidAt:              timestamp,
-		TxID:                txHash,
-	}
-
-	e := tx.Create(&paymentReceipt).Error
-	if e != nil {
-		tx.Rollback()
-		return utils.StackError(e)
 	}
 
 	if err := tx.Commit().Error; err != nil {

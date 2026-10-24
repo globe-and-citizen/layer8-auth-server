@@ -68,6 +68,7 @@ type EventHandlerFunc[T any] func(eventData EventData[T]) error
 type EventData[T any] struct {
 	Data        T
 	TxID        string
+	LogIndex    uint
 	TxTimestamp time.Time
 	TxInput     []byte
 }

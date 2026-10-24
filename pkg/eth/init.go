@@ -152,6 +152,7 @@ func (e *EventListener[T]) handleEvent(ctx context.Context, client *ethclient.Cl
 	}
 
 	eventData.TxID = vLog.TxHash.Hex()
+	eventData.LogIndex = vLog.Index
 	// Fetch block header to get the block timestamp (seconds since epoch)
 	header, err := client.HeaderByNumber(ctx, new(big.Int).SetUint64(vLog.BlockNumber))
 	if err != nil {

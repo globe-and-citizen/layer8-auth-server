@@ -8,7 +8,11 @@ ALTER TABLE client_payment_receipt
 
 ALTER TABLE client_payment_receipt
     ADD COLUMN currency TEXT NOT NULL DEFAULT 'usdc',
-    ADD COLUMN sender_wallet_address TEXT;
+    ADD COLUMN sender_wallet_address TEXT,
+    ADD COLUMN log_index BIGINT NOT NULL DEFAULT 0;
+
+CREATE UNIQUE INDEX uq_client_payment_receipt_tx_id_log_index
+    ON client_payment_receipt (tx_id, log_index);
 
 UPDATE client_payment_receipt
 SET currency = 'pol';

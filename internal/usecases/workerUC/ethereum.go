@@ -32,6 +32,7 @@ func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.Traff
 		event.Data.Payer.Hex(),
 		event.TxTimestamp,
 		event.TxID,
+		event.LogIndex,
 	)
 	if err != nil {
 		return err
@@ -68,6 +69,7 @@ func (uc *WorkerUsecase) handleCNCTokenDeposited(event eth.EventData[models.CNCT
 		event.Data.Depositor.Hex(),
 		event.TxTimestamp,
 		event.TxID,
+		event.LogIndex,
 	)
 	if err != nil {
 		return err

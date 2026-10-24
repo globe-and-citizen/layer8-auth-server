@@ -55,6 +55,7 @@ type ClientPaymentReceipt struct {
 	SenderWalletAddress string    `gorm:"column:sender_wallet_address"`
 	PaidAt              time.Time `gorm:"column:paid_at"`
 	TxID                string    `gorm:"column:tx_id"`
+	LogIndex            uint      `gorm:"column:log_index; not null; default:0"`
 }
 
 func (ClientPaymentReceipt) TableName() string {
