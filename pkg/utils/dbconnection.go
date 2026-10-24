@@ -13,13 +13,13 @@ import (
 )
 
 type PostgresConfig struct {
-	Host        string `env:"DB_HOST" env-default:"localhost"`
-	Port        int    `env:"DB_PORT" env-default:"5432"`
+	Host        string `env:"DB_HOST" envDefault:"localhost"`
+	Port        int    `env:"DB_PORT" envDefault:"5432"`
 	User        string `env:"DB_USER"`
 	Password    string `env:"DB_PASSWORD"`
 	DBName      string `env:"DB_NAME"`
 	SSLMode     string `env:"DB_SSL_MODE" required:"true"`
-	MigratePath string `env:"DB_MIGRATE_PATH" default:"./migrations"`
+	MigratePath string `env:"DB_MIGRATE_PATH" envDefault:"./migrations"`
 }
 
 func ConnectDB(postgresConfig PostgresConfig) *gorm.DB {

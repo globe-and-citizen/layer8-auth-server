@@ -2,14 +2,16 @@ package postgresRepo
 
 import (
 	"context"
-	"database/sql"
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (r *PostgresRepository) GetClientBalance(ctx context.Context, clientId string) (*gormModels.ClientBalance, error) {
-	// TODO: is isolation level higher then the default needed?
 	var clientStatistics gormModels.ClientBalance
 
 	err := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
@@ -24,34 +26,44 @@ func (r *PostgresRepository) GetClientBalance(ctx context.Context, clientId stri
 	return &clientStatistics, nil
 }
 
-func (r *PostgresRepository) UpdateClientBalance(
+func (r *PostgresRepository) AddClientBalanceDelta(
 	ctx context.Context,
 	clientId string,
-	newBalance string,
-	status gormModels.AccountStatus,
-	lastUsageUpdatedAt time.Time,
+	delta string,
+	currency gormModels.Currency,
+	lastUsageUpdatedAt *time.Time,
 ) error {
-	tx := r.db.WithContext(ctx).Begin(&sql.TxOptions{Isolation: sql.LevelRepeatableRead})
-
-	err := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
-		Where("client_id = ?", clientId).
-		Updates(map[string]interface{}{
-			"balance_wei":           newBalance,
-			"status":                status,
-			"last_usage_updated_at": lastUsageUpdatedAt,
-		}).Error
-
-	if err != nil {
-		tx.Rollback()
-		return utils.StackError(err)
+	updates := map[string]interface{}{
+		"balance_base_units": gorm.Expr("balance_base_units + (?::numeric)", delta),
+		"currency":           currency,
+		"status": gorm.Expr(
+			`CASE
+				WHEN balance_base_units + (?::numeric) < 0 THEN ?::account_status
+				WHEN balance_base_units + (?::numeric) > 0 THEN ?::account_status
+				ELSE ?::account_status
+			END`,
+			delta, gormModels.AccountOverpaid,
+			delta, gormModels.AccountOwing,
+			gormModels.AccountZeroed,
+		),
+	}
+	if lastUsageUpdatedAt != nil {
+		updates["last_usage_updated_at"] = *lastUsageUpdatedAt
 	}
 
-	tx.Commit()
+	result := r.db.WithContext(ctx).Model(&gormModels.ClientBalance{}).
+		Where("client_id = ?", clientId).
+		Updates(updates)
+	if result.Error != nil {
+		return utils.StackError(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return utils.StackError(fmt.Errorf("no client balance found for client_id: %s", clientId))
+	}
 	return nil
 }
 
 func (r *PostgresRepository) GetAllClientBalances(ctx context.Context) ([]gormModels.ClientBalance, error) {
-	// TODO: is isolation level higher then the default needed?
 	var allClientStatistics []gormModels.ClientBalance
 
 	err := r.db.WithContext(ctx).Find(&allClientStatistics).Error
@@ -66,19 +78,71 @@ func (r *PostgresRepository) AddClientPaymentReceipt(
 	ctx context.Context,
 	clientId string,
 	amount string,
+	currency gormModels.Currency,
+	senderWalletAddress string,
 	timestamp time.Time,
 	txHash string,
+	logIndex uint,
 ) error {
-	paymentReceipt := gormModels.ClientPaymentReceipt{
-		ClientID:      clientId,
-		PaidAmountWei: amount,
-		PaidAt:        timestamp,
-		TxID:          txHash,
+	tx := r.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return utils.StackError(tx.Error)
 	}
 
-	e := r.db.WithContext(ctx).Create(&paymentReceipt).Error
-	if e != nil {
-		return utils.StackError(e)
+	// todo 1. convert old balance to new currency if needed
+	paymentReceipt := gormModels.ClientPaymentReceipt{
+		ClientID:            clientId,
+		PaidAmount:          amount,
+		Currency:            currency,
+		SenderWalletAddress: senderWalletAddress,
+		PaidAt:              timestamp,
+		TxID:                txHash,
+		LogIndex:            logIndex,
+	}
+
+	createResult := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "tx_id"},
+			{Name: "log_index"},
+		},
+		DoNothing: true,
+	}).Create(&paymentReceipt)
+	if createResult.Error != nil {
+		tx.Rollback()
+		return utils.StackError(createResult.Error)
+	}
+	if createResult.RowsAffected == 0 {
+		tx.Rollback()
+		return nil
+	}
+
+	updateResult := tx.Model(&gormModels.ClientBalance{}).
+		Where("client_id = ?", clientId).
+		Updates(map[string]interface{}{
+			"balance_base_units": gorm.Expr("balance_base_units - (?::numeric)", amount),
+			"currency":           currency,
+			"status": gorm.Expr(
+				`CASE
+					WHEN balance_base_units - (?::numeric) < 0 THEN ?::account_status
+					WHEN balance_base_units - (?::numeric) > 0 THEN ?::account_status
+					ELSE ?::account_status
+				END`,
+				amount, gormModels.AccountOverpaid,
+				amount, gormModels.AccountOwing,
+				gormModels.AccountZeroed,
+			),
+		})
+	if updateResult.Error != nil {
+		tx.Rollback()
+		return utils.StackError(updateResult.Error)
+	}
+	if updateResult.RowsAffected == 0 {
+		tx.Rollback()
+		return utils.StackError(fmt.Errorf("no client balance found for client_id: %s", clientId))
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return utils.StackError(err)
 	}
 
 	return nil

@@ -11,3 +11,9 @@ type TrafficPaidEvent struct {
 	Payer    common.Address
 	Amount   *big.Int
 }
+
+type CNCTokenDepositedEvent struct {
+	Depositor common.Address
+	Token     common.Address
+	Amount    *big.Int
+}

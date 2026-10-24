@@ -1,20 +1,17 @@
 <template>
   <div v-if="isLoggedIn">
     <div class="flex items-center gap-4">
-
-        <span class="text-sm text-gray-700">
-          Balance:
-          <span class="font-semibold text-gray-900">
-            {{ unpaidAmount }} POL
-          </span>
+      <span class="text-sm text-gray-700">
+        Balance:
+        <span class="font-semibold text-gray-900">
+          {{ unpaidAmount }} USDC
         </span>
-
-      <div></div>
+      </span>
 
       <button
         @click="modalWindowActive = true"
         class="text-sm font-medium text-indigo-600
-                 hover:text-indigo-700 border bg-[#E5E5E5]"
+               hover:text-indigo-700 border bg-[#E5E5E5]"
       >
         <span class="m-4">Pay Now</span>
       </button>
@@ -25,104 +22,100 @@
 
   <PayWithCryptoModal
     :active="modalWindowActive"
-    :unpaidAmountETH="unpaidAmount"
+    :unpaidAmount="unpaidAmount"
+    :userID="props.userID"
     v-model:paymentAmount="paymentAmount"
-    @cancel="cancelModel"
+    @cancel="cancelModal"
     @pay="payWithCrypto"
-  ></PayWithCryptoModal>
+  />
+
+  <CncPayCheckout
+    :active="checkoutActive"
+    :facture-id="props.userID"
+    :amount="checkoutAmount"
+    @close="closeCheckout"
+    @success="onPaymentSuccess"
+  />
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref, watch} from "vue";
-import {ClientUnpaidAmountPath, getAPI} from "@/api/paths.ts";
-import PayWithCryptoModal from "@/views/client/profile/PayWithCryptoModal.vue";
-
-// Import the new hook
-import {useTrafficContract} from "@/utils/paywithcrypto/usePaymentContract.ts";
+import {onMounted, ref} from 'vue'
+import {ClientUnpaidAmountPath, getAPI} from '@/api/paths.ts'
+import PayWithCryptoModal from '@/views/client/profile/PayWithCryptoModal.vue'
+import CncPayCheckout from '@/views/client/profile/CncPayCheckout.vue'
 
 const props = defineProps<{
   userID: string
 }>()
 
-/* =========================
-   Reactive State
-   ========================= */
 const token = ref<string | null>(localStorage.getItem('clientToken'))
-const modalWindowActive = ref(false)
-const paymentAmount = ref('')
-const unpaidAmount = ref('')
 const isLoggedIn = ref(!!token.value)
 
-const {
-  payTraffic,
-  isSuccess,
-  writeError,
-  hash
-} = useTrafficContract()
+const modalWindowActive = ref(false)
+const checkoutActive = ref(false)
 
-/* =========================
-   Lifecycle & Data Fetching
-   ========================= */
+const paymentAmount = ref('')
+const checkoutAmount = ref('')
+const unpaidAmount = ref('')
+
 onMounted(async () => {
   if (!token.value) return
   await getOwingBalance()
 })
 
 async function getOwingBalance() {
-  const unpaidAmountResponse = await fetch(
-    getAPI(ClientUnpaidAmountPath),
-    {
-      headers: {Authorization: `Bearer ${token.value}`}
+  try {
+    const response = await fetch(
+      getAPI(ClientUnpaidAmountPath),
+      {
+        headers: {
+          Authorization: `Bearer ${token.value}`
+        }
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch unpaid amount')
     }
-  )
 
-  if (unpaidAmountResponse.status !== 200) {
+    const body = await response.json()
+    unpaidAmount.value = String(body.data.balance)
+  } catch (error) {
+    console.error(error)
     alert('Failed to fetch unpaid amount, retry later')
-    return
   }
-
-  const unpaidAmountBody = await unpaidAmountResponse.json()
-  unpaidAmount.value = unpaidAmountBody.data.balance
 }
 
-/* =========================
-   Payment Logic
-   ========================= */
-const cancelModel = async () => {
+function cancelModal() {
   modalWindowActive.value = false
 }
 
-const payWithCrypto = async () => {
-  try {
-    await payTraffic(props.userID, paymentAmount.value)
-  } catch (error) {
-    alert('Payment failed to initiate: ' + error)
+function payWithCrypto() {
+  const amount = Number(paymentAmount.value)
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    !/^(?:\d+(?:\.\d{1,6})?|\.\d{1,6})$/.test(paymentAmount.value)
+  ) {
+    alert('Please enter a positive USDC amount with at most 6 decimal places')
+    return
   }
+
+  // Preserve the amount used for this checkout.
+  checkoutAmount.value = paymentAmount.value
+
+  // Close the amount modal and open CNC Pay.
+  modalWindowActive.value = false
+  checkoutActive.value = true
 }
 
-/* =========================
-   Watchers for Feedback
-   ========================= */
-// Watch for successful transaction hash generation
-watch(isSuccess, (newSuccess) => {
-  if (newSuccess && hash.value) {
-    modalWindowActive.value = false
-    console.log('txhash:', hash.value)
-    alert(
-      'Transaction sent successfully! You can track it at txhash:' +
-      hash.value
-    )
-  }
-})
+function closeCheckout() {
+  checkoutActive.value = false
+}
 
-// Watch for contract errors
-watch(writeError, (newError) => {
-  if (newError) {
-    alert('Transaction error: ' + (newError as any).shortMessage || newError.message)
-  }
-})
+async function onPaymentSuccess() {
+  paymentAmount.value = ''
+  await getOwingBalance()
+}
 </script>
-
-<style scoped>
-
-</style>

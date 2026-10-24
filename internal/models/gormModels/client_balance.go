@@ -16,6 +16,13 @@ const (
 	AccountOverpaid AccountStatus = "overpaid"
 )
 
+type Currency string
+
+const (
+	USDC Currency = "usdc"
+	POL  Currency = "pol"
+)
+
 func (AccountStatus) GetStatus(balance *big.Int) AccountStatus {
 	switch balance.Cmp(big.NewInt(0)) {
 	case -1:
@@ -30,7 +37,8 @@ func (AccountStatus) GetStatus(balance *big.Int) AccountStatus {
 type ClientBalance struct {
 	ID                 uint          `gorm:"primaryKey; autoIncrement; not null"`
 	ClientID           string        `gorm:"column:client_id; unique; not null"`
-	BalanceWei         string        `gorm:"column:balance_wei" type:"numeric(78,0)"`
+	BalanceBaseUnits   string        `gorm:"column:balance_base_units" type:"numeric(78,0)"`
+	Currency           Currency      `gorm:"column:currency; not null; default:usdc"`
 	Status             AccountStatus `gorm:"column:status" default:"zeroed"`
 	LastUsageUpdatedAt time.Time     `gorm:"column:last_usage_updated_at"`
 }
@@ -40,11 +48,14 @@ func (ClientBalance) TableName() string {
 }
 
 type ClientPaymentReceipt struct {
-	ID            uint      `gorm:"primaryKey; autoIncrement; not null"`
-	ClientID      string    `gorm:"column:client_id; not null"`
-	PaidAmountWei string    `gorm:"column:paid_amount_wei" type:"numeric(78,0)"`
-	PaidAt        time.Time `gorm:"column:paid_at"`
-	TxID          string    `gorm:"column:tx_id"`
+	ID                  uint      `gorm:"primaryKey; autoIncrement; not null"`
+	ClientID            string    `gorm:"column:client_id; not null"`
+	PaidAmount          string    `gorm:"column:paid_amount" type:"numeric(78,0)"`
+	Currency            Currency  `gorm:"column:currency; not null; default:usdc"`
+	SenderWalletAddress string    `gorm:"column:sender_wallet_address"`
+	PaidAt              time.Time `gorm:"column:paid_at"`
+	TxID                string    `gorm:"column:tx_id"`
+	LogIndex            uint      `gorm:"column:log_index; not null; default:0"`
 }
 
 func (ClientPaymentReceipt) TableName() string {

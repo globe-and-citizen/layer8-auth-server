@@ -49,7 +49,7 @@ func main() {
 	logger := log.NewLogger(appConfig.LogConfig)
 
 	// Initialize OpenTelemetry tracer with config
-	shutdownTracer, err := otel.InitTracer(appConfig.LogConfig.Service, appConfig.OTelConfig)
+	shutdownTracer, err := otel.InitTracer(appConfig.LogConfig.Service, appConfig.OTel)
 	if err != nil {
 		logger.Warnf("Failed to initialize OpenTelemetry tracer: %v", err)
 	}
@@ -75,7 +75,7 @@ func main() {
 	app := gin.New()
 	app.Use(ginUtils.RequestID, gin.Recovery(), ginUtils.OTel(oTelTracer), ginUtils.AccessLog(logger))
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*.layer8proxy.net", "localhost:*"}, // Vue dev server
+		AllowOrigins:     appConfig.CORSOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -89,27 +89,27 @@ func main() {
 		})
 	})
 
-	app.GET("/config.js", serveFrontendConfig(appConfig.SPAConfig))
+	app.GET("/config.js", serveFrontendConfig(appConfig.Frontend))
 	// Serve static assets
-	app.Static("/assets", appConfig.StaticAssetsPath)
+	app.Static("/assets", appConfig.Frontend.StaticAssetsPath)
 	// Serve SPA index.html for all other routes (to support client-side routing)
 	app.NoRoute(func(c *gin.Context) {
-		c.File(appConfig.SPAIndexPath)
+		c.File(appConfig.Frontend.SPAIndexPath)
 	})
 
-	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.PostgresConfig)
+	postgresRepository := postgresRepo.NewPostgresRepository(appConfig.Postgres)
 	//postgresRepository.Migrate()
 	tokenRepository := tokenRepo.NewTokenRepository(
-		appConfig.ServerDNS,
-		[]byte(appConfig.UserConfig.JWTSecret),
-		[]byte(appConfig.ClientConfig.JWTSecret),
-		[]byte(appConfig.OAuthConfig.JWTSecret),
+		appConfig.TokensIssuer,
+		[]byte(appConfig.User.JWTSecret),
+		[]byte(appConfig.Client.JWTSecret),
+		[]byte(appConfig.OAuth.JWTSecret),
 	)
-	emailRepository := emailRepo.NewEmailRepository(appConfig.EmailConfig)
+	emailRepository := emailRepo.NewEmailRepository(appConfig.User.EmailConfig)
 	codeGenRepository := codeGenRepo.NewCodeGenerateRepository(code.NewMIMCCodeGenerator())
-	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZkConfig))
-	phoneRepository := phoneRepo.NewPhoneRepository(appConfig.PhoneConfig)
-	influxdbRepository := influxdbRepo.NewInfluxdbRepository(appConfig.InfluxDB2Config)
+	zkRepository := zkRepo.NewZkRepository(zkSetup(postgresRepository, appConfig.ZK))
+	phoneRepository := phoneRepo.NewPhoneRepository(appConfig.User.PhoneConfig)
+	influxdbRepository := influxdbRepo.NewInfluxdbRepository(appConfig.Client.InfluxDB2Config)
 	err = influxdbRepository.IsConnected(context.Background())
 	if err != nil {
 		panic(err)
@@ -130,29 +130,29 @@ func main() {
 		tokenRepository,
 		influxdbRepository,
 	)
-	oauthUsecase := oauthUC.NewOAuthUsecase(logger, appConfig.OAuthConfig, postgresRepository, tokenRepository)
+	oauthUsecase := oauthUC.NewOAuthUsecase(logger, appConfig.OAuth, postgresRepository, tokenRepository)
 
 	apiGroup := app.Group("/api/v1")
-	userHandler := userH.NewUserHandler(logger, apiGroup, userUsecase, appConfig.UserConfig)
+	userHandler := userH.NewUserHandler(logger, apiGroup, userUsecase, appConfig.User)
 	userHandler.RegisterAPIs()
-	clientHandler := clientH.NewClientHandler(logger, apiGroup, config.ClientConfig{}, clientUsecase)
+	clientHandler := clientH.NewClientHandler(logger, apiGroup, appConfig.Client, clientUsecase)
 	clientHandler.RegisterAPIs()
-	oauthHandler := oauthH.NewOAuthHandler(logger, apiGroup, config.OAuthConfig{CookieMaxAge: 3600}, oauthUsecase)
+	oauthHandler := oauthH.NewOAuthHandler(logger, apiGroup, appConfig.OAuth, oauthUsecase)
 	oauthHandler.RegisterAPIs()
 
-	client, err := eth.ConnectToEthereum(appConfig.Web3Config.WebsocketRPCURL)
+	client, err := eth.ConnectToEthereum(appConfig.Client.Web3Config.WebsocketRPCURL)
 	if err != nil {
-		panic(fmt.Errorf("failed to connect to %s: %w", appConfig.Web3Config.WebsocketRPCURL, err))
+		panic(fmt.Errorf("failed to connect to %s: %w", appConfig.Client.Web3Config.WebsocketRPCURL, err))
 	}
 	defer eth.CloseEthereumConnection(client)
-	ethRepository := ethRepo.NewEthereumRepository(logger, client, appConfig.Web3Config)
+	ethRepository := ethRepo.NewEthereumRepository(logger, client, appConfig.Client.Web3Config)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	workerUsecase := workerUC.NewWorkerUsecase(logger, ctx, postgresRepository, influxdbRepository, ethRepository)
+	workerUsecase := workerUC.NewWorkerUsecase(appConfig.Worker, logger, ctx, postgresRepository, influxdbRepository, ethRepository)
 
 	go func() {
-		ticker := time.NewTicker(appConfig.UpdateUsageInterval)
+		ticker := time.NewTicker(appConfig.Worker.UpdateUsageInterval)
 		defer ticker.Stop()
 
 		for {
@@ -164,11 +164,11 @@ func main() {
 			case currTime := <-ticker.C:
 				logger.Info(fmt.Sprintf(
 					"Update usage balance with interval: %s",
-					appConfig.UpdateUsageInterval,
+					appConfig.Worker.UpdateUsageInterval,
 				))
 
 				if err := workerUsecase.UpdateUsageBalance(
-					appConfig.BillingRatePerByte,
+					appConfig.Worker.Payment.BillingRatePerByte,
 					currTime,
 				); err != nil {
 					logger.Error("Error while updating usage balance", err)

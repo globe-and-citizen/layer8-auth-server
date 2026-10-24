@@ -53,12 +53,12 @@ type IClientRepository interface {
 
 type IClientBalanceRepository interface {
 	GetClientBalance(ctx context.Context, clientId string) (*gormModels.ClientBalance, error)
-	UpdateClientBalance(ctx context.Context, clientId string, newBalance string, status gormModels.AccountStatus, lastUsageUpdated time.Time) error
+	AddClientBalanceDelta(ctx context.Context, clientId string, delta string, currency gormModels.Currency, lastUsageUpdated *time.Time) error
 	GetAllClientBalances(ctx context.Context) ([]gormModels.ClientBalance, error)
 }
 
 type IClientPaymentReceiptRepository interface {
-	AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, timestamp time.Time, txHash string) error
+	AddClientPaymentReceipt(ctx context.Context, clientId string, amount string, currency gormModels.Currency, senderWalletAddress string, timestamp time.Time, txHash string, logIndex uint) error
 }
 
 type IUserMetadataRepository interface {
