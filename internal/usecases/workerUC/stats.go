@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByte big.Int, currTime time.Time) error {
+func (uc *WorkerUsecase) UpdateUsageBalance(currTime time.Time) error {
 	allBalances, err := uc.postgres.GetAllClientBalances(uc.ctx)
 	if err != nil {
 		return err
@@ -27,12 +27,33 @@ func (uc *WorkerUsecase) UpdateUsageBalance(ratePerByte big.Int, currTime time.T
 			continue
 		}
 
-		newBilled := ratePerByte
-		newBilled.Mul(&newBilled, big.NewInt(int64(consumedBytesFloat)))
+		totalUnbilledBytes, err := utils.DBStringToBigInt(balance.UnbilledUsageBytes)
+		if err != nil {
+			return fmt.Errorf("failed to convert unbilled usage bytes for client %s: %w", balance.ClientID, err)
+		}
+
+		// totalUnbilledBytes = newlyUpdatedConsumption + lastUpdatedUnbilledConsumption
+		totalUnbilledBytes.Add(totalUnbilledBytes, big.NewInt(int64(consumedBytesFloat)))
+
+		if utils.StringSliceContains(uc.config.Debug.ClientID, balance.ClientID) {
+			uc.logger.Debugf("clientID: %s, newConsumedBytes: %d, lastUnbilledBytes: %s, totalUnbilledBytes: %s",
+				balance.ClientID, int64(consumedBytesFloat), balance.UnbilledUsageBytes, totalUnbilledBytes.String())
+		}
+
+		// newBilledBalance = quotient(totalUnbilledBytes / BytesPerBillingUnit) * CostPerBillingUnit
+		// newUnbilledBytes = remainder(totalUnbilledBytes % BytesPerBillingUnit)
+		newBilledBalance, newUnbilledBytes := totalUnbilledBytes.DivMod(totalUnbilledBytes, &uc.config.Payment.BytesPerBillingUnit, &uc.config.Payment.BytesPerBillingUnit)
+		newBilledBalance.Mul(newBilledBalance, &uc.config.Payment.CostPerBillingUnit)
+
+		if utils.StringSliceContains(uc.config.Debug.ClientID, balance.ClientID) {
+			uc.logger.Debugf("clientID: %s, newBilledBalance: %s, newUnbilledBytes: %s", balance.ClientID, newBilledBalance.String(), newUnbilledBytes.String())
+		}
+
 		err = uc.postgres.AddClientBalanceDelta(
 			uc.ctx,
 			balance.ClientID,
-			utils.BigIntToDBAmount(&newBilled),
+			utils.BigIntToDBString(newBilledBalance),
+			utils.BigIntToDBString(newUnbilledBytes),
 			gormModels.Currency(uc.config.Payment.Currency),
 			&timestamp,
 		)

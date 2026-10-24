@@ -16,7 +16,7 @@ func WeiToEth(wei *big.Int) *big.Float {
 	return eth
 }
 
-func DBAmountToBigInt(dbValue string) (*big.Int, error) {
+func DBStringToBigInt(dbValue string) (*big.Int, error) {
 	if dbValue == "" || dbValue == "0" {
 		return big.NewInt(0), nil
 	}
@@ -116,7 +116,7 @@ func EthStringToWei(eth string) (*big.Int, error) {
 	return wei, nil
 }
 
-func BigIntToDBAmount(amount *big.Int) string {
+func BigIntToDBString(amount *big.Int) string {
 	if amount == nil {
 		return "0"
 	}

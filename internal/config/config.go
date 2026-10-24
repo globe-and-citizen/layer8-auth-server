@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"globe-and-citizen/layer8/auth-server/pkg/log"
 	"globe-and-citizen/layer8/auth-server/pkg/otel"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
@@ -26,6 +27,7 @@ type AppConfig struct {
 	Payment   PaymentConfig
 	OTel      otel.Config
 
+	Debug  DebugConfig
 	User   UserConfig
 	Client ClientConfig
 	OAuth  OAuthConfig
@@ -49,13 +51,19 @@ type ScramConfig struct {
 }
 
 type PaymentConfig struct {
-	Currency           string  `env:"PAYMENT_CURRENCY" required:"true" envDefault:"usdc"`
-	BillingRatePerByte big.Int `env:"BILLING_RATE_PER_BYTE" envDefault:"1"`
+	Currency            string  `env:"PAYMENT_CURRENCY" required:"true" envDefault:"usdc"`
+	CostPerBillingUnit  big.Int `env:"COST_PER_BILLING_UNIT" envDefault:"1"`
+	BytesPerBillingUnit big.Int `env:"BYTES_PER_BILLING_UNIT" envDefault:"1000"`
+}
+
+type DebugConfig struct {
+	ClientID []string `env:"DEBUG_CLIENT_ID" envSeparator:";"`
 }
 
 type WorkerConfig struct {
 	UpdateUsageInterval time.Duration `env:"UPDATE_USAGE_INTERVAL" envDefault:"15m"`
 	Payment             PaymentConfig
+	Debug               DebugConfig
 }
 
 func LoadConfig() AppConfig {
@@ -64,6 +72,10 @@ func LoadConfig() AppConfig {
 	cfg := AppConfig{}
 	if err := env.Parse(&cfg); err != nil {
 		panic(err)
+	}
+
+	if cfg.Payment.BytesPerBillingUnit.Sign() <= 0 {
+		panic(fmt.Errorf("invalid BYTES_PER_BILLING_UNIT=%s: must be > 0", cfg.Payment.BytesPerBillingUnit.String()))
 	}
 
 	return cfg
