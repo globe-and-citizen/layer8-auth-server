@@ -95,13 +95,22 @@ func (e *EventListener[T]) Start(ctx context.Context, logger log.ILogger, client
 				time.Sleep(3 * time.Second)
 				goto RESUBSCRIBE
 			case vLog := <-logs:
-				err = e.handleEvent(ctx, client, vLog)
-				if err != nil {
+				for {
+					err = e.handleEvent(ctx, client, vLog)
+					if err == nil {
+						saveLastBlock(e.EventName, vLog.BlockNumber)
+						break
+					}
+
 					logger.Errorf(err, "Error handling ethereum event %s", e.EventName)
-					// todo what to do on handler error?
-					continue
+					select {
+					case <-ctx.Done():
+						sub.Unsubscribe()
+						logger.Infof("Unsubscribed from event %s", e.EventName)
+						return
+					case <-time.After(3 * time.Second):
+					}
 				}
-				saveLastBlock(e.EventName, vLog.BlockNumber)
 			}
 		}
 	RESUBSCRIBE:

@@ -23,13 +23,13 @@ type Web3Config struct {
 	WebsocketRPCURL string `env:"WEB3_WS_RPC_URL" required:"true"`
 
 	TrafficPaidEnabled  bool   `env:"WEB3_TRAFFIC_PAID_ENABLED" envDefault:"false"`
-	PaymentContractAddr string `env:"WEB3_PAYMENT_CONTRACT_ADDRESS" required:"true"`
-	PaymentContractABI  string `env:"WEB3_PAYMENT_CONTRACT_ABI" required:"true"`
+	PaymentContractAddr string `env:"WEB3_PAYMENT_CONTRACT_ADDRESS"`
+	PaymentContractABI  string `env:"WEB3_PAYMENT_CONTRACT_ABI"`
 
 	// CNC payment
 	CNCPaymentEnabled bool   `env:"WEB3_CNC_PAYMENT_ENABLED" envDefault:"false"`
-	CNCContractAddr   string `env:"WEB3_CNC_CONTRACT_ADDRESS" required:"true"`
-	CNCEventABI       string `env:"WEB3_CNC_EVENT_ABI" required:"true"`
+	CNCContractAddr   string `env:"WEB3_CNC_CONTRACT_ADDRESS"`
+	CNCEventABI       string `env:"WEB3_CNC_EVENT_ABI"`
 
 	// other contracts addr and abi
 }
