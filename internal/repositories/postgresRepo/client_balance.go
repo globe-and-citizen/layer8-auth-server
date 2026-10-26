@@ -30,12 +30,14 @@ func (r *PostgresRepository) AddClientBalanceDelta(
 	ctx context.Context,
 	clientId string,
 	delta string,
+	remainUnbilledBytes string,
 	currency gormModels.Currency,
 	lastUsageUpdatedAt *time.Time,
 ) error {
 	updates := map[string]interface{}{
-		"balance_base_units": gorm.Expr("balance_base_units + (?::numeric)", delta),
-		"currency":           currency,
+		"balance_base_units":   gorm.Expr("balance_base_units + (?::numeric)", delta),
+		"unbilled_usage_bytes": remainUnbilledBytes,
+		"currency":             currency,
 		"status": gorm.Expr(
 			`CASE
 				WHEN balance_base_units + (?::numeric) < 0 THEN ?::account_status

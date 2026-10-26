@@ -167,10 +167,7 @@ func main() {
 					appConfig.Worker.UpdateUsageInterval,
 				))
 
-				if err := workerUsecase.UpdateUsageBalance(
-					appConfig.Worker.Payment.BillingRatePerByte,
-					currTime,
-				); err != nil {
+				if err := workerUsecase.UpdateUsageBalance(currTime); err != nil {
 					logger.Error("Error while updating usage balance", err)
 				}
 			}

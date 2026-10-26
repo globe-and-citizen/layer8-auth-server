@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/google/uuid"
@@ -80,4 +81,8 @@ func GetEnvironment() string {
 		env = "development"
 	}
 	return env
+}
+
+func StringSliceContains(slice []string, s string) bool {
+	return slices.Contains(slice, s)
 }

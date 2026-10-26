@@ -23,7 +23,7 @@ func (uc *WorkerUsecase) ListenToEthereumEvents() {
 func (uc *WorkerUsecase) handleTrafficPaidEvent(event eth.EventData[models.TrafficPaidEvent]) error {
 	uc.logger.Infof("Handling traffic paid event: %+v", event)
 
-	amount := utils.BigIntToDBAmount(event.Data.Amount)
+	amount := utils.BigIntToDBString(event.Data.Amount)
 	err := uc.postgres.AddClientPaymentReceipt(
 		uc.ctx,
 		event.Data.ClientID,
@@ -60,7 +60,7 @@ func (uc *WorkerUsecase) handleCNCTokenDeposited(event eth.EventData[models.CNCT
 		event.Data.Amount.String(),
 	)
 
-	amount := utils.BigIntToDBAmount(event.Data.Amount)
+	amount := utils.BigIntToDBString(event.Data.Amount)
 	err = uc.postgres.AddClientPaymentReceipt(
 		uc.ctx,
 		factureID,

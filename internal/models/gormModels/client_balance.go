@@ -39,6 +39,7 @@ type ClientBalance struct {
 	ClientID           string        `gorm:"column:client_id; unique; not null"`
 	BalanceBaseUnits   string        `gorm:"column:balance_base_units" type:"numeric(78,0)"`
 	Currency           Currency      `gorm:"column:currency; not null; default:usdc"`
+	UnbilledUsageBytes string        `gorm:"column:unbilled_usage_bytes" type:"numeric(78,0)"`
 	Status             AccountStatus `gorm:"column:status" default:"zeroed"`
 	LastUsageUpdatedAt time.Time     `gorm:"column:last_usage_updated_at"`
 }
