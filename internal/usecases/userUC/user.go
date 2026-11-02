@@ -47,9 +47,15 @@ func (uc *UserUsecase) Register(ctx context.Context, req requestdto.UserRegister
 
 	err := uc.postgres.UpdateUser(ctx, newUser)
 	if err != nil {
-		delErr := uc.postgres.DeleteUserByUsername(ctx, req.Username)
+		// no pending registration for this username (unknown or already registered user): never delete anything
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ucerror.New(utils.StackError(fmt.Errorf("no pending registration for user: %w", err)), consts.ErrNotFound)
+		}
+
+		// clean up the pending registration only; completed accounts are never deleted here
+		delErr := uc.postgres.DeletePendingUserByUsername(ctx, req.Username)
 		if delErr != nil {
-			uc.logger.Error("Failed to delete user after failed update", delErr)
+			uc.logger.Error("Failed to delete pending user after failed update", delErr)
 		}
 
 		if errors.Is(err, context.Canceled) {

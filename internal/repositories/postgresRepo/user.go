@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/auth-server/internal/models/gormModels"
 	"globe-and-citizen/layer8/auth-server/pkg/utils"
+
+	"gorm.io/gorm"
 )
 
 func (r *PostgresRepository) IsUserIDExists(ctx context.Context, id uint) (bool, error) {
@@ -18,22 +20,35 @@ func (r *PostgresRepository) IsUserIDExists(ctx context.Context, id uint) (bool,
 	return count > 0, nil
 }
 
+// pendingRegistrationCond matches users created by PrecheckRegister that have not completed Register yet.
+const pendingRegistrationCond = "(stored_key IS NULL OR stored_key = '')"
+
+// UpdateUser completes the registration of a pending user. It returns gorm.ErrRecordNotFound if the user
+// does not exist or has already completed registration, so an existing account can never be overwritten.
 func (r *PostgresRepository) UpdateUser(ctx context.Context, updates gormModels.User) error {
 	tx := r.db.WithContext(ctx).Begin()
 	user := gormModels.User{}
-	if err := tx.Where("username = ?", updates.Username).First(&user).Error; err != nil {
+	if err := tx.Where("username = ?", updates.Username).Where(pendingRegistrationCond).First(&user).Error; err != nil {
 		tx.Rollback()
-		return utils.StackError(fmt.Errorf("could not find user: %w", err))
+		return utils.StackError(fmt.Errorf("could not find pending user: %w", err))
 	}
 
-	err := tx.Model(&user).Updates(map[string]interface{}{
-		"public_key": updates.PublicKey,
-		"stored_key": updates.ScramStoredKey,
-		"server_key": updates.ScramServerKey,
-	}).Error
-	if err != nil {
+	// re-check the pending condition in the UPDATE itself to guard against concurrent registrations
+	result := tx.Model(&gormModels.User{}).
+		Where("id = ?", user.ID).
+		Where(pendingRegistrationCond).
+		Updates(map[string]interface{}{
+			"public_key": updates.PublicKey,
+			"stored_key": updates.ScramStoredKey,
+			"server_key": updates.ScramServerKey,
+		})
+	if result.Error != nil {
 		tx.Rollback()
-		return utils.StackError(fmt.Errorf("could not update user: %w", err))
+		return utils.StackError(fmt.Errorf("could not update user: %w", result.Error))
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return utils.StackError(fmt.Errorf("could not find pending user: %w", gorm.ErrRecordNotFound))
 	}
 
 	userMetadata := gormModels.UserMetadata{
@@ -43,18 +58,21 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, updates gormModels.
 		Color:           "",
 	}
 
-	err = tx.Create(&userMetadata).Error
+	err := tx.Create(&userMetadata).Error
 	if err != nil {
 		tx.Rollback()
-		return utils.StackError(fmt.Errorf("could not create user metadata entry: %e", err))
+		return utils.StackError(fmt.Errorf("could not create user metadata entry: %w", err))
 	}
 
-	tx.Commit()
-	return nil
+	return utils.StackError(tx.Commit().Error)
 }
 
-func (r *PostgresRepository) DeleteUserByUsername(ctx context.Context, username string) error {
-	return utils.StackError(r.db.WithContext(ctx).Where("username = ?", username).Delete(&gormModels.User{}).Error)
+// DeletePendingUserByUsername deletes a user only if it has not completed registration.
+func (r *PostgresRepository) DeletePendingUserByUsername(ctx context.Context, username string) error {
+	return utils.StackError(r.db.WithContext(ctx).
+		Where("username = ?", username).
+		Where(pendingRegistrationCond).
+		Delete(&gormModels.User{}).Error)
 }
 
 func (r *PostgresRepository) GetUserByID(ctx context.Context, userId uint) (*gormModels.User, error) {
