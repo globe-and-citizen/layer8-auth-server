@@ -74,9 +74,18 @@ func LoadConfig() AppConfig {
 		panic(err)
 	}
 
-	if cfg.Payment.BytesPerBillingUnit.Sign() <= 0 {
-		panic(fmt.Errorf("invalid BYTES_PER_BILLING_UNIT=%s: must be > 0", cfg.Payment.BytesPerBillingUnit.String()))
+	for _, payment := range []PaymentConfig{cfg.Payment, cfg.Client.Payment, cfg.Worker.Payment} {
+		payment.validate()
 	}
 
 	return cfg
+}
+
+func (p PaymentConfig) validate() {
+	if p.BytesPerBillingUnit.Sign() <= 0 {
+		panic(fmt.Errorf("invalid BYTES_PER_BILLING_UNIT=%s: must be > 0", p.BytesPerBillingUnit.String()))
+	}
+	if p.CostPerBillingUnit.Sign() < 0 {
+		panic(fmt.Errorf("invalid COST_PER_BILLING_UNIT=%s: must be >= 0", p.CostPerBillingUnit.String()))
+	}
 }

@@ -20,7 +20,7 @@ func (uc *WorkerUsecase) UpdateUsageBalance(currTime time.Time) error {
 			uc.ctx, balance.LastUsageUpdatedAt, timestamp, balance.ClientID,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to get traffic updates for client %s: %e", balance.ClientID, err)
+			return fmt.Errorf("failed to get traffic updates for client %s: %w", balance.ClientID, err)
 		}
 
 		if consumedBytesFloat == 0 {
@@ -42,7 +42,9 @@ func (uc *WorkerUsecase) UpdateUsageBalance(currTime time.Time) error {
 
 		// newBilledBalance = quotient(totalUnbilledBytes / BytesPerBillingUnit) * CostPerBillingUnit
 		// newUnbilledBytes = remainder(totalUnbilledBytes % BytesPerBillingUnit)
-		newBilledBalance, newUnbilledBytes := totalUnbilledBytes.DivMod(totalUnbilledBytes, &uc.config.Payment.BytesPerBillingUnit, &uc.config.Payment.BytesPerBillingUnit)
+		// DivMod writes the remainder into its last argument, so it must be a fresh big.Int: passing the config
+		// value there would overwrite BytesPerBillingUnit and lead to a division by zero on later iterations.
+		newBilledBalance, newUnbilledBytes := new(big.Int).DivMod(totalUnbilledBytes, &uc.config.Payment.BytesPerBillingUnit, new(big.Int))
 		newBilledBalance.Mul(newBilledBalance, &uc.config.Payment.CostPerBillingUnit)
 
 		if utils.StringSliceContains(uc.config.Debug.ClientID, balance.ClientID) {
