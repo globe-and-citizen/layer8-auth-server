@@ -1,0 +1,101 @@
+# AWS CodeBuild buildspec for layer8-auth-server
+#
+# Builds the multi-stage Dockerfile (Vue SPA + Go server + migrate binary),
+# pushes the image to Amazon ECR and emits artifacts for ECS deploys.
+#
+# Required CodeBuild project settings:
+#   - Privileged mode: ON (needed for docker build)
+#   - Image: aws/codebuild/amazonlinux-x86_64-standard:5.0 (or -aarch64- for ARM/Graviton)
+#   - Service role permissions: ecr:GetAuthorizationToken, ecr:BatchCheckLayerAvailability,
+#     ecr:InitiateLayerUpload, ecr:UploadLayerPart, ecr:CompleteLayerUpload,
+#     ecr:PutImage, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer
+#
+# Environment variables (set on the CodeBuild project or override per pipeline):
+#   AWS_ACCOUNT_ID   - AWS account that owns the ECR repository
+#   IMAGE_REPO_NAME  - ECR repository name (e.g. layer8/auth-server-production)
+#   CONTAINER_NAME   - container name in the ECS task definition (used in imagedefinitions.json)
+#   DOCKERHUB_USERNAME / DOCKERHUB_TOKEN (optional) - avoids Docker Hub pull rate limits
+#     for the node/golang base images; store the token in Secrets Manager or Parameter Store.
+
+version: 0.2
+
+env:
+  variables:
+    IMAGE_REPO_NAME: "layer8/auth-server-production"
+    CONTAINER_NAME: "auth-server"
+    RUN_TESTS: "true"
+    DOCKER_BUILDKIT: "1"
+  # Uncomment to pull Docker Hub credentials from Secrets Manager
+  # secrets-manager:
+  #   DOCKERHUB_USERNAME: "dockerhub-credentials:username"
+  #   DOCKERHUB_TOKEN: "dockerhub-credentials:token"
+
+phases:
+  install:
+    runtime-versions:
+      golang: latest
+    commands:
+      - docker version
+
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+      - REPOSITORY_URI="${ECR_REGISTRY}/${IMAGE_REPO_NAME}"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+      - |
+        if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+          echo "Logging in to Docker Hub..."
+          echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c 1-7)
+      - IMAGE_TAG="${COMMIT_HASH:-build-$CODEBUILD_BUILD_NUMBER}"
+      - echo "Image will be tagged $REPOSITORY_URI:$IMAGE_TAG"
+      # Go unit tests run with the CodeBuild Go toolchain; the Docker build pins its own Go version.
+      - |
+        if [ "$RUN_TESTS" = "true" ]; then
+          echo "Running Go tests..."
+          export GOTOOLCHAIN=auto
+          go vet ./cmd/... ./internal/... ./pkg/...
+          go test ./cmd/... ./internal/... ./pkg/...
+        fi
+      # Pull the previous image so its layers can be reused as build cache
+      - docker pull "$REPOSITORY_URI:latest" || true
+
+  build:
+    commands:
+      - echo "Building Docker image on $(date)"
+      - |
+        docker build \
+          --cache-from "$REPOSITORY_URI:latest" \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          -t "$REPOSITORY_URI:$IMAGE_TAG" \
+          -t "$REPOSITORY_URI:latest" \
+          .
+
+  post_build:
+    commands:
+      - |
+        if [ "$CODEBUILD_BUILD_SUCCEEDING" != "1" ]; then
+          echo "Build failed, skipping push."
+          exit 1
+        fi
+      - echo "Pushing image to ECR..."
+      - docker push "$REPOSITORY_URI:$IMAGE_TAG"
+      - docker push "$REPOSITORY_URI:latest"
+      # For the ECS standard deploy action in CodePipeline
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$REPOSITORY_URI:$IMAGE_TAG" > imagedefinitions.json
+      # For ECS blue/green (CodeDeploy) deploys
+      - printf '{"ImageURI":"%s"}' "$REPOSITORY_URI:$IMAGE_TAG" > imageDetail.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - imageDetail.json
+
+cache:
+  paths:
+    - "/root/go/pkg/mod/**/*"
+    - "/root/.cache/go-build/**/*"
