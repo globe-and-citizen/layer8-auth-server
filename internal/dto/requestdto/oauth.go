@@ -20,7 +20,6 @@ type OAuthAuthorizeQueries struct {
 
 type OAuthAuthorizeConsent struct {
 	OAuthAuthorizeQueries `json:",inline"`
-	OIDCAgreedToShare     bool `json:"oidc_agreed" default:"false"`
 	Share                 struct {
 		Bio             bool `json:"bio" default:"false"`
 		Color           bool `json:"color" default:"false"`

@@ -854,7 +854,6 @@ All monetary values are stored in integer base units (`numeric(78,0)`), and `cur
 
 | Field                     | Type | Required | Description                       |
 |---------------------------|------|---------:|-----------------------------------|
-| `oidc_agreed`             | bool |       No | Whether user agrees to OIDC share |
 | `share.bio`               | bool |       No | Share bio                         |
 | `share.color`             | bool |       No | Share color                       |
 | `share.display_name`      | bool |       No | Share display name                |

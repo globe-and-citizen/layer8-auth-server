@@ -58,10 +58,6 @@ func (uc *OAuthUsecase) PostAuthorizeDecision(
 		scopes = append(scopes, ScopeReadUserLocation)
 	}
 
-	if scopes.IsOIDC() && !req.OIDCAgreedToShare {
-		return nil, ucerror.New(fmt.Errorf("user must agree to share info for OIDC scopes"), consts.ErrBadRequest)
-	}
-
 	code, err := utils.GenerateRandomBase64String(AuthorizationCodeSize)
 	if err != nil {
 		return nil, ucerror.New(fmt.Errorf("error generating authorization code: %w", err), consts.ErrInternalServer)

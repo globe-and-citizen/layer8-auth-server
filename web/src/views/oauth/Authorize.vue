@@ -4,9 +4,17 @@
     <h1 class="heading">Layer8</h1>
     <div class="line"></div>
 
-    <div class="body">
+    <!-- OIDC: no decision page, the request is approved automatically -->
+    <div v-if="isOIDC" class="body">
       <h2 class="center">
-        {{ isOIDC ? 'Sign in to' : 'Authorize' }}
+        Signing in to <b>{{ clientName }}</b>…
+      </h2>
+      <small v-if="error" class="error">{{ error }}</small>
+    </div>
+
+    <div v-else class="body">
+      <h2 class="center">
+        Authorize
         <b>{{ clientName }}</b>
       </h2>
 
@@ -21,14 +29,8 @@
 
       <br/>
 
-      <form method="POST" id="submit" @submit="submit">
-        <input type="hidden" name="decision" value="allow"/>
-        <div v-if="isOIDC" style="display: flex; flex-direction: column; align-items: flex-start;">
-          <ConsentCheckbox label="Agree with all terms and conditions"
-                           v-model="agreed"></ConsentCheckbox>
-        </div>
-
-        <div v-if="!isOIDC" style="display: flex; flex-direction: column; align-items: flex-start;">
+      <form method="POST" id="submit" @submit.prevent="submit">
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
           <ConsentCheckbox
             v-model="shareDisplayName"
             label="Share display name"
@@ -74,7 +76,7 @@ import {
   getAPI,
   OAuthGetAuthorizeContextPath,
   OAuthPostAuthorizeDecisionPath,
-  OAuthUserLoginPath, OAuthUserLogoutPath
+  OAuthUserLogoutPath
 } from "@/api/paths.js";
 import {useRoute, useRouter} from "vue-router";
 import ConsentCheckbox from "@/views/oauth/authorize/ConsentCheckbox.vue";
@@ -98,7 +100,6 @@ const shareIsEmailVerified = ref(false)
 const shareColor = ref(false)
 const shareBio = ref(false)
 const shareLocation = ref(false)
-const agreed = ref(false)
 
 const getDate = () => new Date().getFullYear()
 
@@ -136,57 +137,61 @@ onMounted(async () => {
     }
 
     const data = await res.json()
-    // console.log(data)
     clientName.value = data.client_name
     scopes.value = data.scopes
+
+    // OIDC flow skips the decision page: approve right away.
+    if (isOIDC) {
+      await postDecision()
+    }
   } catch (e) {
     console.log(e)
     error.value = e.message
   }
 })
 
-const submit = async (e) => {
-  e.preventDefault()
+const postDecision = async () => {
+  const res = await fetch(getAPI(OAuthPostAuthorizeDecisionPath) + `${params}`,
+    {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      redirect: "follow",
+      body: JSON.stringify({
+        client_id: clientId,
+        scopes: scopeParam,
+        share: {
+          display_name: shareDisplayName.value,
+          is_email_verified: shareIsEmailVerified.value,
+          color: shareColor.value,
+          bio: shareBio.value,
+          location: shareLocation.value
+        },
+      }),
+    })
 
-  try {
-    if (isOIDC && !agreed.value) {
-      alert('You must agree with all terms and conditions to continue.')
-      return
-    }
-
-    const res = await fetch(getAPI(OAuthPostAuthorizeDecisionPath) + `${params}`,
-      {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'include',
-        redirect: "follow",
-        body: JSON.stringify({
-          client_id: clientId,
-          scopes: scopeParam,
-          oidc_agreed: agreed.value,
-          share: {
-            display_name: shareDisplayName.value,
-            is_email_verified: shareIsEmailVerified.value,
-            color: shareColor.value,
-            bio: shareBio.value,
-            location: shareLocation.value
-          },
-          return_result: !!window.opener, // ??? what's this for?
-        }),
-      })
-
-    const data = await res.json()
-
-    if (window.opener) {
-      window.opener.postMessage(data, '*')
-      window.close()
-    } else {
-      window.location.href = data.redirect_uri
-    }
-  } catch (e) {
-    console.log(e)
+  if (!res.ok) {
+    error.value = `Authorization failed: ${res.status} ${res.statusText}`
+    return
   }
 
+  const data = await res.json()
+
+  if (window.opener) {
+    window.opener.postMessage(data, '*')
+    window.close()
+  } else {
+    window.location.href = data.redirect_uri
+  }
+}
+
+const submit = async () => {
+  try {
+    await postDecision()
+  } catch (e) {
+    console.log(e)
+    error.value = e.message
+  }
 }
 </script>
 
